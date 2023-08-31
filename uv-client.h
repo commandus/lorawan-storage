@@ -1,0 +1,55 @@
+#ifndef UV_CLIENT_H_
+#define UV_CLIENT_H_	1
+
+#ifdef _MSC_VER
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
+#include <string>
+#include <uv.h>
+#include "identity-serialization.h"
+#include "identity-client.h"
+
+class UvClient : public IdentityClient {
+private:
+    bool useTcp;
+    struct sockaddr serverAddress;
+    uv_udp_t udpSocket;
+
+    uv_tcp_t tcpSocket;
+    uv_connect_t connectReq;
+    int status;
+    uv_loop_t *loop;
+
+    void init();
+    void query(
+        void *buf,
+        size_t len
+    );
+
+public:
+    bool tcpConnected;
+    void *dataBuf;
+    size_t dataSize;
+
+    explicit UvClient(
+        bool useTcp,
+        const std::string &aHost,
+        uint16_t port,
+        ResponseIntf *onResponse
+    );
+    ~UvClient() override;
+
+    /**
+     * Prepare to send request
+     * @param value
+     */
+    void request(
+        GetRequest* value
+    ) override;
+    void start() override;
+    void stop() override;
+};
+
+#endif
