@@ -14,18 +14,35 @@
 #include "lorawan-msg.h"
 #include "log.h"
 #include "gateway-identity.h"
+#include "ip-address.h"
 
 const char *progname = "lorawan-gateway-query";
 
+enum CliGatewayQueryCommand {
+    QUERY_GATEWAY_QUERY = 1,
+    QUERY_GATEWAY_LIST,
+    QUERY_GATEWAY_ASSIGN,
+    QUERY_GATEWAY_RM
+};
+
 // global parameters
-std::vector<GatewayIdentity> query;
-size_t queryPos = 0;
-bool useTcp;
-int verbose;
-std::string intf;
-uint16_t port;
-int32_t code;
-uint64_t accessCode;
+class CliGatewayQueryParams {
+public:
+    CliGatewayQueryCommand command;
+    std::vector<GatewayIdentity> query;
+    size_t queryPos = 0;
+    bool useTcp;
+    int verbose;
+    std::string intf;
+    uint16_t port;
+    int32_t code;
+    uint64_t accessCode;
+    std::string addrssNport;
+    size_t offset;
+    size_t size;
+};
+
+static CliGatewayQueryParams params;
 
 class OnResp : public ResponseIntf {
 public:
@@ -47,7 +64,7 @@ public:
                 std::cerr << ERR_MESSAGE << retVal->code << std::endl;
                 client->stop();
             } else {
-                if (verbose)
+                if (params.verbose)
                     std::cout << retVal->toJsonString() << std::endl;
                 else
                     std::cout << retVal->toString() << std::endl;
@@ -64,27 +81,27 @@ public:
         GatewayClient* client
     ) override {
         // retry
-        client->request(new GetRequest(query[queryPos], code, accessCode));
+        client->request(new GetRequest(query[params.queryPos], params.code, params.accessCode));
     }
 
     bool next(
         GatewayClient *client
     ) {
-        if (queryPos >= query.size())
+        if (params.queryPos >= query.size())
             return false;
-        client->request(new GetRequest(query[queryPos], code, accessCode));
-        queryPos++;
+        client->request(new GetRequest(query[params.queryPos], params.code, params.accessCode));
+        params.queryPos++;
         return true;
     }
 };
 
 void run() {
-	OnResp onResp(query);
+	OnResp onResp(params.query);
     GatewayClient *client;
 #ifdef ENABLE_LIBUV
     client = new UvClient(useTcp, intf, port, &onResp);
 #else
-    client = new UDPClient(intf, port, &onResp);
+    client = new UDPClient(params.intf, params.port, &onResp);
 #endif
     // request first address to resolve
     if (!onResp.next(client))
@@ -93,32 +110,25 @@ void run() {
     delete client;
 }
 
-static void parseAddress(
-    std::string &retIntf,
-    uint16_t &retPort,
-    const std::string &value
-) {
-    size_t pos = value.find(':');
-    if (pos != std::string::npos) {
-        retIntf = value.substr(0, pos);
-        std::string sport = value.substr(pos + 1);
-        retPort = (uint16_t) std::stoi(sport);
-    }
-}
-
 int main(int argc, char **argv) {
 	struct arg_str *a_query = arg_strn(nullptr, nullptr, "<gateway-id>", 1, 100, "hex, 8 bytes long");
+    struct arg_str *a_assign = arg_str0("a", "assign", "<address:port>", "assign address to the gateway");
     struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
+    struct arg_lit *a_ls = arg_lit0("l", "list", "print gateway list");
+    struct arg_lit *a_rm = arg_lit0("r", "rm", "remove");
+    struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
+    struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 100. ");
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 1,"print errors/warnings");
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = { 
-		a_query, a_interface_n_port,
-        a_code, a_access_code, a_tcp, a_verbose,
+		a_query, a_assign, a_interface_n_port,
+        a_code, a_access_code, a_tcp,
+        a_ls, a_rm, a_offset, a_size,  a_verbose,
 		a_help, a_end 
 	};
 
@@ -130,30 +140,50 @@ int main(int argc, char **argv) {
 	// Parse the command line as defined by argtable[]
 	int errorCount = arg_parse(argc, argv, argtable);
 
-	verbose = a_verbose->count;
-    useTcp = a_tcp->count > 0;
+    params.verbose = a_verbose->count;
+    params.useTcp = a_tcp->count > 0;
 
     if (a_interface_n_port->count) {
-        parseAddress(intf, port, std::string(*a_interface_n_port->sval));
+        if (!splitAddress(params.intf, params.port, std::string(*a_interface_n_port->sval))) {
+            return ERR_CODE_COMMAND_LINE;
+        }
     } else {
-        intf = "localhost";
-        port = 4244;
+        params.intf = "localhost";
+        params.port = 4244;
     }
 
-    query.reserve(a_query->count);
+    if (a_assign->count) {
+        params.command = QUERY_GATEWAY_ASSIGN;
+    } else {
+        if (a_ls->count) {
+            params.command = QUERY_GATEWAY_LIST;
+            if (a_offset->count) {
+                params.offset = (size_t) *a_offset->ival;
+            }
+            if (a_size->count) {
+                params.size = (size_t) *a_size->ival;
+            }
+        } else {
+            if (a_rm->count) {
+                params.command = QUERY_GATEWAY_RM;
+            } else
+                params.command = QUERY_GATEWAY_QUERY;
+        }
+    }
+    params.query.reserve(a_query->count);
     for (int i = 0; i < a_query->count; i++) {
-        query.emplace_back(strtoull(a_query->sval[i], nullptr, 16));
+        params.query.emplace_back(strtoull(a_query->sval[i], nullptr, 16));
     }
 
     if (a_access_code->count)
-        accessCode = strtoull(*a_access_code->sval, nullptr, 16);
+        params.accessCode = strtoull(*a_access_code->sval, nullptr, 16);
     else
-        accessCode = 42;
+        params.accessCode = 42;
 
     if (a_code->count)
-        code = *a_code->ival;
+        params.code = *a_code->ival;
     else
-        code = 42;
+        params.code = 42;
 
     // special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || errorCount) {

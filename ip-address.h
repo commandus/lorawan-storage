@@ -11,6 +11,15 @@
 #endif
 
 /**
+ * Split @param address e.g. ADRESS:PORT to @param retAddress and @param retPort
+ */
+bool splitAddress(
+    std::string &retAddress,
+    uint16_t &retPort,
+    const std::string &address
+);
+
+/**
  * Return IP adress:port
  * @return address string
  */

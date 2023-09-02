@@ -33,11 +33,11 @@ std::string sockaddr2string(
 }
 
 /**
- * ADRESS:PORT
+ * Split @param address e.g. ADRESS:PORT to @param retAddress and @param retPort
  */
-static bool splitAddress(
+bool splitAddress(
     std::string &retAddress,
-    int &retPort,
+    uint16_t &retPort,
     const std::string &address
 )
 {
@@ -46,7 +46,7 @@ static bool splitAddress(
         return false;
     retAddress = address.substr(0, pos);
     std::string p(address.substr(pos + 1));
-    retPort = atoi(p.c_str());
+    retPort = (uint16_t) strtoul(p.c_str(), nullptr, 0);
     return true;
 }
 
@@ -62,7 +62,7 @@ bool string2sockaddr(
 )
 {
     std::string address;
-    int port;
+    uint16_t port;
     if (!splitAddress(address, port, value))
         return false;
     bool r = inet_pton(AF_INET6, address.c_str(), &((struct sockaddr_in6 *) retval)->sin6_addr) == 1;

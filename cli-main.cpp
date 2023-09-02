@@ -29,6 +29,7 @@
 #include "lorawan-error.h"
 #include "log.h"
 #include "daemonize.h"
+#include "ip-address.h"
 
 const char *progname = "lorawan-gateway-storage";
 
@@ -110,19 +111,6 @@ void run() {
         std::cerr << MSG_ERROR << r << ": " << std::endl;
 }
 
-static void parseAddress(
-    std::string &retHost,
-    uint16_t &retPort,
-    const std::string &value
-) {
-    size_t pos = value.find(':');
-    if (pos != std::string::npos) {
-        retHost = value.substr(0, pos);
-        std::string sport = value.substr(pos + 1);
-        retPort = (uint16_t) std::stoi(sport);
-    }
-}
-
 int main(int argc, char **argv) {
 	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4242");
 #ifdef ENABLE_SQLITE
@@ -156,7 +144,7 @@ int main(int argc, char **argv) {
 	int verbose = a_verbose->count;
 
 	if (a_interface_n_port->count) {
-        parseAddress(intf, port, std::string(*a_interface_n_port->sval));
+        splitAddress(intf, port, std::string(*a_interface_n_port->sval));
     } else {
         intf = "*";
         port = 4242;
