@@ -26,7 +26,7 @@ public:
     GatewayIdentity request;
     GetRequest();
     explicit GetRequest(const GatewayIdentity &identity);
-    GetRequest(const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
+    GetRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
     GetRequest(const char *buf, size_t sz);
     void ntoh();
     std::string toJsonString() const;

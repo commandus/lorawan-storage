@@ -75,8 +75,9 @@ void UDPClient::request(
 
 void UDPClient::start() {
     status = CODE_OK;
-    int af = isIPv6(&addr) ? AF_INET6 : AF_INET;
-    int proto = isIPv6(&addr) ? IPPROTO_IPV6 : IPPROTO_IP;
+    bool ipv6 = isIPv6(&addr);
+    int af = ipv6 ? AF_INET6 : AF_INET;
+    int proto = ipv6 ? IPPROTO_IPV6 : IPPROTO_IP;
 
     while (status != ERR_CODE_STOPPED) {
         sock = socket(af, SOCK_DGRAM, proto);
@@ -96,7 +97,7 @@ void UDPClient::start() {
             if (!query)
                 break;
             query->ntoh();
-            ssize_t sz = sendto(sock, (const char*) query, sizeof(GetRequest), 0, (struct sockaddr *)&addr, sizeof(addr));
+            ssize_t sz = sendto(sock, (const char*) query, sizeof(GetRequest), 0, (struct sockaddr *) &addr, sizeof(addr));
             if (sz < 0) {
                 status = ERR_CODE_SOCKET_WRITE;
 #ifdef ENABLE_DEBUG

@@ -66,11 +66,12 @@ GetRequest::GetRequest(
 }
 
 GetRequest::GetRequest(
+    char tag,
     const GatewayIdentity &aIdentity,
     int32_t code,
     uint64_t accessCode
 )
-    : GatewayMessage('a', code, accessCode), request(aIdentity)
+    : GatewayMessage(tag, code, accessCode), request(aIdentity)
 {
 }
 
@@ -186,7 +187,7 @@ size_t GatewaySerialization::query(
                 return sizeof(GetResponse);
             }
         case 'A':
-            // request network identity(with address) by network address. Return 0 if success, retval = EUI and keys
+            // request gateway identifier(with address) by network address. Return 0 if success
             // int getNetworkIdentity(NETWORKIDENTITY &retval, const DEVEUI &eui)
             break;
         case 'p':
@@ -215,21 +216,6 @@ size_t GatewaySerialization::query(
         case 'd':
             // close resources
             // void stop()
-            break;
-        case 'I':
-            // parse RX list of identifiers, wildcards or regexes and copy found EUI into retval
-            // int parseIdentifiers(std::vector<DEVEUI> &retval, const std::vector<std::string> &list, bool useRegex)
-            break;
-        case 'N':
-            // parseRX list of identifiers, wildcards or regexes and copy found EUI into retval
-            // int parseNames(std::vector<DEVEUI> &retval, const std::vector<std::string> &list, bool useRegex)
-            break;
-        case 'C':
-            // bool canControlService(const DEVADDR &addr)
-            break;
-        case 'n':
-            // Return next network address if available
-            // int next(NETWORKIDENTITY &retval)
             break;
         default:
             break;
