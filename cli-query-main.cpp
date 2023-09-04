@@ -88,7 +88,7 @@ public:
         GatewayClient* client
     ) override {
         // retry
-        client->request(new GetRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
+        client->request(new GatewayRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
     }
 
     bool next(
@@ -96,7 +96,7 @@ public:
     ) {
         if (params.queryPos >= query.size())
             return false;
-        client->request(new GetRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
+        client->request(new GatewayRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
         params.queryPos++;
         return true;
     }

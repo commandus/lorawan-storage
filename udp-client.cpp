@@ -67,7 +67,7 @@ UDPClient::~UDPClient()
 }
 
 void UDPClient::request(
-    GetRequest* value
+        GatewayRequest* value
 )
 {
     query = value;
@@ -97,7 +97,7 @@ void UDPClient::start() {
             if (!query)
                 break;
             query->ntoh();
-            ssize_t sz = sendto(sock, (const char*) query, sizeof(GetRequest), 0, (struct sockaddr *) &addr, sizeof(addr));
+            ssize_t sz = sendto(sock, (const char*) query, sizeof(GatewayRequest), 0, (struct sockaddr *) &addr, sizeof(addr));
             if (sz < 0) {
                 status = ERR_CODE_SOCKET_WRITE;
 #ifdef ENABLE_DEBUG

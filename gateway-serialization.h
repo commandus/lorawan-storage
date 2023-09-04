@@ -21,22 +21,23 @@ public:
     void ntoh();
 };  // 5 bytes
 
-class GetRequest : public GatewayMessage {
+class GatewayRequest : public GatewayMessage {
 public:
-    GatewayIdentity request;
-    GetRequest();
-    explicit GetRequest(const GatewayIdentity &identity);
-    GetRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
-    GetRequest(const char *buf, size_t sz);
+    char tag;
+    GatewayIdentity identity;
+    GatewayRequest();
+    explicit GatewayRequest(char tag, const GatewayIdentity &identity);
+    GatewayRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
+    GatewayRequest(const char *buf, size_t sz);
     void ntoh();
     std::string toJsonString() const;
 };
 
-class GetResponse : public GetRequest {
+class GetResponse : public GatewayRequest {
 public:
     GatewayIdentity response;
     GetResponse() = default;
-    explicit GetResponse(const GetRequest& request);
+    explicit GetResponse(const GatewayRequest& request);
     GetResponse(const char *buf, size_t sz);
     void ntoh();
     std::string toString() const;

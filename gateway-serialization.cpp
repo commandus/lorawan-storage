@@ -44,56 +44,56 @@ void GatewayMessage::ntoh()
     accessCode = NTOH8(accessCode);
 }
 
-GetRequest::GetRequest()
-    : GatewayMessage('a', 0, 0), request()
+GatewayRequest::GatewayRequest()
+    : GatewayMessage('a', 0, 0), identity()
 {
 }
 
-GetRequest::GetRequest(
+GatewayRequest::GatewayRequest(
+    char tag,
     const GatewayIdentity& aIdentity
 )
-    : GatewayMessage('a', 0, 0), request(aIdentity)
+    : GatewayMessage(tag, 0, 0), identity(aIdentity)
 {
 }
 
-GetRequest::GetRequest(
+GatewayRequest::GatewayRequest(
     const char *buf,
     size_t sz
 )
-    : GatewayMessage(buf, sz),
-    request(((GetRequest *) buf)->request)
+    : GatewayMessage(buf, sz), identity(((GatewayRequest *) buf)->identity)
 {
 }
 
-GetRequest::GetRequest(
+GatewayRequest::GatewayRequest(
     char tag,
     const GatewayIdentity &aIdentity,
     int32_t code,
     uint64_t accessCode
 )
-    : GatewayMessage(tag, code, accessCode), request(aIdentity)
+    : GatewayMessage(tag, code, accessCode), identity(aIdentity)
 {
 }
 
-void GetRequest::ntoh()
+void GatewayRequest::ntoh()
 {
     code = NTOH4(code);
     accessCode = NTOH8(accessCode);
-    request.gatewayId = NTOH8(request.gatewayId);
-    sockaddrNtoh(&request.sockaddr);
+    identity.gatewayId = NTOH8(identity.gatewayId);
+    sockaddrNtoh(&identity.sockaddr);
 }
 
-std::string GetRequest::toJsonString() const
+std::string GatewayRequest::toJsonString() const
 {
     std::stringstream ss;
-    ss << R"({"addr": ")" << request.toString() << "\"}";
+    ss << R"({"addr": ")" << identity.toString() << "\"}";
     return ss.str();
 }
 
 GetResponse::GetResponse(
-    const GetRequest& req
+    const GatewayRequest& req
 )
-    : GetRequest(req)
+    : GatewayRequest(req)
 {
 }
 
@@ -101,14 +101,14 @@ GetResponse::GetResponse(
     const char* buf,
     size_t sz
 )
-    : GetRequest(buf, sz),
+    : GatewayRequest(buf, sz),
       response(((GetResponse *) buf)->response)
 {
 }
 
 std::string GetResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"request": ")" << GetRequest::toJsonString()
+    ss << R"({"request": ")" << GatewayRequest::toJsonString()
         << ", \"response\": " << response.toJsonString() << "\"}";
     return ss.str();
 }
@@ -121,7 +121,7 @@ void GetResponse::ntoh()
 {
     code = NTOH4(code);
     accessCode = NTOH8(accessCode);
-    request.gatewayId = NTOH8(request.gatewayId);
+    identity.gatewayId = NTOH8(identity.gatewayId);
     sockaddrNtoh(&response.sockaddr);
 }
 
@@ -158,14 +158,14 @@ size_t GatewaySerialization::query(
     auto pMsg = (GatewayMessage *) request;
     switch (request[0]) {
         case 'a':
-            if (sz < sizeof(GetRequest)) {
+            if (sz < sizeof(GatewayRequest)) {
 #ifdef ENABLE_DEBUG
-                std::cerr << "Required size " << sizeof(GetRequest)  << std::endl;
+                std::cerr << "Required size " << sizeof(GatewayRequest)  << std::endl;
 #endif
                 return 0;
             }
             {
-                auto gr = (GetRequest *) request;
+                auto gr = (GatewayRequest *) request;
                 gr->ntoh();
                 if ((pMsg->code != code) || (pMsg->accessCode != accessCode)) {
 #ifdef ENABLE_DEBUG
@@ -181,7 +181,7 @@ size_t GatewaySerialization::query(
                     return sizeof(GetResponse);
                 }
                 auto r = new GetResponse(*gr);
-                r->code = svc->get(r->response, r->request);
+                r->code = svc->get(r->response, r->identity);
                 r->ntoh();
                 *retBuf = (char *) r;
                 return sizeof(GetResponse);
