@@ -23,12 +23,23 @@ public:
 
 class GatewayRequest : public GatewayMessage {
 public:
-    char tag;
     GatewayIdentity identity;
     GatewayRequest();
     explicit GatewayRequest(char tag, const GatewayIdentity &identity);
     GatewayRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
     GatewayRequest(const char *buf, size_t sz);
+    void ntoh();
+    std::string toJsonString() const;
+};
+
+class OperationRequest : public GatewayMessage {
+public:
+    size_t offset;
+    size_t size;
+    OperationRequest();
+    explicit OperationRequest(char tag, const GatewayIdentity &identity);
+    OperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
+    OperationRequest(const char *buf, size_t sz);
     void ntoh();
     std::string toJsonString() const;
 };
@@ -39,6 +50,17 @@ public:
     GetResponse() = default;
     explicit GetResponse(const GatewayRequest& request);
     GetResponse(const char *buf, size_t sz);
+    void ntoh();
+    std::string toString() const;
+    std::string toJsonString() const;
+};
+
+class OperationResponse : public OperationRequest {
+public:
+    size_t response;
+    OperationResponse() = default;
+    explicit OperationResponse(const OperationRequest& request);
+    OperationResponse(const char *buf, size_t sz);
     void ntoh();
     std::string toString() const;
     std::string toJsonString() const;
