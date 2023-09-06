@@ -10,29 +10,31 @@ typedef SSIZE_T ssize_t;
 #include "gateway-service.h"
 #include "gateway-identity.h"
 
-class GatewayMessage {
+class ServiceMessage {
 public:
     char tag;
     int32_t code;  // "account#" in request
     uint64_t accessCode;  // magic number in request, retCode in response, negative is error code
-    GatewayMessage() = default;
-    GatewayMessage(char tag, int32_t code, uint64_t accessCode);
-    GatewayMessage(const char *buf, size_t sz);
-    void ntoh();
+    ServiceMessage() = default;
+    ServiceMessage(char tag, int32_t code, uint64_t accessCode);
+    ServiceMessage(const char *buf, size_t sz);
+    virtual void ntoh();
+    virtual std::string toJsonString() const;
 };  // 5 bytes
 
-class GatewayRequest : public GatewayMessage {
+class GatewayRequest : public ServiceMessage {
 public:
     GatewayIdentity identity;
     GatewayRequest();
     explicit GatewayRequest(char tag, const GatewayIdentity &identity);
     GatewayRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
     GatewayRequest(const char *buf, size_t sz);
-    void ntoh();
-    std::string toJsonString() const;
+    void ntoh() override;
+
+    std::string toJsonString() const override;
 };
 
-class OperationRequest : public GatewayMessage {
+class OperationRequest : public ServiceMessage {
 public:
     size_t offset;
     size_t size;
@@ -40,8 +42,8 @@ public:
     explicit OperationRequest(char tag, const GatewayIdentity &identity);
     OperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
     OperationRequest(const char *buf, size_t sz);
-    void ntoh();
-    std::string toJsonString() const;
+    void ntoh() override;
+    std::string toJsonString() const override;
 };
 
 class GetResponse : public GatewayRequest {
@@ -50,20 +52,18 @@ public:
     GetResponse() = default;
     explicit GetResponse(const GatewayRequest& request);
     GetResponse(const char *buf, size_t sz);
-    void ntoh();
-    std::string toString() const;
-    std::string toJsonString() const;
+    void ntoh() override;
+    std::string toJsonString() const override;
 };
 
 class OperationResponse : public OperationRequest {
 public:
-    size_t response;
+    size_t response = 0;
     OperationResponse() = default;
     explicit OperationResponse(const OperationRequest& request);
     OperationResponse(const char *buf, size_t sz);
-    void ntoh();
-    std::string toString() const;
-    std::string toJsonString() const;
+    void ntoh() override;
+    std::string toJsonString() const override;
 };
 
 class GatewaySerialization {
@@ -90,10 +90,6 @@ public:
         size_t sz
     );
 
-    static bool isGetResponse(
-        const char *buf,
-        size_t sz
-    );
 };
 
 /**

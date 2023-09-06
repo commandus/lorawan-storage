@@ -74,7 +74,7 @@ public:
                 if (params.verbose)
                     std::cout << retVal->toJsonString() << std::endl;
                 else
-                    std::cout << retVal->toString() << std::endl;
+                    std::cout << sockaddr2string(&retVal->response.sockaddr) << std::endl;
                 if (!next(client)) {
                     client->stop();
                 }

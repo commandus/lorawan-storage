@@ -16,7 +16,7 @@
 #include "lorawan-msg.h"
 #endif
 
-GatewayMessage::GatewayMessage(
+ServiceMessage::ServiceMessage(
     char aTag,
     int32_t aCode,
     uint64_t aAccessCode
@@ -26,26 +26,31 @@ GatewayMessage::GatewayMessage(
 
 }
 
-GatewayMessage::GatewayMessage(
+ServiceMessage::ServiceMessage(
     const char *buf,
     size_t sz
 )
 {
-    if (sz >= sizeof(GatewayMessage)) {
-        tag = ((GatewayMessage *) buf)->tag;
-        code = ((GatewayMessage *) buf)->code;
-        accessCode = ((GatewayMessage *) buf)->accessCode;
+    if (sz >= sizeof(ServiceMessage)) {
+        tag = ((ServiceMessage *) buf)->tag;
+        code = ((ServiceMessage *) buf)->code;
+        accessCode = ((ServiceMessage *) buf)->accessCode;
     }
 }
 
-void GatewayMessage::ntoh()
+void ServiceMessage::ntoh()
 {
     code = NTOH4(code);
     accessCode = NTOH8(accessCode);
 }
 
+std::string ServiceMessage::toJsonString() const
+{
+    return "";
+}
+
 GatewayRequest::GatewayRequest()
-    : GatewayMessage('a', 0, 0), identity()
+    : ServiceMessage('a', 0, 0), identity()
 {
 }
 
@@ -53,7 +58,7 @@ GatewayRequest::GatewayRequest(
     char tag,
     const GatewayIdentity& aIdentity
 )
-    : GatewayMessage(tag, 0, 0), identity(aIdentity)
+    : ServiceMessage(tag, 0, 0), identity(aIdentity)
 {
 }
 
@@ -61,7 +66,7 @@ GatewayRequest::GatewayRequest(
     const char *buf,
     size_t sz
 )
-    : GatewayMessage(buf, sz), identity(((GatewayRequest *) buf)->identity)
+    : ServiceMessage(buf, sz), identity(((GatewayRequest *) buf)->identity)
 {
 }
 
@@ -71,7 +76,7 @@ GatewayRequest::GatewayRequest(
     int32_t code,
     uint64_t accessCode
 )
-    : GatewayMessage(tag, code, accessCode), identity(aIdentity)
+    : ServiceMessage(tag, code, accessCode), identity(aIdentity)
 {
 }
 
@@ -86,13 +91,13 @@ void GatewayRequest::ntoh()
 std::string GatewayRequest::toJsonString() const
 {
     std::stringstream ss;
-    ss << R"({"addr": ")" << identity.toString() << "\"}";
+    ss << R"({"identity": ")" << identity.toJsonString() << "\"}";
     return ss.str();
 }
 
 OperationRequest::OperationRequest()
-    : GatewayMessage('L', 0, 0),
-    offset(0), size(0)
+    : ServiceMessage('L', 0, 0),
+      offset(0), size(0)
 {
 }
 
@@ -100,8 +105,8 @@ OperationRequest::OperationRequest(
     char tag,
     const GatewayIdentity &identity
 )
-    : GatewayMessage(tag, 0, 0),
-    offset(0), size(0)
+    : ServiceMessage(tag, 0, 0),
+      offset(0), size(0)
 {
 }
 
@@ -112,7 +117,7 @@ OperationRequest::OperationRequest(
     int32_t code,
     uint64_t accessCode
 )
-    : GatewayMessage(tag, code, accessCode), offset(aOffset), size(aSize)
+    : ServiceMessage(tag, code, accessCode), offset(aOffset), size(aSize)
 {
 }
 
@@ -120,7 +125,7 @@ OperationRequest::OperationRequest(
     const char *buf,
     size_t sz
 )
-    : GatewayMessage(buf, sz), offset(((OperationRequest *) buf)->offset), size(((OperationRequest *) buf)->size)
+    : ServiceMessage(buf, sz), offset(((OperationRequest *) buf)->offset), size(((OperationRequest *) buf)->size)
 {
 }
 
@@ -162,10 +167,6 @@ std::string GetResponse::toJsonString() const {
     return ss.str();
 }
 
-std::string GetResponse::toString() const {
-    return response.toString();
-}
-
 void GetResponse::ntoh()
 {
     code = NTOH4(code);
@@ -194,12 +195,6 @@ void OperationResponse::ntoh() {
     NTOH8(response);
 }
 
-std::string OperationResponse::toString() const {
-    std::stringstream ss;
-    ss << response;
-    return ss.str();
-}
-
 std::string OperationResponse::toJsonString() const {
     std::stringstream ss;
     ss << R"({"request": ")" << OperationRequest::toJsonString()
@@ -217,18 +212,6 @@ GatewaySerialization::GatewaySerialization(
 
 }
 
-bool GatewaySerialization::isGetResponse(
-    const char *buf,
-    size_t sz
-)
-{
-    if (sz < sizeof(GetResponse))
-        return false;
-    if (buf[0] != 'a')
-        return false;
-    return true;
-}
-
 size_t GatewaySerialization::query(
     char **retBuf,
     const char *request,
@@ -243,7 +226,7 @@ size_t GatewaySerialization::query(
 #endif
         return 0;
     }
-    auto pMsg = (GatewayMessage *) request;
+    auto pMsg = (ServiceMessage *) request;
     auto gr = (GatewayRequest *) request;
     gr->ntoh();
     if ((pMsg->code != code) || (pMsg->accessCode != accessCode)) {
