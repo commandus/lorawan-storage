@@ -16,6 +16,12 @@
 #include "lorawan-msg.h"
 #endif
 
+ServiceMessage::ServiceMessage()
+    : tag(0), code(0), accessCode(0)
+{
+
+}
+
 ServiceMessage::ServiceMessage(
     char aTag,
     int32_t aCode,
@@ -49,12 +55,58 @@ std::string ServiceMessage::toJsonString() const
     return "";
 }
 
-GatewayRequest::GatewayRequest()
+GatewayIdRequest::GatewayIdRequest()
+    : ServiceMessage('a', 0, 0), id(0)
+{
+}
+
+GatewayIdRequest::GatewayIdRequest(
+    char tag,
+    const uint64_t aId
+)
+    : ServiceMessage(tag, 0, 0), id(aId)
+{
+
+}
+
+GatewayIdRequest::GatewayIdRequest(
+    char tag,
+    const uint64_t aId,
+    int32_t code,
+    uint64_t accessCode
+)
+    : ServiceMessage(tag, code, accessCode), id(aId)
+{
+
+}
+
+GatewayIdRequest::GatewayIdRequest(
+    const char *buf,
+    size_t sz
+)
+    : ServiceMessage(buf, sz), id(((GatewayIdRequest *) buf)->id)
+{
+}
+
+void GatewayIdRequest::ntoh() {
+    code = NTOH4(code);
+    accessCode = NTOH8(accessCode);
+    id = NTOH8(id);
+}
+
+std::string GatewayIdRequest::toJsonString() const
+{
+    std::stringstream ss;
+    ss << R"("gwid":")" << std::hex << id;
+    return ss.str();
+}
+
+GatewayIdAddrRequest::GatewayIdAddrRequest()
     : ServiceMessage('a', 0, 0), identity()
 {
 }
 
-GatewayRequest::GatewayRequest(
+GatewayIdAddrRequest::GatewayIdAddrRequest(
     char tag,
     const GatewayIdentity& aIdentity
 )
@@ -62,15 +114,15 @@ GatewayRequest::GatewayRequest(
 {
 }
 
-GatewayRequest::GatewayRequest(
+GatewayIdAddrRequest::GatewayIdAddrRequest(
     const char *buf,
     size_t sz
 )
-    : ServiceMessage(buf, sz), identity(((GatewayRequest *) buf)->identity)
+    : ServiceMessage(buf, sz), identity(((GatewayIdAddrRequest *) buf)->identity)
 {
 }
 
-GatewayRequest::GatewayRequest(
+GatewayIdAddrRequest::GatewayIdAddrRequest(
     char tag,
     const GatewayIdentity &aIdentity,
     int32_t code,
@@ -80,7 +132,7 @@ GatewayRequest::GatewayRequest(
 {
 }
 
-void GatewayRequest::ntoh()
+void GatewayIdAddrRequest::ntoh()
 {
     code = NTOH4(code);
     accessCode = NTOH8(accessCode);
@@ -88,7 +140,7 @@ void GatewayRequest::ntoh()
     sockaddrNtoh(&identity.sockaddr);
 }
 
-std::string GatewayRequest::toJsonString() const
+std::string GatewayIdAddrRequest::toJsonString() const
 {
     std::stringstream ss;
     ss << R"({"identity": ")" << identity.toJsonString() << "\"}";
@@ -145,9 +197,9 @@ std::string OperationRequest::toJsonString() const {
 }
 
 GetResponse::GetResponse(
-    const GatewayRequest& req
+    const GatewayIdAddrRequest& req
 )
-    : GatewayRequest(req)
+    : GatewayIdAddrRequest(req)
 {
 }
 
@@ -155,14 +207,14 @@ GetResponse::GetResponse(
     const char* buf,
     size_t sz
 )
-    : GatewayRequest(buf, sz),
+    : GatewayIdAddrRequest(buf, sz),
       response(((GetResponse *) buf)->response)
 {
 }
 
 std::string GetResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"request": ")" << GatewayRequest::toJsonString()
+    ss << R"({"request": ")" << GatewayIdAddrRequest::toJsonString()
         << ", \"response\": " << response.toJsonString() << "\"}";
     return ss.str();
 }
@@ -192,7 +244,7 @@ OperationResponse::OperationResponse(
 }
 
 void OperationResponse::ntoh() {
-    NTOH8(response);
+    response = NTOH8(response);
 }
 
 std::string OperationResponse::toJsonString() const {
@@ -220,15 +272,13 @@ size_t GatewaySerialization::query(
 {
     if (!svc)
         return 0;
-    if (sz < sizeof(GatewayRequest)) {
+    if (sz < sizeof(ServiceMessage)) {
 #ifdef ENABLE_DEBUG
-        std::cerr << "Required size " << sizeof(GatewayRequest)  << std::endl;
+        std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdAddrRequest)  << std::endl;
 #endif
         return 0;
     }
     auto pMsg = (ServiceMessage *) request;
-    auto gr = (GatewayRequest *) request;
-    gr->ntoh();
     if ((pMsg->code != code) || (pMsg->accessCode != accessCode)) {
 #ifdef ENABLE_DEBUG
         std::cerr << ERR_ACCESS_DENIED
@@ -236,25 +286,42 @@ size_t GatewaySerialization::query(
                         << "," << pMsg->accessCode
                         << std::endl;
 #endif
-        auto r = new GetResponse(*gr);
+        auto r = new OperationResponse;
         r->code = ERR_CODE_ACCESS_DENIED;
         r->ntoh();
         *retBuf = (char *) r;
-        return sizeof(GetResponse);
+        return sizeof(OperationResponse);
     }
 
     switch (request[0]) {
         case 'a':   // request gateway identifier(with address) by network address. Return 0 if success
         case 'A':   // request gateway address (with identifier) by identifier. Return 0 if success
             {
+                if (sz < sizeof(GatewayIdAddrRequest)) {
+#ifdef ENABLE_DEBUG
+                    std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdAddrRequest)  << std::endl;
+#endif
+                    return 0;
+                }
+
+                auto gr = (GatewayIdAddrRequest *) request;
+                gr->ntoh();
                 auto r = new GetResponse(*gr);
                 r->code = svc->get(r->response, r->identity);
                 r->ntoh();
                 *retBuf = (char *) r;
                 return sizeof(GetResponse);
             }
-        case 'p':
+        case 'p':   // assign (put) gateway address to the gateway by identifier
         {
+            if (sz < sizeof(GatewayIdAddrRequest)) {
+#ifdef ENABLE_DEBUG
+                std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdAddrRequest)  << std::endl;
+#endif
+                return 0;
+            }
+            auto gr = (GatewayIdAddrRequest *) request;
+            gr->ntoh();
             auto r = new GetResponse(*gr);
             svc->put(r->identity);
             r->code = CODE_OK;
@@ -265,19 +332,36 @@ size_t GatewaySerialization::query(
         case 'r':
             // Remove entry
         {
-            auto r = new GetResponse(*gr);
-            svc->rm(r->identity);
+            if (sz < sizeof(GatewayIdRequest)) {
+#ifdef ENABLE_DEBUG
+                std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdRequest)  << std::endl;
+#endif
+                return 0;
+            }
+            auto gr = (GatewayIdRequest *) request;
+            gr->ntoh();
+            auto r = new OperationResponse;
+            svc->rm(gr->id);
             r->code = CODE_OK;
             r->ntoh();
             *retBuf = (char *) r;
-            return sizeof(GetResponse);
+            return sizeof(OperationResponse);
         }
         case 'L':
             // List entries
         {
-            auto r = new GetResponse(*gr);
+            if (sz < sizeof(OperationRequest)) {
+#ifdef ENABLE_DEBUG
+                std::cerr << MSG_REQUIRED_SIZE << sizeof(OperationRequest)  << std::endl;
+#endif
+                return 0;
+            }
+            auto gr = (OperationRequest *) request;
+            gr->ntoh();
+            auto r = new OperationResponse(*gr);
             std::vector<GatewayIdentity> l;
-            svc->list(l, 0, 100);
+            svc->list(l, gr->offset, gr->size);
+            r->response = l.size();
             r->code = CODE_OK;
             r->ntoh();
             *retBuf = (char *) r;
@@ -285,13 +369,20 @@ size_t GatewaySerialization::query(
         }
         case 'c':
         {
-            auto r = new GetResponse(*gr);
-            std::vector<GatewayIdentity> l;
-            svc->size();
+            if (sz < sizeof(OperationRequest)) {
+#ifdef ENABLE_DEBUG
+                std::cerr << MSG_REQUIRED_SIZE << sizeof(OperationRequest)  << std::endl;
+#endif
+                return 0;
+            }
+            auto gr = (OperationRequest *) request;
+            gr->ntoh();
+            auto r = new OperationResponse;
+            r->response = svc->size();
             r->code = CODE_OK;
             r->ntoh();
             *retBuf = (char *) r;
-            return sizeof(GetResponse);
+            return sizeof(OperationResponse);
         }
         case 'f':
             // force save

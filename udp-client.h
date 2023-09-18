@@ -18,7 +18,7 @@ class UDPClient : public GatewayClient {
 private:
     SOCKET sock;
     struct sockaddr addr;
-    GatewayRequest* query;
+    GatewayIdAddrRequest* query;
     int status;
 public:
     explicit UDPClient(
@@ -38,7 +38,7 @@ public:
      * @param value
      */
     void request(
-            GatewayRequest* value
+            GatewayIdAddrRequest* value
     ) override;
     void start() override;
     void stop() override;

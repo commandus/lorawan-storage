@@ -22,9 +22,8 @@
  */
 class GatewayIdentity {
 public:
-    // gateway identifier
-	uint64_t gatewayId;
-	struct sockaddr sockaddr;
+	uint64_t gatewayId;         // gateway identifier
+	struct sockaddr sockaddr;   // gateway UIPv4 or IPv6 address
 
 	GatewayIdentity();
 	GatewayIdentity(const GatewayIdentity &value);

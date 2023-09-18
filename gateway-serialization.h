@@ -15,20 +15,32 @@ public:
     char tag;
     int32_t code;  // "account#" in request
     uint64_t accessCode;  // magic number in request, retCode in response, negative is error code
-    ServiceMessage() = default;
+    ServiceMessage();
     ServiceMessage(char tag, int32_t code, uint64_t accessCode);
     ServiceMessage(const char *buf, size_t sz);
     virtual void ntoh();
     virtual std::string toJsonString() const;
 };  // 5 bytes
 
-class GatewayRequest : public ServiceMessage {
+class GatewayIdRequest : public ServiceMessage {
+public:
+    uint64_t id;
+    GatewayIdRequest();
+    explicit GatewayIdRequest(char tag, const uint64_t id);
+    GatewayIdRequest(char tag, const uint64_t id, int32_t code, uint64_t accessCode);
+    GatewayIdRequest(const char *buf, size_t sz);
+    void ntoh() override;
+
+    std::string toJsonString() const override;
+};
+
+class GatewayIdAddrRequest : public ServiceMessage {
 public:
     GatewayIdentity identity;
-    GatewayRequest();
-    explicit GatewayRequest(char tag, const GatewayIdentity &identity);
-    GatewayRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
-    GatewayRequest(const char *buf, size_t sz);
+    GatewayIdAddrRequest();
+    explicit GatewayIdAddrRequest(char tag, const GatewayIdentity &identity);
+    GatewayIdAddrRequest(char tag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
+    GatewayIdAddrRequest(const char *buf, size_t sz);
     void ntoh() override;
 
     std::string toJsonString() const override;
@@ -46,11 +58,11 @@ public:
     std::string toJsonString() const override;
 };
 
-class GetResponse : public GatewayRequest {
+class GetResponse : public GatewayIdAddrRequest {
 public:
     GatewayIdentity response;
     GetResponse() = default;
-    explicit GetResponse(const GatewayRequest& request);
+    explicit GetResponse(const GatewayIdAddrRequest& request);
     GetResponse(const char *buf, size_t sz);
     void ntoh() override;
     std::string toJsonString() const override;

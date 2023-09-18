@@ -374,6 +374,8 @@
 
 #define MSG_RESTART_REQUEST             "Restart"
 
+#define MSG_REQUIRED_SIZE               "Required size "
+
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);
 const char *strerror_lorawan_ns(int errcode);

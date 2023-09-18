@@ -35,7 +35,7 @@ public:
      * @param value
      */
     virtual void request(
-            GatewayRequest* value
+            GatewayIdAddrRequest* value
     ) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;
