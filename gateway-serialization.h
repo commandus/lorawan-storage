@@ -70,10 +70,20 @@ public:
 
 class OperationResponse : public OperationRequest {
 public:
-    size_t response = 0;
-    OperationResponse() = default;
-    explicit OperationResponse(const OperationRequest& request);
+    size_t response;
+    OperationResponse();
+    explicit OperationResponse(const OperationResponse& resp);
     OperationResponse(const char *buf, size_t sz);
+    void ntoh() override;
+    std::string toJsonString() const override;
+};
+
+class ListResponse : public OperationResponse {
+public:
+    GatewayIdentity identities[1];
+    ListResponse();
+    explicit ListResponse(const ListResponse& resp);
+    ListResponse(const char *buf, size_t sz);
     void ntoh() override;
     std::string toJsonString() const override;
 };

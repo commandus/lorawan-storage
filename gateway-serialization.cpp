@@ -89,8 +89,7 @@ GatewayIdRequest::GatewayIdRequest(
 }
 
 void GatewayIdRequest::ntoh() {
-    code = NTOH4(code);
-    accessCode = NTOH8(accessCode);
+    ServiceMessage::ntoh();
     id = NTOH8(id);
 }
 
@@ -134,8 +133,7 @@ GatewayIdAddrRequest::GatewayIdAddrRequest(
 
 void GatewayIdAddrRequest::ntoh()
 {
-    code = NTOH4(code);
-    accessCode = NTOH8(accessCode);
+    ServiceMessage::ntoh();
     identity.gatewayId = NTOH8(identity.gatewayId);
     sockaddrNtoh(&identity.sockaddr);
 }
@@ -182,8 +180,7 @@ OperationRequest::OperationRequest(
 }
 
 void OperationRequest::ntoh() {
-    code = NTOH4(code);
-    accessCode = NTOH8(accessCode);
+    ServiceMessage::ntoh();
     offset = NTOH8(offset);
     size = NTOH8(size);
 }
@@ -221,16 +218,18 @@ std::string GetResponse::toJsonString() const {
 
 void GetResponse::ntoh()
 {
-    code = NTOH4(code);
-    accessCode = NTOH8(accessCode);
-    identity.gatewayId = NTOH8(identity.gatewayId);
-    sockaddrNtoh(&response.sockaddr);
+    GatewayIdAddrRequest::ntoh();
+}
+
+OperationResponse::OperationResponse()
+    : OperationRequest(), response(0)
+{
 }
 
 OperationResponse::OperationResponse(
-    const OperationRequest& request
+    const OperationResponse& resp
 )
-    : OperationRequest(request)
+    : OperationRequest(resp)
 {
 }
 
@@ -244,6 +243,7 @@ OperationResponse::OperationResponse(
 }
 
 void OperationResponse::ntoh() {
+    OperationRequest::ntoh();
     response = NTOH8(response);
 }
 
@@ -251,6 +251,52 @@ std::string OperationResponse::toJsonString() const {
     std::stringstream ss;
     ss << R"({"request": ")" << OperationRequest::toJsonString()
        << ", \"response\": " << response << "\"}";
+    return ss.str();
+}
+
+ListResponse::ListResponse()
+    : OperationResponse()
+{
+}
+
+ListResponse::ListResponse(
+    const ListResponse& resp
+)
+    : OperationResponse(resp)
+{
+}
+
+ListResponse::ListResponse(
+    const char *buf,
+    size_t sz
+)
+    : OperationResponse(buf, sz)
+{
+    // identities does not initilized
+}
+
+void ListResponse::ntoh()
+{
+    OperationResponse::ntoh();
+    for (auto i = 0; i < response; i++) {
+        identities[i].gatewayId = NTOH8(identities[i].gatewayId);
+        sockaddrNtoh(&identities[i].sockaddr);
+    }
+}
+
+std::string ListResponse::toJsonString() const {
+    std::stringstream ss;
+    ss << R"({"result": ")" << OperationResponse::toJsonString()
+       << ", \"gateways\": [";
+    bool isFirst = true;
+    for (auto i = 0; i < response; i++) {
+        if (isFirst)
+            isFirst = false;
+        else
+            ss << ", ";
+        ss << identities[i].toJsonString();
+    }
+    ss <<  "]}";
     return ss.str();
 }
 
@@ -358,14 +404,28 @@ size_t GatewaySerialization::query(
             }
             auto gr = (OperationRequest *) request;
             gr->ntoh();
-            auto r = new OperationResponse(*gr);
+
             std::vector<GatewayIdentity> l;
             svc->list(l, gr->offset, gr->size);
-            r->response = l.size();
+
+            size_t sz = l.size();
+            size_t size = sz > 0 ? sizeof(ListResponse) + ((sz - 1) * sizeof(GatewayIdentity))
+                    : sizeof(OperationResponse);
+            *retBuf = (char *) malloc(size);
+            ListResponse *r = (ListResponse *) *retBuf;
+            r->tag = gr->tag;
             r->code = CODE_OK;
+            r->accessCode = gr->accessCode;
+            r->offset = gr->offset;
+            r->size = gr->size;
+            r->response = sz;
+            int i = 0;
+            for (auto it(l.begin()); it != l.end(); it++) {
+                r->identities[i] = *it;
+                i++;
+            }
             r->ntoh();
-            *retBuf = (char *) r;
-            return sizeof(GetResponse);
+            return size;
         }
         case 'c':
         {
