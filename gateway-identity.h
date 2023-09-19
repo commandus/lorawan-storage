@@ -28,6 +28,8 @@ public:
 	GatewayIdentity();
 	GatewayIdentity(const GatewayIdentity &value);
     GatewayIdentity(uint64_t gatewayId);
+    GatewayIdentity(uint64_t gatewayId, const std::string &addressNport);
+    GatewayIdentity(uint64_t gatewayId, const std::string &address, uint16_t port);
 	bool operator==(GatewayIdentity &rhs) const;
 	std::string toString() const;
     std::string toJsonString() const;

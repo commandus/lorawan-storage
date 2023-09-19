@@ -10,6 +10,11 @@ public:
         bool got,
         const GetResponse *retVal
     ) = 0;
+    virtual void onStatus(
+        GatewayClient* client,
+        bool got,
+        const OperationResponse *retVal
+    ) = 0;
     // TCP connection lost
     virtual void onDisconnected(
         GatewayClient* client
@@ -35,7 +40,7 @@ public:
      * @param value
      */
     virtual void request(
-            GatewayIdAddrRequest* value
+        ServiceMessage* value
     ) = 0;
     virtual void start() = 0;
     virtual void stop() = 0;

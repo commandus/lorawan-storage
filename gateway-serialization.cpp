@@ -310,6 +310,14 @@ GatewaySerialization::GatewaySerialization(
 
 }
 
+size_t getListResponseSize(
+    size_t sz
+)
+{
+    return sz > 0 ? sizeof(ListResponse) + ((sz - 1) * sizeof(GatewayIdentity))
+        : sizeof(OperationResponse);
+}
+
 size_t GatewaySerialization::query(
     char **retBuf,
     const char *request,
@@ -368,15 +376,14 @@ size_t GatewaySerialization::query(
             }
             auto gr = (GatewayIdAddrRequest *) request;
             gr->ntoh();
-            auto r = new GetResponse(*gr);
-            svc->put(r->identity);
+            svc->put(gr->identity);
+            auto r = new OperationResponse;
             r->code = CODE_OK;
             r->ntoh();
             *retBuf = (char *) r;
-            return sizeof(GetResponse);
+            return sizeof(OperationResponse);
         }
-        case 'r':
-            // Remove entry
+        case 'r':   // Remove entry
         {
             if (sz < sizeof(GatewayIdRequest)) {
 #ifdef ENABLE_DEBUG
@@ -393,8 +400,7 @@ size_t GatewaySerialization::query(
             *retBuf = (char *) r;
             return sizeof(OperationResponse);
         }
-        case 'L':
-            // List entries
+        case 'L':   // List entries
         {
             if (sz < sizeof(OperationRequest)) {
 #ifdef ENABLE_DEBUG
@@ -409,8 +415,7 @@ size_t GatewaySerialization::query(
             svc->list(l, gr->offset, gr->size);
 
             size_t sz = l.size();
-            size_t size = sz > 0 ? sizeof(ListResponse) + ((sz - 1) * sizeof(GatewayIdentity))
-                    : sizeof(OperationResponse);
+            size_t size = getListResponseSize(sz);
             *retBuf = (char *) malloc(size);
             ListResponse *r = (ListResponse *) *retBuf;
             r->tag = gr->tag;
@@ -427,7 +432,7 @@ size_t GatewaySerialization::query(
             r->ntoh();
             return size;
         }
-        case 'c':
+        case 'c':   // count
         {
             if (sz < sizeof(OperationRequest)) {
 #ifdef ENABLE_DEBUG
@@ -444,22 +449,124 @@ size_t GatewaySerialization::query(
             *retBuf = (char *) r;
             return sizeof(OperationResponse);
         }
-        case 'f':
-            // force save
+        case 'f':   // force save
             // void flush()
             break;
-        case 'l':
-            // reload
-            // init(const std::string &option, void *data)
-            break;
-        case 'd':
-            // close resources
+        case 'd':   // close resources
             // void stop()
             break;
         default:
             break;
     }
     return 0;
+}
+
+/**
+ * Get query tag in the buffer
+ * @param str PChar
+ * @return query tag
+ */
+enum CliGatewayQueryTag getQueryTag(
+    const char *str
+)
+{
+    if (str) {
+        switch (*str) {
+            case 'a':   // request gateway identifier(with address) by network address.
+                return QUERY_GATEWAY_ADDR;
+            case 'A':   // request gateway address (with identifier) by identifier.
+                return QUERY_GATEWAY_ID;
+            case 'p':   // assign (put) gateway address to the gateway by identifier
+                return QUERY_GATEWAY_ASSIGN;
+            case 'r':   // Remove entry
+                return QUERY_GATEWAY_RM;
+            case 'L':   // List entries
+                return QUERY_GATEWAY_LIST;
+            case 'c':   // list count
+                return QUERY_GATEWAY_COUNT;
+            case 'f':   // force save
+                return QUERY_GATEWAY_FORCE_SAVE;
+            case 'd':   // close resources
+                return QUERY_GATEWAY_CLOSE_RESOURCES;
+            default:
+                break;
+        }
+    }
+    return QUERY_GATEWAY_NONE;
+}
+
+/**
+ * Check does it serialized query in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return query tag
+ */
+enum CliGatewayQueryTag validateQuery(
+    const char *buffer,
+    size_t sz
+)
+{
+    switch (buffer[0]) {
+        case 'a':   // request gateway identifier(with address) by network address.
+            if (sz < sizeof(GatewayIdAddrRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_ADDR;
+        case 'A':   // request gateway address (with identifier) by identifier.
+            if (sz < sizeof(GatewayIdAddrRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_ID;
+        case 'p':   // assign (put) gateway address to the gateway by identifier
+            if (sz < sizeof(GatewayIdAddrRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_ASSIGN;
+        case 'r':   // Remove entry
+            if (sz < sizeof(GatewayIdRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_RM;
+        case 'L':   // List entries
+            if (sz < sizeof(OperationRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_LIST;
+        case 'c':   // list count
+            if (sz < sizeof(OperationRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_COUNT;
+        case 'f':   // force save
+            if (sz < sizeof(OperationRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_FORCE_SAVE;
+        case 'd':   // close resources
+            if (sz < sizeof(OperationRequest))
+                return QUERY_GATEWAY_NONE;
+            return QUERY_GATEWAY_CLOSE_RESOURCES;
+    default:
+            break;
+    }
+    return QUERY_GATEWAY_NONE;
+}
+
+/**
+ * Return required size for response
+ * @param buffer serialized request
+ * @param size buffer size
+ * @return size in bytes
+ */
+size_t responseSizeForRequest(
+    const char *buffer,
+    size_t size
+)
+{
+    enum CliGatewayQueryTag tag = validateQuery(buffer, size);
+    switch (tag) {
+        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
+        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
+            return sizeof(GetResponse);
+        case QUERY_GATEWAY_LIST:   // List entries
+            return getListResponseSize(((OperationRequest *) buffer)->size);
+        default:
+            break;
+    }
+    return sizeof(OperationResponse);
 }
 
 size_t makeResponse(

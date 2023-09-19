@@ -38,4 +38,17 @@ bool string2sockaddr(
     const std::string &value
 );
 
+/**
+ * Trying parseRX I v6 address, then IPv4
+ * @param retval return address into struct sockaddr_in6 struct pointer
+ * @param address IPv8 or IPv4 address string
+ * @param port number
+ * @return true if success
+ */
+bool string2sockaddr(
+    struct sockaddr *retval,
+    const std::string &address,
+    uint16_t port
+);
+
 #endif

@@ -67,7 +67,7 @@ UDPClient::~UDPClient()
 }
 
 void UDPClient::request(
-        GatewayIdAddrRequest* value
+    ServiceMessage* value
 )
 {
     query = value;
@@ -97,7 +97,7 @@ void UDPClient::start() {
             if (!query)
                 break;
             query->ntoh();
-            ssize_t sz = sendto(sock, (const char*) query, sizeof(GatewayIdAddrRequest), 0, (struct sockaddr *) &addr, sizeof(addr));
+            ssize_t sz = sendto(sock, (const char*) query, sizeof(*query), 0, (struct sockaddr *) &addr, sizeof(addr));
             if (sz < 0) {
                 status = ERR_CODE_SOCKET_WRITE;
 #ifdef ENABLE_DEBUG
@@ -111,7 +111,8 @@ void UDPClient::start() {
 #endif
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
-            char rxBuf[256];
+            char *rxBuf = (char *) malloc(responseSizeForRequest((const char*) query, sizeof(*query)));
+
             ssize_t len = recvfrom(sock, rxBuf, sizeof(rxBuf), 0, (struct sockaddr *)&srcAddress, &socklen);
 
             if (len < 0) {  // Error occurred during receiving
@@ -125,9 +126,27 @@ void UDPClient::start() {
 #ifdef ENABLE_DEBUG
                 std::cerr << MSG_RECEIVED << len << " " << MSG_BYTES << std::endl;
 #endif
-                GetResponse gr = GetResponse(rxBuf, len);
-                gr.ntoh();
-                onResponse->onGet(this, true, &gr);
+                enum CliGatewayQueryTag tag = validateQuery(rxBuf, len);
+                switch (tag) {
+                    case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
+                    case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
+                    {
+                        GetResponse gr(rxBuf, len);
+                        gr.ntoh();
+                        onResponse->onGet(this, true, &gr);
+                    }
+                        break;
+                    case QUERY_GATEWAY_LIST:   // List entries
+                        break;
+                    default:
+                    {
+                        OperationResponse gr(rxBuf, len);
+                        gr.ntoh();
+                        onResponse->onStatus(this, true, &gr);
+                    }
+                        break;
+                }
+                free(rxBuf);
             }
         }
 

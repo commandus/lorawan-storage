@@ -65,6 +65,22 @@ bool string2sockaddr(
     uint16_t port;
     if (!splitAddress(address, port, value))
         return false;
+    return string2sockaddr(retval, address, port);
+}
+
+/**
+ * Trying parseRX I v6 address, then IPv4
+ * @param retval return address into struct sockaddr_in6 struct pointer
+ * @param address IPv8 or IPv4 address string
+ * @param port number
+ * @return true if success
+ */
+bool string2sockaddr(
+    struct sockaddr *retval,
+    const std::string &address,
+    uint16_t port
+)
+{
     bool r = inet_pton(AF_INET6, address.c_str(), &((struct sockaddr_in6 *) retval)->sin6_addr) == 1;
     if (r) {
         ((struct sockaddr_in6*) retval)->sin6_family = AF_INET6;

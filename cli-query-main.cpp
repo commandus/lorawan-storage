@@ -18,19 +18,6 @@
 
 const char *progname = "lorawan-gateway-query";
 
-enum CliGatewayQueryTag {
-    QUERY_GATEWAY_ADDR = 'a',
-    QUERY_GATEWAY_ID = 'A',
-    QUERY_GATEWAY_LIST = 'L',
-    QUERY_GATEWAY_COUNT = 'c',
-    QUERY_GATEWAY_ASSIGN = 'p',
-    QUERY_GATEWAY_RM = 'r',
-    QUERY_GATEWAY_FORCE_SAVE = 'f',
-    QUERY_GATEWAY_CLOSE_RESOURCES = 'd'
-};
-
-const std::string tags = "aALcprfd";
-
 // global parameters
 class CliGatewayQueryParams {
 public:
@@ -61,7 +48,30 @@ public:
     {
     }
 
-	void onGet(
+    void onStatus(
+        GatewayClient* client,
+        bool got,
+        const OperationResponse *retVal
+    ) override {
+        if (got && retVal) {
+            if (retVal->code) {
+                std::cerr << ERR_MESSAGE << retVal->code << std::endl;
+                client->stop();
+            } else {
+                if (params.verbose)
+                    std::cout << retVal->toJsonString() << std::endl;
+                else
+                    std::cout << retVal->response << std::endl;
+                if (!next(client)) {
+                    client->stop();
+                }
+            }
+        } else {
+            client->stop();
+        }
+    }
+
+    void onGet(
         GatewayClient* client,
         bool got,
         const GetResponse *retVal
@@ -102,7 +112,31 @@ public:
     }
 };
 
-void run() {
+/**
+ * Merge address and identifiers
+ * @param query Each item has address or identifier
+ * @return true if success
+ */
+static bool mergeIdAddress(
+    std::vector<GatewayIdentity> &query
+)
+{
+    auto pairSize = query.size() / 2;
+    int m = 1;
+    for (int i = 0; i < pairSize; i++) {
+        if (query[i * 2].gatewayId) {
+            query[i].gatewayId = query[i * 2].gatewayId;
+            memmove(&query[i + 1].sockaddr, &query[(i * 2) + 1].sockaddr, sizeof(struct sockaddr));
+        } else {
+            memmove(&query[i].sockaddr, &query[(i * 2)].sockaddr, sizeof(struct sockaddr));
+            query[i + 1].gatewayId = query[(i * 2) + 1].gatewayId;
+        }
+    }
+    query.resize(pairSize);
+    return true;
+}
+
+static void run() {
 	OnResp onResp(params.query);
     GatewayClient *client;
 #ifdef ENABLE_LIBUV
@@ -118,13 +152,12 @@ void run() {
 }
 
 int main(int argc, char **argv) {
-	struct arg_str *a_query = arg_strn(nullptr, nullptr, "<gateway-id>", 1, 100, "hex, 8 bytes long");
-    struct arg_str *a_addr = arg_str0("a", "assign", "<address:port>", "assign address to the gateway");
+	struct arg_str *a_query = arg_strn(nullptr, nullptr, "<gateway-id | address:port>", 1, 100, "hex, 8 bytes long gayeway id or/and IP address");
     struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
-    struct arg_str *a_tag = arg_str0("c", "tag", "<a|A|L|c|p|r|f|d>", "a(default) address by id, A- id by address, L- list, c- count, p- assign id&addr, r- remove");
+    struct arg_str *a_tag = arg_str0("g", "tag", "<a|A|L|c|p|r|f|d>", "a(default) address by id, A- id by address, L- list, c- count, p- assign id&addr, r- remove");
     struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 100. ");
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 1,"print errors/warnings");
@@ -132,7 +165,7 @@ int main(int argc, char **argv) {
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = { 
-		a_query, a_addr, a_interface_n_port,
+		a_query, a_interface_n_port,
         a_code, a_access_code, a_tcp,
         a_tag, a_offset, a_size,  a_verbose,
 		a_help, a_end 
@@ -159,13 +192,9 @@ int main(int argc, char **argv) {
     }
 
     if (a_tag->count) {
-        std::string t(*a_tag->sval);
-        if (t.empty())
+        params.tag = getQueryTag(*a_tag->sval);
+        if (params.tag == QUERY_GATEWAY_NONE)
             return ERR_CODE_COMMAND_LINE;
-        char tag = t[0];
-        if (tags.find(tag) == std::string::npos)
-            return ERR_CODE_COMMAND_LINE;
-        params.tag = static_cast<CliGatewayQueryTag>(tag);
     } else {
         params.tag = QUERY_GATEWAY_ADDR;
     }
@@ -179,16 +208,26 @@ int main(int argc, char **argv) {
         }
     }
 
-    if (params.tag == QUERY_GATEWAY_ID) {
-        if (a_addr->count) {
-            splitAddress(params.queryAddress, params.queryPort, *a_addr->sval);
-        }
-    }
-
     params.query.reserve(a_query->count);
 
     for (int i = 0; i < a_query->count; i++) {
-        params.query.emplace_back(strtoull(a_query->sval[i], nullptr, 16));
+        std::string a;
+        uint16_t p;
+        if (splitAddress(a, p, a_query->sval[i])) {
+            params.query.emplace_back(GatewayIdentity(0, a, p));
+        } else {
+            uint64_t id;
+            char *last;
+            strtoull(a_query->sval[i], &last, 16);
+            if (*last)
+                return ERR_CODE_COMMAND_LINE;
+            params.query.emplace_back(id);
+        }
+    }
+
+    if (params.tag == QUERY_GATEWAY_ASSIGN) {
+        // reorder query
+        mergeIdAddress(params.query);
     }
 
     if (a_access_code->count)

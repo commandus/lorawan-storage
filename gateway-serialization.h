@@ -10,6 +10,18 @@ typedef SSIZE_T ssize_t;
 #include "gateway-service.h"
 #include "gateway-identity.h"
 
+enum CliGatewayQueryTag {
+    QUERY_GATEWAY_NONE = '0',
+    QUERY_GATEWAY_ADDR = 'a',
+    QUERY_GATEWAY_ID = 'A',
+    QUERY_GATEWAY_LIST = 'L',
+    QUERY_GATEWAY_COUNT = 'c',
+    QUERY_GATEWAY_ASSIGN = 'p',
+    QUERY_GATEWAY_RM = 'r',
+    QUERY_GATEWAY_FORCE_SAVE = 'f',
+    QUERY_GATEWAY_CLOSE_RESOURCES = 'd'
+};
+
 class ServiceMessage {
 public:
     char tag;
@@ -100,7 +112,7 @@ public:
         uint64_t accessCode
     );
     /**
-     * Request GatewayService
+     * Request GatewayService and return serializred response.
      * @param retBuf buffer to return serialized response
      * @param request serialized request
      * @param sz serialized request size
@@ -111,8 +123,47 @@ public:
         const char *request,
         size_t sz
     );
-
 };
+
+/**
+ * Check does it serialized query in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return query tag
+ */
+enum CliGatewayQueryTag validateQuery(
+    const char *buffer,
+    size_t size
+);
+
+/**
+ * Get query tag in the buffer
+ * @param str PChar
+ * @return query tag
+ */
+enum CliGatewayQueryTag getQueryTag(
+    const char *str
+);
+
+/**
+ * Return required size for response
+ * @param buffer serialized request
+ * @param size buffer size
+ * @return size in bytes
+ */
+size_t responseSizeForRequest(
+    const char *buffer,
+    size_t size
+);
+
+/**
+ * Calc size for serialized list
+ * @param sz count ofg items
+ * @return size in bytes
+ */
+size_t getListResponseSize(
+    size_t sz
+);
 
 /**
  * Helper function

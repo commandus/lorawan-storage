@@ -33,6 +33,25 @@ GatewayIdentity::GatewayIdentity(
     memset(&sockaddr, 0, sizeof(struct sockaddr));
 }
 
+GatewayIdentity::GatewayIdentity(
+    uint64_t aGatewayId,
+    const std::string &addressNport
+)
+    : gatewayId(aGatewayId)
+{
+    string2sockaddr(&sockaddr, addressNport);
+}
+
+GatewayIdentity::GatewayIdentity(
+        uint64_t aGatewayId,
+        const std::string &address,
+        uint16_t port
+)
+    : gatewayId(aGatewayId)
+{
+    string2sockaddr(&sockaddr, address, port);
+}
+
 /**
  * 8-bit gateway Identifier
  */
