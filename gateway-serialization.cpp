@@ -272,7 +272,7 @@ ListResponse::ListResponse(
 )
     : OperationResponse(buf, sz)
 {
-    // identities does not initilized
+    // identities does not initialized
 }
 
 void ListResponse::ntoh()

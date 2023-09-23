@@ -7,13 +7,19 @@ class ResponseIntf {
 public:
     virtual void onGet(
         GatewayClient* client,
-        bool got,
-        const GetResponse *retVal
+        const GetResponse *response
     ) = 0;
     virtual void onStatus(
         GatewayClient* client,
-        bool got,
-        const OperationResponse *retVal
+        const OperationResponse *response
+    ) = 0;
+    virtual void onList(
+        GatewayClient* client,
+        const ListResponse *response
+    ) = 0;
+    virtual void onError(
+        GatewayClient* client,
+        int32_t code  // 0- success, != 0- failure (error code)
     ) = 0;
     // TCP connection lost
     virtual void onDisconnected(

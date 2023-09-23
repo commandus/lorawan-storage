@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <uv.h>
+#include <sstream>
 
 #include "argtable3/argtable3.h"
 
@@ -18,22 +19,105 @@
 
 const char *progname = "lorawan-gateway-query";
 
+class CommandName {
+public:
+    enum CliGatewayQueryTag s;
+    const char* l;
+    bool isCommand(
+        const char* cmd
+    ) const
+    {
+        if (!cmd)
+            return false;
+        auto len = strlen(cmd);
+        if (len == 1 && s == *cmd)
+            return true;
+        return (strncmp(cmd, l, len) == 0);
+    };
+};
+
+static const CommandName commands[9] = {
+    { QUERY_GATEWAY_NONE, "none" },             // '0'
+    { QUERY_GATEWAY_ADDR, "addr" },             // 'a'
+    { QUERY_GATEWAY_ID, "id" },                 // 'A'
+    { QUERY_GATEWAY_LIST, "list" },             // 'L'
+    { QUERY_GATEWAY_COUNT, "count" },           // 'c'
+    { QUERY_GATEWAY_ASSIGN, "assign" },         // 'p'
+    { QUERY_GATEWAY_RM, "remove" },             // 'r',
+    { QUERY_GATEWAY_FORCE_SAVE, "save" },       // 'f',
+    { QUERY_GATEWAY_CLOSE_RESOURCES, "close" }  // 'd'
+};
+
+#define COMMANDS_COUNT 9
+
+static const char *commandLongName(
+    enum CliGatewayQueryTag tag
+)
+{
+    for (int i = 0; i < COMMANDS_COUNT; i++) {
+        if (commands[i].isCommand((char *) &tag))
+            return commands[i].l;
+    }
+    return commands[0].l;
+}
+
+static std::string listCommands() {
+    std::stringstream ss;
+    for (int i = 1; i < COMMANDS_COUNT; i++) {
+        ss << "  " << (char ) commands[i].s << "\t" << commands[i].l;
+        if (i == 1)
+            ss << " (default)";
+        ss << "\n";
+    }
+    return ss.str();
+}
+
+static CliGatewayQueryTag isTag(const char *tag) {
+    for (int i = 0; i < COMMANDS_COUNT; i++) {
+        if (commands[i].isCommand(tag)) {
+            return commands[i].s;
+        }
+    }
+    return QUERY_GATEWAY_NONE;
+}
+
 // global parameters
 class CliGatewayQueryParams {
 public:
     CliGatewayQueryTag tag;
     std::vector<GatewayIdentity> query;
-    size_t queryPos = 0;
+    size_t queryPos;
     bool useTcp;
     int verbose;
     std::string intf;
     uint16_t port;
     int32_t code;
     uint64_t accessCode;
-    std::string queryAddress;
-    uint16_t queryPort;
     size_t offset;
     size_t size;
+
+    int32_t retCode;
+
+    CliGatewayQueryParams()
+        : tag(tag), queryPos(0), useTcp(false), verbose(0), port(4244), code(42), accessCode(42), offset(0), size(0),
+          retCode(0)
+    {
+
+    }
+
+    std::string toString() {
+        std::stringstream ss;
+        ss
+            << "Service: " << intf << ":" << port << " " << (useTcp ? "TCP" : "UDP") << " "
+            << "command: " << commandLongName(tag) << ", code: " << std::hex << code << ", access code: "  << accessCode << " "
+            << "offset: " << std::dec << offset << ", size: "  << size << "\n";
+        for (auto it(query.begin()); it != query.end(); it++) {
+            if (it->gatewayId)
+                ss << std::hex << it->gatewayId;
+            ss << "\t" << sockaddr2string(&it->sockaddr) << "\n";
+        }
+        return ss.str();
+    }
 };
 
 static CliGatewayQueryParams params;
@@ -41,27 +125,40 @@ static CliGatewayQueryParams params;
 class OnResp : public ResponseIntf {
 public:
     const std::vector<GatewayIdentity> &query;
+    int verbose;
     explicit OnResp(
-        const std::vector<GatewayIdentity> &aQuery
+        const std::vector<GatewayIdentity> &aQuery,
+        int aVerbose
     )
-        : query(aQuery)
+        : query(aQuery), verbose(aVerbose)
     {
+    }
+
+    void onError(
+        GatewayClient* client,
+        int32_t code
+    ) override {
+        std::cerr << "error code: " << code << "\n";
+        client->stop();
+        params.retCode = code;
     }
 
     void onStatus(
         GatewayClient* client,
-        bool got,
-        const OperationResponse *retVal
+        const OperationResponse *response
     ) override {
-        if (got && retVal) {
-            if (retVal->code) {
-                std::cerr << ERR_MESSAGE << retVal->code << std::endl;
+        if (verbose) {
+            std::cerr << "operation successfully completed\n";
+        }
+        if (response) {
+            if (response->code) {
+                std::cerr << ERR_MESSAGE << response->code << std::endl;
                 client->stop();
             } else {
                 if (params.verbose)
-                    std::cout << retVal->toJsonString() << std::endl;
+                    std::cout << response->toJsonString() << std::endl;
                 else
-                    std::cout << retVal->response << std::endl;
+                    std::cout << response->response << std::endl;
                 if (!next(client)) {
                     client->stop();
                 }
@@ -73,18 +170,17 @@ public:
 
     void onGet(
         GatewayClient* client,
-        bool got,
-        const GetResponse *retVal
+        const GetResponse *response
     ) override {
-        if (got && retVal) {
-            if (retVal->code) {
-                std::cerr << ERR_MESSAGE << retVal->code << std::endl;
+        if (response) {
+            if (response->code) {
+                std::cerr << ERR_MESSAGE << response->code << std::endl;
                 client->stop();
             } else {
                 if (params.verbose)
-                    std::cout << retVal->toJsonString() << std::endl;
+                    std::cout << response->toJsonString() << std::endl;
                 else
-                    std::cout << sockaddr2string(&retVal->response.sockaddr) << std::endl;
+                    std::cout << sockaddr2string(&response->response.sockaddr) << std::endl;
                 if (!next(client)) {
                     client->stop();
                 }
@@ -94,9 +190,41 @@ public:
         }
 	}
 
+    void onList(
+        GatewayClient* client,
+        const ListResponse *response
+    ) override {
+        if (response) {
+            if (response->code) {
+                std::cerr << ERR_MESSAGE << response->code << std::endl;
+                client->stop();
+            } else {
+                if (params.verbose)
+                    std::cout << response->toJsonString() << std::endl;
+                else {
+                    for (int i = 0; i < response->response; i++) {
+                        std::cout << std::hex << response->identities[i].gatewayId
+                            << sockaddr2string(&response->identities[i].sockaddr)
+                            << std::endl;
+                    }
+                }
+                if (!next(client)) {
+                    client->stop();
+                }
+            }
+        } else {
+            client->stop();
+        }
+    }
+
+
+
     void onDisconnected(
         GatewayClient* client
     ) override {
+        if (verbose) {
+            std::cerr << "disconnected \n";
+        }
         // retry
         client->request(new GatewayIdAddrRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
     }
@@ -108,6 +236,9 @@ public:
             return false;
         client->request(new GatewayIdAddrRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
         params.queryPos++;
+        if (verbose > 1) {
+            std::cerr << "next " << params.queryPos << "\n";
+        }
         return true;
     }
 };
@@ -126,10 +257,10 @@ static bool mergeIdAddress(
     for (int i = 0; i < pairSize; i++) {
         if (query[i * 2].gatewayId) {
             query[i].gatewayId = query[i * 2].gatewayId;
-            memmove(&query[i + 1].sockaddr, &query[(i * 2) + 1].sockaddr, sizeof(struct sockaddr));
+            memmove(&query[i].sockaddr, &query[(i * 2) + 1].sockaddr, sizeof(struct sockaddr));
         } else {
             memmove(&query[i].sockaddr, &query[(i * 2)].sockaddr, sizeof(struct sockaddr));
-            query[i + 1].gatewayId = query[(i * 2) + 1].gatewayId;
+            query[i].gatewayId = query[(i * 2) + 1].gatewayId;
         }
     }
     query.resize(pairSize);
@@ -137,7 +268,7 @@ static bool mergeIdAddress(
 }
 
 static void run() {
-	OnResp onResp(params.query);
+	OnResp onResp(params.query, params.verbose);
     GatewayClient *client;
 #ifdef ENABLE_LIBUV
     client = new UvClient(useTcp, intf, port, &onResp);
@@ -145,29 +276,32 @@ static void run() {
     client = new UDPClient(params.intf, params.port, &onResp);
 #endif
     // request first address to resolve
-    if (!onResp.next(client))
+    if (!onResp.next(client)) {
+        params.retCode = ERR_CODE_PARAM_INVALID;
         return;
+    }
     client->start();
     delete client;
 }
 
 int main(int argc, char **argv) {
-	struct arg_str *a_query = arg_strn(nullptr, nullptr, "<gateway-id | address:port>", 1, 100, "hex, 8 bytes long gayeway id or/and IP address");
+    struct arg_str *a_tag = arg_str0("g", "tag", "<a|A|L|c|p|r|f|d>", "a(default) address by id, A- id by address, L- list, c- count, p- assign id&addr, r- remove");
+
+    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | gateway-id | address:port>", 1, 100, "command: a|A|L|c|p|r|f|d, gateway id: 16 hex digits");
     struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
-    struct arg_str *a_tag = arg_str0("g", "tag", "<a|A|L|c|p|r|f|d>", "a(default) address by id, A- id by address, L- list, c- count, p- assign id&addr, r- remove");
     struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 100. ");
-    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 1,"print errors/warnings");
+    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = { 
 		a_query, a_interface_n_port,
         a_code, a_access_code, a_tcp,
-        a_tag, a_offset, a_size,  a_verbose,
+        a_offset, a_size,  a_verbose,
 		a_help, a_end 
 	};
 
@@ -191,12 +325,26 @@ int main(int argc, char **argv) {
         params.port = 4244;
     }
 
-    if (a_tag->count) {
-        params.tag = getQueryTag(*a_tag->sval);
-        if (params.tag == QUERY_GATEWAY_NONE)
-            return ERR_CODE_COMMAND_LINE;
-    } else {
-        params.tag = QUERY_GATEWAY_ADDR;
+    params.tag = QUERY_GATEWAY_ADDR;
+
+    params.query.reserve(a_query->count);
+    for (int i = 0; i < a_query->count; i++) {
+        enum CliGatewayQueryTag tag = isTag(a_query->sval[i]);
+        if (tag != QUERY_GATEWAY_NONE) {
+            params.tag = tag;
+            continue;
+        }
+        std::string a;
+        uint16_t p;
+        if (splitAddress(a, p, a_query->sval[i])) {
+            params.query.emplace_back(GatewayIdentity(0, a, p));
+        } else {
+            char *last;
+            uint64_t id = strtoull(a_query->sval[i], &last, 16);
+            if (*last)
+                return ERR_CODE_COMMAND_LINE;
+            params.query.emplace_back(id);
+        }
     }
 
     if (params.tag == QUERY_GATEWAY_LIST) {
@@ -205,23 +353,6 @@ int main(int argc, char **argv) {
         }
         if (a_size->count) {
             params.size = (size_t) *a_size->ival;
-        }
-    }
-
-    params.query.reserve(a_query->count);
-
-    for (int i = 0; i < a_query->count; i++) {
-        std::string a;
-        uint16_t p;
-        if (splitAddress(a, p, a_query->sval[i])) {
-            params.query.emplace_back(GatewayIdentity(0, a, p));
-        } else {
-            uint64_t id;
-            char *last;
-            strtoull(a_query->sval[i], &last, 16);
-            if (*last)
-                return ERR_CODE_COMMAND_LINE;
-            params.query.emplace_back(id);
         }
     }
 
@@ -248,14 +379,19 @@ int main(int argc, char **argv) {
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << "LoRaWAN gateway storage query" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
+        std::cerr << "Commands:\n" << listCommands() << std::endl;
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
 	}
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
+    if (params.verbose) {
+        std::cerr << params.toString() << std::endl;
+    }
 
 #ifdef _MSC_VER
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 	run();
+    return params.retCode;
 }

@@ -86,13 +86,13 @@ void UDPClient::start() {
 #ifdef ENABLE_DEBUG
             std::cerr << ERR_SOCKET_CREATE << " " << errno << ": " << strerror(errno) << std::endl;
 #endif
-            onResponse->onGet(this, false, nullptr);
+            onResponse->onError(this, ERR_CODE_SOCKET_CREATE);
             break;
         }
 
         // Set timeout
         struct timeval timeout{ 1, 0 };
-        setsockopt (sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout, sizeof timeout);
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout, sizeof timeout);
         while (status != ERR_CODE_STOPPED) {
             if (!query)
                 break;
@@ -103,7 +103,7 @@ void UDPClient::start() {
 #ifdef ENABLE_DEBUG
                 std::cerr << ERR_SOCKET_WRITE << " " << errno << ": " << strerror(errno) << std::endl;
 #endif
-                onResponse->onGet(this, false, nullptr);
+                onResponse->onError(this, ERR_CODE_SOCKET_WRITE);
                 break;
             }
 #ifdef ENABLE_DEBUG
@@ -120,7 +120,7 @@ void UDPClient::start() {
                 std::cerr << ERR_SOCKET_READ << " " << errno << ": " << strerror(errno) << std::endl;
 #endif
                 status = ERR_CODE_SOCKET_READ;
-                onResponse->onGet(this, false, nullptr);
+                onResponse->onError(this, ERR_CODE_SOCKET_READ);
                 break;
             } else {
 #ifdef ENABLE_DEBUG
@@ -133,16 +133,21 @@ void UDPClient::start() {
                     {
                         GetResponse gr(rxBuf, len);
                         gr.ntoh();
-                        onResponse->onGet(this, true, &gr);
+                        onResponse->onGet(this, &gr);
                     }
                         break;
                     case QUERY_GATEWAY_LIST:   // List entries
+                    {
+                        ListResponse *gr = (ListResponse *) rxBuf;
+                        gr->ntoh();
+                        onResponse->onList(this, gr);
+                    }
                         break;
                     default:
                     {
                         OperationResponse gr(rxBuf, len);
                         gr.ntoh();
-                        onResponse->onStatus(this, true, &gr);
+                        onResponse->onStatus(this, &gr);
                     }
                         break;
                 }
