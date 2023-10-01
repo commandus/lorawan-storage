@@ -1,13 +1,19 @@
 #include "udp-client.h"
 
 #ifdef _MSC_VER
-#include <io.h>
 #include <WS2tcpip.h>
+
 #define close closesocket
+#define SOCKET_ERRNO WSAGetLastError()
+#define ERR_TIMEOUT WSAETIMEDOUT
+// #define inet_pton InetPtonA
 #else
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+
+#define SOCKET_ERRNO errno
+#define ERR_TIMEOUT EAGAIN
 #endif
 
 #ifdef ENABLE_DEBUG
@@ -49,15 +55,23 @@ UDPClient::UDPClient(
     : GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
 {
     memset(&addr, 0, sizeof(addr));
+    int r = 0;
     if (isAddrStringIPv6(aHost.c_str())) {
         auto *a = (struct sockaddr_in6 *) &addr;
-        inet_pton(AF_INET, aHost.c_str(), a);
+        a->sin6_family = AF_INET6;
+        r = inet_pton(AF_INET6, aHost.c_str(), &a->sin6_addr);
         a->sin6_port = htons(aPort);
         a->sin6_scope_id = 0;
     } else {
         auto *a = (struct sockaddr_in *) &addr;
-        inet_pton(AF_INET6, aHost.c_str(), a);
+        a->sin_family = AF_INET;
+        r = inet_pton(AF_INET, aHost.c_str(), &a->sin_addr);
         a->sin_port = htons(aPort);
+    }
+    if (r == -1) {
+        if (onResponse) {
+            onResponse->onError(this, ERR_CODE_SOCKET_ADDRESS, SOCKET_ERRNO);
+        }
     }
 }
 
@@ -66,11 +80,13 @@ UDPClient::~UDPClient()
     stop();
 }
 
-void UDPClient::request(
+ServiceMessage* UDPClient::request(
     ServiceMessage* value
 )
 {
+    ServiceMessage* r = query;
     query = value;
+    return r;
 }
 
 void UDPClient::start() {
@@ -86,24 +102,28 @@ void UDPClient::start() {
 #ifdef ENABLE_DEBUG
             std::cerr << ERR_SOCKET_CREATE << " " << errno << ": " << strerror(errno) << std::endl;
 #endif
-            onResponse->onError(this, ERR_CODE_SOCKET_CREATE);
+            onResponse->onError(this, ERR_CODE_SOCKET_CREATE, SOCKET_ERRNO);
             break;
         }
 
         // Set timeout
-        struct timeval timeout{ 1, 0 };
+#ifdef _MSC_VER
+        DWORD timeout = 1000;   // ms
+#else
+        struct timeval timeout { 1, 0 };
+#endif
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout, sizeof timeout);
+
+        unsigned char sendBuffer[40];
         while (status != ERR_CODE_STOPPED) {
             if (!query)
                 break;
             query->ntoh();
-            ssize_t sz = sendto(sock, (const char*) query, sizeof(*query), 0, (struct sockaddr *) &addr, sizeof(addr));
+            size_t ssz = query->serialize(sendBuffer);
+            ssize_t sz = sendto(sock, (const char*) sendBuffer, (int) ssz, 0, &addr, sizeof(addr));
             if (sz < 0) {
                 status = ERR_CODE_SOCKET_WRITE;
-#ifdef ENABLE_DEBUG
-                std::cerr << ERR_SOCKET_WRITE << " " << errno << ": " << strerror(errno) << std::endl;
-#endif
-                onResponse->onError(this, ERR_CODE_SOCKET_WRITE);
+                onResponse->onError(this, ERR_CODE_SOCKET_WRITE, SOCKET_ERRNO);
                 break;
             }
 #ifdef ENABLE_DEBUG
@@ -111,16 +131,13 @@ void UDPClient::start() {
 #endif
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
-            char *rxBuf = (char *) malloc(responseSizeForRequest((const char*) query, sizeof(*query)));
+            unsigned char *rxBuf = (unsigned char *) malloc(responseSizeForRequest((const unsigned char*) query, sizeof(*query)));
 
-            ssize_t len = recvfrom(sock, rxBuf, sizeof(rxBuf), 0, (struct sockaddr *)&srcAddress, &socklen);
+            ssize_t len = recvfrom(sock, (char *) rxBuf, sizeof(rxBuf), 0, (struct sockaddr *)&srcAddress, &socklen);
 
             if (len < 0) {  // Error occurred during receiving
-#ifdef ENABLE_DEBUG
-                std::cerr << ERR_SOCKET_READ << " " << errno << ": " << strerror(errno) << std::endl;
-#endif
                 status = ERR_CODE_SOCKET_READ;
-                onResponse->onError(this, ERR_CODE_SOCKET_READ);
+                onResponse->onError(this, ERR_CODE_SOCKET_READ, SOCKET_ERRNO);
                 break;
             } else {
 #ifdef ENABLE_DEBUG

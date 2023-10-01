@@ -19,7 +19,8 @@ public:
     ) = 0;
     virtual void onError(
         GatewayClient* client,
-        int32_t code  // 0- success, != 0- failure (error code)
+        const int32_t code,  // 0- success, != 0- failure (error code)
+        const int errorCode
     ) = 0;
     // TCP connection lost
     virtual void onDisconnected(
@@ -44,8 +45,9 @@ public:
     /**
      * Prepare to send request
      * @param value
+     * @return previous message, NULL if not exists
      */
-    virtual void request(
+    virtual ServiceMessage* request(
         ServiceMessage* value
     ) = 0;
     virtual void start() = 0;

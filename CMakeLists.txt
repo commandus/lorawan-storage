@@ -109,7 +109,7 @@ else()
 		lorawan-types.cpp lorawan-string.cpp lorawan-conv.cpp network-identity.cpp
 		gateway-identity.cpp gateway-service.cpp
 		ip-helper.cpp lorawan-date.cpp ip-address.cpp third-party/strptime.cpp
-	)
+    )
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})

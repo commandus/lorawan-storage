@@ -136,9 +136,10 @@ public:
 
     void onError(
         GatewayClient* client,
-        int32_t code
+        const int32_t code,
+        const int errorCode
     ) override {
-        std::cerr << "error code: " << code << "\n";
+        std::cerr << "error " << code << ", errno: " << errno << "\n";
         client->stop();
         params.retCode = code;
     }
@@ -217,29 +218,56 @@ public:
         }
     }
 
-
-
     void onDisconnected(
         GatewayClient* client
     ) override {
         if (verbose) {
             std::cerr << "disconnected \n";
         }
-        // retry
-        client->request(new GatewayIdAddrRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
     }
 
     bool next(
         GatewayClient *client
     ) {
-        if (params.queryPos >= query.size())
-            return false;
-        client->request(new GatewayIdAddrRequest((char) params.tag, query[params.queryPos], params.code, params.accessCode));
+        bool hasNext = params.queryPos < query.size();
+        ServiceMessage *req = nullptr;
+        if (hasNext) {
+            GatewayIdentity gi = params.query[params.queryPos];
+            switch (params.tag) {
+                case QUERY_GATEWAY_NONE:
+                    break;
+                case QUERY_GATEWAY_LIST:
+                    req = new OperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
+                    break;
+                case QUERY_GATEWAY_COUNT:
+                    req = new OperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
+                    break;
+                case QUERY_GATEWAY_ASSIGN:
+                    break;
+                case QUERY_GATEWAY_RM:
+                    break;
+                case QUERY_GATEWAY_FORCE_SAVE:
+                    break;
+                case QUERY_GATEWAY_CLOSE_RESOURCES:
+                    break;
+                default:
+                    if (gi.gatewayId == 0)
+                        req = new GatewayAddrRequest(gi.sockaddr, params.code, params.accessCode);
+                    else
+                        req = new GatewayIdRequest(gi.gatewayId, params.code, params.accessCode);
+                    break;
+            }
+        }
+        if (req) {
+            ServiceMessage *previousMessage = client->request(req);
+            if (previousMessage)
+                delete previousMessage;
+        }
         params.queryPos++;
         if (verbose > 1) {
             std::cerr << "next " << params.queryPos << "\n";
         }
-        return true;
+        return hasNext;
     }
 };
 

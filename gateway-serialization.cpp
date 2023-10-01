@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "lorawan-error.h"
+#include "ip-address.h"
 
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"
@@ -15,6 +16,120 @@
 #include "lorawan-string.h"
 #include "lorawan-msg.h"
 #endif
+
+/**
+ * Serialize Internet address v4, v6
+ * @param retBuf return buffer
+ * @param addr address to serialize
+ * @return 0 (unknown family), 7 (IPv4, 19(IPv6)
+ */
+static size_t serializeSocketAddress(
+    unsigned char *retBuf,
+    const struct sockaddr *addr
+)
+{
+    size_t r = 0;
+    switch (addr->sa_family) {
+        case AF_INET:
+            retBuf[0] = AF_INET;
+            {
+                struct sockaddr_in *addrIn = (struct sockaddr_in *) addr;
+                retBuf[1] = *(unsigned char *) &addrIn->sin_port;
+                retBuf[2] = * ((unsigned char *) &addrIn->sin_port + 1);
+                retBuf[3] = addrIn->sin_addr.S_un.S_un_b.s_b1;
+                retBuf[4] = addrIn->sin_addr.S_un.S_un_b.s_b2;
+                retBuf[5] = addrIn->sin_addr.S_un.S_un_b.s_b3;
+                retBuf[6] = addrIn->sin_addr.S_un.S_un_b.s_b4;
+            }
+            r = 7;
+            break;
+        case AF_INET6:
+            retBuf[0] = AF_INET6;
+            {
+                struct sockaddr_in6 *addrIn = (struct sockaddr_in6 *) addr;
+                retBuf[1] = *(unsigned char *) &addrIn->sin6_port;
+                retBuf[2] = * ((unsigned char *) &addrIn->sin6_port + 1);
+                retBuf[3] = addrIn->sin6_addr.u.Byte[0];
+                retBuf[4] = addrIn->sin6_addr.u.Byte[1];
+                retBuf[5] = addrIn->sin6_addr.u.Byte[2];
+                retBuf[6] = addrIn->sin6_addr.u.Byte[3];
+
+                retBuf[7] = addrIn->sin6_addr.u.Byte[4];
+                retBuf[8] = addrIn->sin6_addr.u.Byte[5];
+                retBuf[9] = addrIn->sin6_addr.u.Byte[6];
+                retBuf[10] = addrIn->sin6_addr.u.Byte[7];
+
+                retBuf[11] = addrIn->sin6_addr.u.Byte[8];
+                retBuf[12] = addrIn->sin6_addr.u.Byte[9];
+                retBuf[13] = addrIn->sin6_addr.u.Byte[10];
+                retBuf[14] = addrIn->sin6_addr.u.Byte[11];
+
+                retBuf[15] = addrIn->sin6_addr.u.Byte[12];
+                retBuf[16] = addrIn->sin6_addr.u.Byte[13];
+                retBuf[17] = addrIn->sin6_addr.u.Byte[14];
+                retBuf[18] = addrIn->sin6_addr.u.Byte[15];
+            }
+            r = 19;
+            break;
+        default:
+            break;
+    }
+    return r;
+}
+
+static size_t deserializeSocketAddress(
+    struct sockaddr *addr,
+    const unsigned char *retBuf
+)
+{
+    size_t r = 0;
+    switch (retBuf[0]) {
+        case AF_INET:
+            addr->sa_family = AF_INET;
+            {
+                struct sockaddr_in *addrIn = (struct sockaddr_in *) addr;
+                *(unsigned char *) &addrIn->sin_port = retBuf[1];
+                *((unsigned char *) &addrIn->sin_port + 1) = retBuf[2];
+                addrIn->sin_addr.S_un.S_un_b.s_b1 = retBuf[3];
+                addrIn->sin_addr.S_un.S_un_b.s_b2 = retBuf[4];
+                addrIn->sin_addr.S_un.S_un_b.s_b3 = retBuf[5];
+                addrIn->sin_addr.S_un.S_un_b.s_b4 = retBuf[6];
+            }
+            r = 7;
+            break;
+        case AF_INET6:
+            addr->sa_family = AF_INET6;
+            {
+                struct sockaddr_in6 *addrIn = (struct sockaddr_in6 *) addr;
+                *(unsigned char *) &addrIn->sin6_port = retBuf[1];
+                *((unsigned char *) &addrIn->sin6_port + 1) = retBuf[2];
+                addrIn->sin6_addr.u.Byte[0] = retBuf[3];
+                addrIn->sin6_addr.u.Byte[1] = retBuf[4];
+                addrIn->sin6_addr.u.Byte[2] = retBuf[5];
+                addrIn->sin6_addr.u.Byte[3] = retBuf[6];
+
+                addrIn->sin6_addr.u.Byte[4] = retBuf[7];
+                addrIn->sin6_addr.u.Byte[5] = retBuf[8];
+                addrIn->sin6_addr.u.Byte[6] = retBuf[9];
+                addrIn->sin6_addr.u.Byte[7] = retBuf[10];
+
+                addrIn->sin6_addr.u.Byte[8] = retBuf[11];
+                addrIn->sin6_addr.u.Byte[9] = retBuf[12];
+                addrIn->sin6_addr.u.Byte[10] = retBuf[13];
+                addrIn->sin6_addr.u.Byte[11] = retBuf[14];
+
+                addrIn->sin6_addr.u.Byte[12] = retBuf[15];
+                addrIn->sin6_addr.u.Byte[13] = retBuf[16];
+                addrIn->sin6_addr.u.Byte[14] = retBuf[17];
+                addrIn->sin6_addr.u.Byte[15] = retBuf[18];
+            }
+            r = 19;
+            break;
+        default:
+            break;
+    }
+    return r;
+}
 
 ServiceMessage::ServiceMessage()
     : tag(0), code(0), accessCode(0)
@@ -33,21 +148,40 @@ ServiceMessage::ServiceMessage(
 }
 
 ServiceMessage::ServiceMessage(
-    const char *buf,
+    const unsigned char *buf,
     size_t sz
 )
 {
-    if (sz >= sizeof(ServiceMessage)) {
-        tag = ((ServiceMessage *) buf)->tag;
-        code = ((ServiceMessage *) buf)->code;
-        accessCode = ((ServiceMessage *) buf)->accessCode;
-    }
+    deserialize(buf, sz);
 }
 
 void ServiceMessage::ntoh()
 {
     code = NTOH4(code);
     accessCode = NTOH8(accessCode);
+}
+
+size_t ServiceMessage::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    if (sz >= 13) {
+        memmove(&tag, &buf[0], sizeof(tag));         // 1
+        memmove(&code, &buf[1], sizeof(code));       // 4
+        memmove(&accessCode, &buf[5], sizeof(accessCode)); // 8
+    }
+    return 13;
+}
+
+size_t ServiceMessage::serialize(
+    unsigned char *retBuf
+) const
+{
+    memmove(&retBuf[0], &tag, sizeof(tag));         // 1
+    memmove(&retBuf[1], &code, sizeof(code));       // 4
+    memmove(&retBuf[5], &accessCode, sizeof(accessCode)); // 8
+    return 13;
 }
 
 std::string ServiceMessage::toJsonString() const
@@ -61,36 +195,54 @@ GatewayIdRequest::GatewayIdRequest()
 }
 
 GatewayIdRequest::GatewayIdRequest(
-    char tag,
     const uint64_t aId
 )
-    : ServiceMessage(tag, 0, 0), id(aId)
+    : ServiceMessage('a', 0, 0), id(aId)
 {
 
 }
 
 GatewayIdRequest::GatewayIdRequest(
-    char tag,
     const uint64_t aId,
     int32_t code,
     uint64_t accessCode
 )
-    : ServiceMessage(tag, code, accessCode), id(aId)
+    : ServiceMessage('a', code, accessCode), id(aId)
 {
 
 }
 
 GatewayIdRequest::GatewayIdRequest(
-    const char *buf,
+    const unsigned char *buf,
     size_t sz
 )
-    : ServiceMessage(buf, sz), id(((GatewayIdRequest *) buf)->id)
 {
+    deserialize(buf, sz);
 }
 
 void GatewayIdRequest::ntoh() {
     ServiceMessage::ntoh();
     id = NTOH8(id);
+}
+
+size_t GatewayIdRequest::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    ServiceMessage::deserialize(buf, sz);   // 13
+    memmove(&id, &buf[13], sizeof(id));         // 8
+    return 21;
+}
+
+
+size_t GatewayIdRequest::serialize(
+    unsigned char *retBuf
+) const
+{
+    ServiceMessage::serialize(retBuf);   // 13
+    memmove(&retBuf[13], &id, sizeof(id));         // 8
+    return 21;
 }
 
 std::string GatewayIdRequest::toJsonString() const
@@ -100,29 +252,93 @@ std::string GatewayIdRequest::toJsonString() const
     return ss.str();
 }
 
-GatewayIdAddrRequest::GatewayIdAddrRequest()
-    : ServiceMessage('a', 0, 0), identity()
+GatewayAddrRequest::GatewayAddrRequest()
+    : ServiceMessage('A', 0, 0)
 {
+    memset(&addr, 0, sizeof(addr));
 }
 
-GatewayIdAddrRequest::GatewayIdAddrRequest(
-    char tag,
+GatewayAddrRequest::GatewayAddrRequest(
     const GatewayIdentity& aIdentity
 )
-    : ServiceMessage(tag, 0, 0), identity(aIdentity)
+    : ServiceMessage('A', 0, 0)
 {
+    memset(&addr, 0, sizeof(addr));
 }
 
-GatewayIdAddrRequest::GatewayIdAddrRequest(
-    const char *buf,
+GatewayAddrRequest::GatewayAddrRequest(
+    const unsigned char *buf,
     size_t sz
 )
-    : ServiceMessage(buf, sz), identity(((GatewayIdAddrRequest *) buf)->identity)
+{
+    deserialize(buf, sz);
+}
+
+GatewayAddrRequest::GatewayAddrRequest(
+    const struct sockaddr &aAddr,
+    int32_t code,
+    uint64_t accessCode
+)
+    : ServiceMessage(tag, code, accessCode)
+{
+    memmove(&addr, &aAddr, sizeof(addr));
+}
+
+void GatewayAddrRequest::ntoh()
+{
+    ServiceMessage::ntoh();
+    sockaddrNtoh(&addr);
+}
+
+size_t GatewayAddrRequest::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    ServiceMessage::deserialize(buf, sz);   // 13
+    size_t r = deserializeSocketAddress(&addr, &buf[21]); // 0, 7, 19
+    return 21 + r;                // up to 40 bytes
+}
+
+size_t GatewayAddrRequest::serialize(
+    unsigned char *retBuf
+) const
+{
+    ServiceMessage::serialize(retBuf);   // 13
+    size_t r = serializeSocketAddress(&retBuf[21], &addr); // 0, 7, 19
+    return 21 + r;                // up to 40 bytes
+}
+
+std::string GatewayAddrRequest::toJsonString() const
+{
+    std::stringstream ss;
+    ss << R"({"addr": ")" << sockaddr2string(&addr) << "\"}";
+    return ss.str();
+}
+
+////////////////////////////////////////////////
+
+GatewayIdAddrRequest::GatewayIdAddrRequest()
+    : ServiceMessage('p', 0, 0), identity()
 {
 }
 
 GatewayIdAddrRequest::GatewayIdAddrRequest(
-    char tag,
+    const GatewayIdentity& aIdentity
+)
+    : ServiceMessage('A', 0, 0), identity(aIdentity)
+{
+}
+
+GatewayIdAddrRequest::GatewayIdAddrRequest(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    deserialize(buf, sz);
+}
+
+GatewayIdAddrRequest::GatewayIdAddrRequest(
     const GatewayIdentity &aIdentity,
     int32_t code,
     uint64_t accessCode
@@ -138,6 +354,27 @@ void GatewayIdAddrRequest::ntoh()
     sockaddrNtoh(&identity.sockaddr);
 }
 
+size_t GatewayIdAddrRequest::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    ServiceMessage::deserialize(buf, sz);   // 13
+    memmove(&identity.gatewayId, &buf[13], sizeof(identity.gatewayId));
+    size_t r = deserializeSocketAddress(&identity.sockaddr, &buf[21]); // 0, 7, 19
+    return 21 + r;                // up to 40 bytes
+}
+
+size_t GatewayIdAddrRequest::serialize(
+        unsigned char *retBuf
+) const
+{
+    ServiceMessage::serialize(retBuf);   // 13
+    memmove(&retBuf[13], &identity.gatewayId, sizeof(identity.gatewayId));
+    size_t r = serializeSocketAddress(&retBuf[21], &identity.sockaddr); // 0, 7, 19
+    return 21 + r;                // up to 40 bytes
+}
+
 std::string GatewayIdAddrRequest::toJsonString() const
 {
     std::stringstream ss;
@@ -145,6 +382,7 @@ std::string GatewayIdAddrRequest::toJsonString() const
     return ss.str();
 }
 
+////////////////////////////////////////////////
 OperationRequest::OperationRequest()
     : ServiceMessage('L', 0, 0),
       offset(0), size(0)
@@ -152,8 +390,7 @@ OperationRequest::OperationRequest()
 }
 
 OperationRequest::OperationRequest(
-    char tag,
-    const GatewayIdentity &identity
+    char tag
 )
     : ServiceMessage(tag, 0, 0),
       offset(0), size(0)
@@ -172,17 +409,38 @@ OperationRequest::OperationRequest(
 }
 
 OperationRequest::OperationRequest(
-    const char *buf,
+    const unsigned char *buf,
     size_t sz
 )
-    : ServiceMessage(buf, sz), offset(((OperationRequest *) buf)->offset), size(((OperationRequest *) buf)->size)
 {
+    deserialize(buf, sz);
 }
 
 void OperationRequest::ntoh() {
     ServiceMessage::ntoh();
     offset = NTOH8(offset);
     size = NTOH8(size);
+}
+
+size_t OperationRequest::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    ServiceMessage::deserialize(buf, sz);   // 13
+    memmove(&offset, &buf[13], sizeof(offset));         // 8
+    memmove(&offset, &buf[21], sizeof(offset));         // 8
+    return 29;
+}
+
+size_t OperationRequest::serialize(
+    unsigned char *retBuf
+) const
+{
+    ServiceMessage::serialize(retBuf);   // 13
+    memmove(&retBuf[13], &offset, sizeof(offset));         // 8
+    memmove(&retBuf[21], &offset, sizeof(offset));         // 8
+    return 29;
 }
 
 std::string OperationRequest::toJsonString() const {
@@ -194,31 +452,45 @@ std::string OperationRequest::toJsonString() const {
 }
 
 GetResponse::GetResponse(
-    const GatewayIdAddrRequest& req
+    const GatewayAddrRequest& req
 )
-    : GatewayIdAddrRequest(req)
+    : GatewayAddrRequest(req)
 {
 }
 
 GetResponse::GetResponse(
-    const char* buf,
+    const unsigned char* buf,
     size_t sz
 )
-    : GatewayIdAddrRequest(buf, sz),
-      response(((GetResponse *) buf)->response)
 {
+    deserialize(buf, sz);
 }
 
 std::string GetResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"request": ")" << GatewayIdAddrRequest::toJsonString()
+    ss << R"({"request": ")" << GatewayAddrRequest::toJsonString()
         << ", \"response\": " << response.toJsonString() << "\"}";
     return ss.str();
 }
 
 void GetResponse::ntoh()
 {
-    GatewayIdAddrRequest::ntoh();
+    GatewayAddrRequest::ntoh();
+}
+
+size_t GetResponse::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    return GatewayAddrRequest::deserialize(buf, sz);   // up to 40 bytes
+}
+
+size_t GetResponse::serialize(
+    unsigned char *retBuf
+) const
+{
+    return GatewayAddrRequest::serialize(retBuf);   // up to 40 bytes
 }
 
 OperationResponse::OperationResponse()
@@ -234,17 +506,35 @@ OperationResponse::OperationResponse(
 }
 
 OperationResponse::OperationResponse(
-    const char *buf,
+    const unsigned char *buf,
     size_t sz
 )
-    : OperationRequest(buf, sz),
-        response(((OperationResponse *) buf)->response)
 {
+    deserialize(buf, sz);
 }
 
 void OperationResponse::ntoh() {
     OperationRequest::ntoh();
     response = NTOH8(response);
+}
+
+size_t OperationResponse::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    OperationRequest::deserialize(buf, sz);   // 29
+    memmove(&response, &buf[29], sizeof(response));         // 8
+    return 37;
+}
+
+size_t OperationResponse::serialize(
+    unsigned char *retBuf
+) const
+{
+    OperationRequest::serialize(retBuf);   // 29
+    memmove(&retBuf[29], &response, sizeof(response));         // 8
+    return 37;
 }
 
 std::string OperationResponse::toJsonString() const {
@@ -267,12 +557,11 @@ ListResponse::ListResponse(
 }
 
 ListResponse::ListResponse(
-    const char *buf,
+    const unsigned char *buf,
     size_t sz
 )
-    : OperationResponse(buf, sz)
 {
-    // identities does not initialized
+    deserialize(buf, sz);
 }
 
 void ListResponse::ntoh()
@@ -282,6 +571,33 @@ void ListResponse::ntoh()
         identities[i].gatewayId = NTOH8(identities[i].gatewayId);
         sockaddrNtoh(&identities[i].sockaddr);
     }
+}
+
+size_t ListResponse::deserialize(
+    const unsigned char *buf,
+    size_t sz
+)
+{
+    size_t ofs = OperationRequest::deserialize(buf, sz);   // 29
+    for (auto i = 0; i < response; i++) {
+        memmove(&identities[i].gatewayId, &buf[ofs], sizeof(uint64_t));  // 8
+        ofs += 8;
+        ofs += deserializeSocketAddress(&identities[i].sockaddr, &buf[ofs]);
+    }
+    return ofs;
+}
+
+size_t ListResponse::serialize(
+    unsigned char *retBuf
+) const
+{
+    size_t ofs = OperationRequest::serialize(retBuf);   // 29
+    for (auto i = 0; i < response; i++) {
+        memmove(&retBuf[ofs], &identities[i].gatewayId, sizeof(uint64_t));  // 8
+        ofs += 8;
+        ofs += serializeSocketAddress(&retBuf[ofs], &identities[i].sockaddr);
+    }
+    return ofs;
 }
 
 std::string ListResponse::toJsonString() const {
@@ -328,7 +644,7 @@ size_t GatewaySerialization::query(
         return 0;
     if (sz < sizeof(ServiceMessage)) {
 #ifdef ENABLE_DEBUG
-        std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdAddrRequest)  << std::endl;
+        std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayAddrRequest)  << std::endl;
 #endif
         return 0;
     }
@@ -351,26 +667,26 @@ size_t GatewaySerialization::query(
         case 'a':   // request gateway identifier(with address) by network address. Return 0 if success
         case 'A':   // request gateway address (with identifier) by identifier. Return 0 if success
             {
-                if (sz < sizeof(GatewayIdAddrRequest)) {
+                if (sz < sizeof(GatewayAddrRequest)) {
 #ifdef ENABLE_DEBUG
-                    std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdAddrRequest)  << std::endl;
+                    std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayAddrRequest)  << std::endl;
 #endif
                     return 0;
                 }
 
-                auto gr = (GatewayIdAddrRequest *) request;
+                auto gr = (GatewayAddrRequest *) request;
                 gr->ntoh();
                 auto r = new GetResponse(*gr);
-                r->code = svc->get(r->response, r->identity);
+                r->code = svc->get(r->response, r->response);
                 r->ntoh();
                 *retBuf = (char *) r;
                 return sizeof(GetResponse);
             }
         case 'p':   // assign (put) gateway address to the gateway by identifier
         {
-            if (sz < sizeof(GatewayIdAddrRequest)) {
+            if (sz < sizeof(GatewayAddrRequest)) {
 #ifdef ENABLE_DEBUG
-                std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayIdAddrRequest)  << std::endl;
+                std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayAddrRequest)  << std::endl;
 #endif
                 return 0;
             }
@@ -502,21 +818,21 @@ enum CliGatewayQueryTag getQueryTag(
  * @return query tag
  */
 enum CliGatewayQueryTag validateQuery(
-    const char *buffer,
+    const unsigned char *buffer,
     size_t sz
 )
 {
     switch (buffer[0]) {
         case 'a':   // request gateway identifier(with address) by network address.
-            if (sz < sizeof(GatewayIdAddrRequest))
+            if (sz < sizeof(GatewayAddrRequest))
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ADDR;
         case 'A':   // request gateway address (with identifier) by identifier.
-            if (sz < sizeof(GatewayIdAddrRequest))
+            if (sz < sizeof(GatewayAddrRequest))
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ID;
         case 'p':   // assign (put) gateway address to the gateway by identifier
-            if (sz < sizeof(GatewayIdAddrRequest))
+            if (sz < sizeof(GatewayAddrRequest))
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ASSIGN;
         case 'r':   // Remove entry
@@ -552,7 +868,7 @@ enum CliGatewayQueryTag validateQuery(
  * @return size in bytes
  */
 size_t responseSizeForRequest(
-    const char *buffer,
+    const unsigned char *buffer,
     size_t size
 )
 {

@@ -5,6 +5,8 @@
 
 #ifdef _MSC_VER
 #include <direct.h>
+#include <sstream>
+
 #define PATH_MAX MAX_PATH
 #define getcwd _getcwd
 #else
@@ -39,27 +41,83 @@ const char *progname = "lorawan-gateway-storage";
 #define MSG_DAEMON_STARTED  	"Started"
 #define MSG_DAEMON_STARTED_1 	". Check syslog."
 
-GatewayListener *server = nullptr;
-std::string intf;
-uint16_t port;
-int32_t code;
-uint64_t accessCode;
+enum IP_PROTO {
+    PROTO_UDP,
+    PROTO_TCP,
+    PROTO_UDP_N_TCP
+};
+
+static std::string IP_PROTO2string(
+    enum IP_PROTO value
+)
+{
+    switch(value) {
+        case PROTO_UDP:
+            return "UDP";
+        case PROTO_TCP:
+            return "TCP";
+        default:
+            return "TCP, UDP";
+    };
+}
+
+// global parameters and descriptors
+class CliGatewayServiceDescriptorNParams : public LogIntf
+{
+public:
+    GatewayListener *server = nullptr;
+
+    enum IP_PROTO proto;
+    std::string intf;
+    uint16_t port;
+    int32_t code;
+    uint64_t accessCode;
+    bool runAsDaemon;
+    int verbose;
 #ifdef ENABLE_SQLITE
-std::string db;
+    std::string db;
 #endif
+    int32_t retCode;
+
+    CliGatewayServiceDescriptorNParams()
+            : server(nullptr), proto(PROTO_UDP), port(4244), code(0), accessCode(0), verbose(0), retCode(0),
+            runAsDaemon(false)
+    {
+
+    }
+
+    std::string toString() {
+        std::stringstream ss;
+        ss
+            << "Service: " << intf << ":" << port << " " << IP_PROTO2string(proto) << ".\n"
+            << "Code: " << std::hex << code << ", access code: "  << accessCode << " " << "\n";
+        return ss.str();
+    }
+
+    std::ostream & strm(int level) override {
+        return std::cerr;
+    }
+
+    void flush() override {
+        std::cerr << std::endl;
+    }
+
+};
+
+CliGatewayServiceDescriptorNParams svc;
 
 static void done() {
-  if (server) {
-    delete server;
-    server = nullptr;
-    std::cerr << MSG_DONE << std::endl;
-    exit(0);
-  }
+    if (svc.server) {
+        delete svc.server;
+        svc.server = nullptr;
+        std::cerr << MSG_DONE << std::endl;
+        exit(0);
+    }
 }
 
 static void stop() {
-	if (server) {
-		server->stop();
+	if (svc.server) {
+        svc.server->stop();
 	}
 }
 
@@ -71,23 +129,17 @@ void signalHandler(int signal)
 	}
 }
 
-#ifdef _MSC_VER
-// TODO
-void setSignalHandler()
-{
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
-}
 
-#else
 void setSignalHandler()
 {
+#ifdef _MSC_VER
+#else
 	struct sigaction action = {};
 	action.sa_handler = &signalHandler;
 	sigaction(SIGINT, &action, nullptr);
 	sigaction(SIGHUP, &action, nullptr);
-}
 #endif
+}
 
 void run() {
     auto gatewayService =
@@ -99,27 +151,28 @@ void run() {
     gatewayService->init("", nullptr);
 #endif
 
-    auto serializationWrapper = new GatewaySerialization(gatewayService, code, accessCode);
+    auto serializationWrapper = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
     server = new UVListener(serializationWrapper);
 #else
-    server = new UDPListener(serializationWrapper);
+    svc.server = new UDPListener(serializationWrapper);
 #endif
-    server->setAddress(intf, port);
-	int r = server->run();
+    svc.server->setAddress(svc.intf, svc.port);
+    svc.server->setLog(svc.verbose, &svc);
+	int r = svc.server->run();
     if (r)
         std::cerr << MSG_ERROR << r << ": " << std::endl;
 }
 
 int main(int argc, char **argv) {
-	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4242");
+	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4244");
 #ifdef ENABLE_SQLITE
     struct arg_str *a_db = arg_str1("d", "db", "<file>", "database file name");
 #endif
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
-	struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 1,"print errors/warnings");
+	struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v - verbose, -vv - debug");
 	struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
@@ -140,14 +193,14 @@ int main(int argc, char **argv) {
 	// Parse the command line as defined by argtable[]
 	int nerrors = arg_parse(argc, argv, argtable);
 
-	bool runAsDaemon = a_daemonize->count > 0;
-	int verbose = a_verbose->count;
+    svc.runAsDaemon = a_daemonize->count > 0;
+	svc.verbose = a_verbose->count;
 
 	if (a_interface_n_port->count) {
-        splitAddress(intf, port, std::string(*a_interface_n_port->sval));
+        splitAddress(svc.intf, svc.port, std::string(*a_interface_n_port->sval));
     } else {
-        intf = "*";
-        port = 4242;
+        svc.intf = "*";
+        svc.port = 4244;
     }
 
 #ifdef ENABLE_SQLITE
@@ -155,14 +208,14 @@ int main(int argc, char **argv) {
         db = *a_db->sval;
 #endif
     if (a_code->count)
-        code = *a_code->ival;
+        svc.code = *a_code->ival;
     else
-        code = 42;
+        svc.code = 42;
 
     if (a_access_code->count)
-        accessCode = strtoull(*a_access_code->sval, nullptr, 16);
+        svc.accessCode = strtoull(*a_access_code->sval, nullptr, 16);
     else
-        accessCode = 42;
+        svc.accessCode = 42;
 
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
@@ -177,16 +230,24 @@ int main(int argc, char **argv) {
 	}
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
-	if (runAsDaemon) {
+#ifdef _MSC_VER
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+
+    if (svc.runAsDaemon) {
 		char wd[PATH_MAX];
 		std::string progpath = getcwd(wd, PATH_MAX);	
-		if (verbose)
+		if (svc.verbose)
 			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
 		OPEN_SYSLOG(progname)
         Daemonize daemon(progname, progpath, run, stop, done);
 		// CLOSESYSLOG()
 	} else {
 		setSignalHandler();
+        if (svc.verbose > 1) {
+            std::cerr << svc.toString() << std::endl;
+        }
 		run();
 		done();
 	}

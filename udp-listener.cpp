@@ -39,6 +39,14 @@
 
 #define DEF_KEEPALIVE_SECS 60
 
+#ifdef _MSC_VER
+#define SOCKET_ERRNO WSAGetLastError()
+#define ERR_TIMEOUT WSAETIMEDOUT
+#else
+#define SOCKET_ERRNO errno
+#define ERR_TIMEOUT EAGAIN
+#endif
+
 /**
  * @see https://habr.com/ru/post/340758/
  * @see https://github.com/Mityuha/grpc_async/blob/master/grpc_async_server.cc
@@ -46,8 +54,17 @@
 UDPListener::UDPListener(
     GatewaySerialization *aSerializationWrapper
 )
-    : GatewayListener(aSerializationWrapper), destAddr({}), status(CODE_OK)
+    : GatewayListener(aSerializationWrapper), destAddr({}), status(CODE_OK), verbose(0), log(nullptr)
 {
+}
+
+void UDPListener::setLog(
+    int aVerbose,
+    LogIntf *aLog
+)
+{
+    verbose = aVerbose;
+    log = aLog;
 }
 
 // http://stackoverflow.com/questions/25615340/closing-libuv-handles-correctly
@@ -88,9 +105,10 @@ void UDPListener::setAddress(
 
 int UDPListener::run()
 {
-#ifdef ENABLE_DEBUG	
-	std::cerr << "Run.." << std::endl;
-#endif
+    if (log && verbose > 1) {
+        log->strm(LOG_INFO) << "Run..";
+        log->flush();
+    }
     char rxBuf[256];
 
     int proto = isIPv6(&destAddr) ? IPPROTO_IPV6 : IPPROTO_IP;
@@ -100,21 +118,26 @@ int UDPListener::run()
     while (status != ERR_CODE_STOPPED) {
         SOCKET sock = socket(af, SOCK_DGRAM, proto);
         if (sock == INVALID_SOCKET) {
-#ifdef ENABLE_DEBUG
-            std::cerr << "Unable to create socket, error " << errno << std::endl;
-#endif
-#ifdef _MSC_VER
-            std::cerr << "Unable to create socket, error " << WSAGetLastError() << std::endl;
-#endif
+            if (log) {
+                log->strm(LOG_ERR) << "Unable to create socket, error " << SOCKET_ERRNO;
+                log->flush();
+            }
             r = ERR_CODE_SOCKET_CREATE;
             break;
         }
-#ifdef ENABLE_DEBUG
-        std::cerr << "Socket created " << std::endl;
+#ifdef _MSC_VER
+        if (log && verbose > 1) {
+            log->strm(LOG_INFO) << "Socket created ";
+            log->flush();
+        }
 #endif
-
         int enable = 1;
-        setsockopt(sock, IPPROTO_IP, IP_PKTINFO, (const char*) &enable, sizeof(enable));
+        if (setsockopt(sock, IPPROTO_IP, IP_PKTINFO, (const char*) &enable, sizeof(enable))) {
+            if (log) {
+                log->strm(LOG_ERR) << "Socket unable to enable receive packet information, error " << SOCKET_ERRNO;
+                log->flush();
+            }
+        }
 
         if (af == AF_INET6) {
             // Note that by default IPV6 binds to both protocols, it must be disabled
@@ -125,17 +148,29 @@ int UDPListener::run()
         }
 
         // Set timeout
-        struct timeval timeout{1, 0};
-        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof timeout);
+#ifdef _MSC_VER
+        DWORD timeout = 1000;   // ms
+#else
+        struct timeval timeout { 1, 0 };
+#endif
+        if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof timeout)) {
+            if (log) {
+                log->strm(LOG_ERR) << "Socket unable to set timeout, error " << SOCKET_ERRNO;
+                log->flush();
+            }
+        }
 
         if (bind(sock, (struct sockaddr *) &destAddr, sizeof(destAddr)) < 0) {
-#ifdef ENABLE_DEBUG
-            std::cerr << "Socket unable to bind, errno " << errno << std::endl;
-#endif
+            if (log) {
+                log->strm(LOG_ERR) << "Socket unable to bind, error " << SOCKET_ERRNO;
+                log->flush();
+            }
         }
-#ifdef ENABLE_DEBUG
-        std::cerr << "Socket bound " << std::endl;
-#endif
+        if (log && verbose > 1) {
+            log->strm(LOG_INFO) << "Socket bound ";
+            log->flush();
+        }
+
         struct sockaddr_storage source_addr{}; // Large enough for both IPv4 or IPv6
         socklen_t socklen = sizeof(source_addr);
 
@@ -143,42 +178,49 @@ int UDPListener::run()
             int len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
             // Error occurred during receiving
             if (len < 0) {
-                if (errno == EAGAIN)    // timeout occurs
+                if (SOCKET_ERRNO == ERR_TIMEOUT) {    // timeout occurs
                     continue;
-#ifdef ENABLE_DEBUG
-                std::cerr << "recvfrom error "
-                    << len << ": " << strerror(errno)
-                    << " , errno "
-                    << errno << ": " << strerror(errno) << std::endl;
-#endif
+                }
+                if (log) {
+                    log->strm(LOG_ERR) << "Receive error " << SOCKET_ERRNO;
+                    log->flush();
+                }
                 continue;
             } else {
                 // Data received
-#ifdef ENABLE_DEBUG
-                std::cerr << "Received " << len << " bytes" << std::endl;
-#endif
+                if (log && verbose > 1) {
+                    log->strm(LOG_INFO) << "Received " << len << " bytes: " << hexString(rxBuf, len);
+                    log->flush();
+                }
                 char *r;
                 size_t sz = makeResponse(serializationWrapper, &r, rxBuf, len);
                 if (r && (sz > 0)) {
                     if (sendto(sock, r, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
-#ifdef ENABLE_DEBUG
-                        std::cerr << "Error occurred during sending " << errno << std::endl;
-#endif
+                        if (log) {
+                            log->strm(LOG_ERR) << "Error occurred during sending " << SOCKET_ERRNO;
+                            log->flush();
+                        }
                     }
                     free(r);
+                } else {
+                    if (log && verbose) {
+                        log->strm(LOG_ERR) << "Invalid request: " << hexString(rxBuf, len) << " (" << len << " bytes)";
+                        log->flush();
+                    }
                 }
             }
         }
-
-#ifdef ENABLE_DEBUG
-        std::cerr << "Shutting down socket and restarting.." << std::endl;
-#endif
+        if (log && verbose > 1) {
+            log->strm(LOG_INFO) << "Shutting down socket and restarting..";
+            log->flush();
+        }
         shutdown(sock, 0);
         close(sock);
     }
-#ifdef ENABLE_DEBUG
-	std::cerr << "Run." << std::endl;
-#endif
+    if (log && verbose > 1) {
+        log->strm(LOG_INFO) << "Run.";
+        log->flush();
+    }
     return r;
 }
 

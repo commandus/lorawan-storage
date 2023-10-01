@@ -36,8 +36,9 @@ public:
     /**
      * Prepare to send request
      * @param value
+     * @return previous message, NULL if not exists
      */
-    void request(
+    ServiceMessage* request(
         ServiceMessage* value
     ) override;
     void start() override;

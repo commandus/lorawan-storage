@@ -28,11 +28,18 @@ void sockaddrNtoh(
     struct sockaddr *addr
 )
 {
-    if (addr->sa_family == AF_INET6) {
-        auto *a = (sockaddr_in6 *) addr;
-        NTOH2(a->sin6_port);
-    } else {
-        auto *a = (sockaddr_in *) addr;
-        NTOH2(a->sin_port);
+    switch (addr->sa_family)
+    {
+        case AF_INET6: {
+            auto *a = (sockaddr_in6 *) addr;
+            NTOH2(a->sin6_port);
+        }
+        break;
+        case AF_INET: {
+            auto *a = (sockaddr_in *) addr;
+            NTOH2(a->sin_port);
+        }
+        default:
+            break;
     }
 }
