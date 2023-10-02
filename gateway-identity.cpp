@@ -1,6 +1,7 @@
 #include "gateway-identity.h"
 #include <sstream>
 #include <iomanip>
+#include <cstring>
 
 #include "lorawan-date.h"
 #include "ip-address.h"

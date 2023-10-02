@@ -3,6 +3,7 @@
 #include "ip-helper.h"
 
 #include <sstream>
+#include <cstring>
 
 #include "lorawan-error.h"
 #include "ip-address.h"
@@ -10,6 +11,18 @@
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"
 #endif
+
+struct in_addr_4 {
+    union {
+        struct {
+            u_char s_b1;
+            u_char s_b2;
+            u_char s_b3;
+            u_char s_b4;
+        } S_un_b;
+        u_long S_addr;
+    } S_un;
+};
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -36,10 +49,18 @@ static size_t serializeSocketAddress(
                 struct sockaddr_in *addrIn = (struct sockaddr_in *) addr;
                 retBuf[1] = *(unsigned char *) &addrIn->sin_port;
                 retBuf[2] = * ((unsigned char *) &addrIn->sin_port + 1);
+#ifdef _MSC_VER
                 retBuf[3] = addrIn->sin_addr.S_un.S_un_b.s_b1;
                 retBuf[4] = addrIn->sin_addr.S_un.S_un_b.s_b2;
                 retBuf[5] = addrIn->sin_addr.S_un.S_un_b.s_b3;
                 retBuf[6] = addrIn->sin_addr.S_un.S_un_b.s_b4;
+#else
+                struct in_addr_4 *p4 = (struct in_addr_4 *) &addrIn->sin_addr.s_addr;
+                retBuf[3] = p4->S_un.S_un_b.s_b1;
+                retBuf[4] = p4->S_un.S_un_b.s_b2;
+                retBuf[5] = p4->S_un.S_un_b.s_b3;
+                retBuf[6] = p4->S_un.S_un_b.s_b4;
+#endif
             }
             r = 7;
             break;
@@ -49,6 +70,8 @@ static size_t serializeSocketAddress(
                 struct sockaddr_in6 *addrIn = (struct sockaddr_in6 *) addr;
                 retBuf[1] = *(unsigned char *) &addrIn->sin6_port;
                 retBuf[2] = * ((unsigned char *) &addrIn->sin6_port + 1);
+
+#ifdef _MSC_VER
                 retBuf[3] = addrIn->sin6_addr.u.Byte[0];
                 retBuf[4] = addrIn->sin6_addr.u.Byte[1];
                 retBuf[5] = addrIn->sin6_addr.u.Byte[2];
@@ -68,6 +91,27 @@ static size_t serializeSocketAddress(
                 retBuf[16] = addrIn->sin6_addr.u.Byte[13];
                 retBuf[17] = addrIn->sin6_addr.u.Byte[14];
                 retBuf[18] = addrIn->sin6_addr.u.Byte[15];
+#else
+                retBuf[3] = addrIn->sin6_addr.__in6_u.__u6_addr8[0];
+                retBuf[4] = addrIn->sin6_addr.__in6_u.__u6_addr8[1];
+                retBuf[5] = addrIn->sin6_addr.__in6_u.__u6_addr8[2];
+                retBuf[6] = addrIn->sin6_addr.__in6_u.__u6_addr8[3];
+
+                retBuf[7] = addrIn->sin6_addr.__in6_u.__u6_addr8[4];
+                retBuf[8] = addrIn->sin6_addr.__in6_u.__u6_addr8[5];
+                retBuf[9] = addrIn->sin6_addr.__in6_u.__u6_addr8[6];
+                retBuf[10] = addrIn->sin6_addr.__in6_u.__u6_addr8[7];
+
+                retBuf[11] = addrIn->sin6_addr.__in6_u.__u6_addr8[8];
+                retBuf[12] = addrIn->sin6_addr.__in6_u.__u6_addr8[9];
+                retBuf[13] = addrIn->sin6_addr.__in6_u.__u6_addr8[10];
+                retBuf[14] = addrIn->sin6_addr.__in6_u.__u6_addr8[11];
+
+                retBuf[15] = addrIn->sin6_addr.__in6_u.__u6_addr8[12];
+                retBuf[16] = addrIn->sin6_addr.__in6_u.__u6_addr8[13];
+                retBuf[17] = addrIn->sin6_addr.__in6_u.__u6_addr8[14];
+                retBuf[18] = addrIn->sin6_addr.__in6_u.__u6_addr8[15];
+#endif
             }
             r = 19;
             break;
@@ -90,10 +134,19 @@ static size_t deserializeSocketAddress(
                 struct sockaddr_in *addrIn = (struct sockaddr_in *) addr;
                 *(unsigned char *) &addrIn->sin_port = retBuf[1];
                 *((unsigned char *) &addrIn->sin_port + 1) = retBuf[2];
+
+#ifdef _MSC_VER
                 addrIn->sin_addr.S_un.S_un_b.s_b1 = retBuf[3];
                 addrIn->sin_addr.S_un.S_un_b.s_b2 = retBuf[4];
                 addrIn->sin_addr.S_un.S_un_b.s_b3 = retBuf[5];
                 addrIn->sin_addr.S_un.S_un_b.s_b4 = retBuf[6];
+#else
+                struct in_addr_4 *p4 = (struct in_addr_4 *) &addrIn->sin_addr.s_addr;
+                p4->S_un.S_un_b.s_b1 = retBuf[3];
+                p4->S_un.S_un_b.s_b2 = retBuf[4];
+                p4->S_un.S_un_b.s_b3 = retBuf[5];
+                p4->S_un.S_un_b.s_b4 = retBuf[6];
+#endif
             }
             r = 7;
             break;
@@ -103,6 +156,7 @@ static size_t deserializeSocketAddress(
                 struct sockaddr_in6 *addrIn = (struct sockaddr_in6 *) addr;
                 *(unsigned char *) &addrIn->sin6_port = retBuf[1];
                 *((unsigned char *) &addrIn->sin6_port + 1) = retBuf[2];
+#ifdef _MSC_VER
                 addrIn->sin6_addr.u.Byte[0] = retBuf[3];
                 addrIn->sin6_addr.u.Byte[1] = retBuf[4];
                 addrIn->sin6_addr.u.Byte[2] = retBuf[5];
@@ -122,6 +176,27 @@ static size_t deserializeSocketAddress(
                 addrIn->sin6_addr.u.Byte[13] = retBuf[16];
                 addrIn->sin6_addr.u.Byte[14] = retBuf[17];
                 addrIn->sin6_addr.u.Byte[15] = retBuf[18];
+#else
+                addrIn->sin6_addr.__in6_u.__u6_addr8[0] = retBuf[3];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[1] = retBuf[4];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[2] = retBuf[5];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[3] = retBuf[6];
+
+                addrIn->sin6_addr.__in6_u.__u6_addr8[4] = retBuf[7];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[5] = retBuf[8];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[6] = retBuf[9];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[7] = retBuf[10];
+
+                addrIn->sin6_addr.__in6_u.__u6_addr8[8] = retBuf[11];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[9] = retBuf[12];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[10] = retBuf[13];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[11] = retBuf[14];
+
+                addrIn->sin6_addr.__in6_u.__u6_addr8[12] = retBuf[15];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[13] = retBuf[16];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[14] = retBuf[17];
+                addrIn->sin6_addr.__in6_u.__u6_addr8[15] = retBuf[18];
+#endif
             }
             r = 19;
             break;

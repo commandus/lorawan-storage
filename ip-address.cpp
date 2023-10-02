@@ -1,6 +1,9 @@
 #include "ip-address.h"
 
 #include <sstream>
+#ifndef _MSC_VER
+#include <arpa/inet.h>
+#endif
 
 /**
  * @return address string

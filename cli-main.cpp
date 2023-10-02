@@ -11,7 +11,6 @@
 #define getcwd _getcwd
 #else
 #include <unistd.h>
-
 #endif
 
 #include "argtable3/argtable3.h"
@@ -94,7 +93,9 @@ public:
         return ss.str();
     }
 
-    std::ostream & strm(int level) override {
+    std::ostream& strm(
+        int level
+    ) override {
         return std::cerr;
     }
 
@@ -128,7 +129,6 @@ void signalHandler(int signal)
         done();
 	}
 }
-
 
 void setSignalHandler()
 {

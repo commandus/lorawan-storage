@@ -3,6 +3,7 @@
 
 #include <uv.h>
 #include <sstream>
+#include <cstring>
 
 #include "argtable3/argtable3.h"
 

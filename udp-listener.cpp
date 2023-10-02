@@ -1,5 +1,7 @@
 #include "udp-listener.h"
 
+#include <iostream>
+
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"
 #endif
@@ -9,15 +11,13 @@
 #endif
 #ifdef _MSC_VER
 #include <iostream>
-#endif
-
-#ifdef _MSC_VER
     #include <ws2tcpip.h>
     #include <io.h>
     #define write _write
     #define close closesocket
 #else
     #define SOCKET int
+    #define INVALID_SOCKET -1
     #ifdef ESP_PLATFORM
         #include "esp_log.h"
         #include "esp_netif.h"
@@ -119,7 +119,7 @@ int UDPListener::run()
         SOCKET sock = socket(af, SOCK_DGRAM, proto);
         if (sock == INVALID_SOCKET) {
             if (log) {
-                log->strm(LOG_ERR) << "Unable to create socket, error " << SOCKET_ERRNO;
+                log->strm(LOG_ERR) << 1 << "Unable to create socket, error " << SOCKET_ERRNO;
                 log->flush();
             }
             r = ERR_CODE_SOCKET_CREATE;

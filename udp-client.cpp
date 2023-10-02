@@ -1,5 +1,7 @@
 #include "udp-client.h"
 
+#include <cstring>
+
 #ifdef _MSC_VER
 #include <WS2tcpip.h>
 
@@ -8,6 +10,7 @@
 #define ERR_TIMEOUT WSAETIMEDOUT
 // #define inet_pton InetPtonA
 #else
+#define INVALID_SOCKET  -1
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -18,7 +21,6 @@
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
-#include <cstring>
 #include "lorawan-msg.h"
 #endif
 
