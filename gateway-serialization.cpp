@@ -937,35 +937,35 @@ enum CliGatewayQueryTag validateQuery(
 {
     switch (buffer[0]) {
         case 'a':   // request gateway identifier(with address) by network address.
-            if (sz < sizeof(GatewayAddrRequest))
+            if (sz < 21)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ADDR;
         case 'A':   // request gateway address (with identifier) by identifier.
-            if (sz < sizeof(GatewayAddrRequest))
+            if (sz < 28)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ID;
         case 'p':   // assign (put) gateway address to the gateway by identifier
-            if (sz < sizeof(GatewayAddrRequest))
+            if (sz < 28)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ASSIGN;
         case 'r':   // Remove entry
-            if (sz < sizeof(GatewayIdRequest))
+            if (sz < 21)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_RM;
         case 'L':   // List entries
-            if (sz < sizeof(OperationRequest))
+            if (sz < 29)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_LIST;
         case 'c':   // list count
-            if (sz < sizeof(OperationRequest))
+            if (sz < 29)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_COUNT;
         case 'f':   // force save
-            if (sz < sizeof(OperationRequest))
+            if (sz < 29)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_FORCE_SAVE;
         case 'd':   // close resources
-            if (sz < sizeof(OperationRequest))
+            if (sz < 29)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_CLOSE_RESOURCES;
     default:
@@ -987,15 +987,15 @@ size_t responseSizeForRequest(
 {
     enum CliGatewayQueryTag tag = validateQuery(buffer, size);
     switch (tag) {
-        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
-        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
-            return sizeof(GetResponse);
-        case QUERY_GATEWAY_LIST:   // List entries
+        case QUERY_GATEWAY_ADDR:    // request gateway identifier(with address) by network address.
+        case QUERY_GATEWAY_ID:      // request gateway address (with identifier) by identifier.
+            return 32;              // IPv4: 20 IPv6: 32
+        case QUERY_GATEWAY_LIST:    // List entries
             return getMaxListResponseSize(((OperationRequest *) buffer)->size);
         default:
             break;
     }
-    return sizeof(OperationResponse);
+    return 37; // OperationResponse
 }
 
 size_t makeResponse(
