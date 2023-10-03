@@ -51,4 +51,15 @@ bool string2sockaddr(
     uint16_t port
 );
 
+/**
+ * Return true if socket address A is same as B
+ * @param a socket address A
+ * @param b socket address B
+ * @return Return true if socket address A is same as B
+ */
+bool sameSocketAddress(
+    const struct sockaddr *a,
+    const struct sockaddr *b
+);
+
 #endif

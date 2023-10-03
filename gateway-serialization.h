@@ -67,14 +67,13 @@ public:
     GatewayIdentity identity;
     GatewayIdAddrRequest();
     explicit GatewayIdAddrRequest(const GatewayIdentity &identity);
-    GatewayIdAddrRequest(const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
+    GatewayIdAddrRequest(char aTag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
     GatewayIdAddrRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
 };
-
 
 class OperationRequest : public ServiceMessage {
 public:
@@ -92,9 +91,13 @@ public:
 
 class GetResponse : public GatewayAddrRequest {
 public:
+
+    GetResponse(const GatewayIdAddrRequest &request);
+
     GatewayIdentity response;
     GetResponse() = default;
     explicit GetResponse(const GatewayAddrRequest& request);
+    GetResponse(const GatewayIdRequest &request);
     GetResponse(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
@@ -126,6 +129,17 @@ public:
     std::string toJsonString() const override;
 };
 
+/**
+ * Return request object or  NULL if packet is invalid
+ * @param buf buffer
+ * @param sz buffer size
+ * @return return NULL if packet is invalid
+ */
+ServiceMessage* deserialize(
+    const unsigned char *buf,
+    size_t sz
+);
+
 class GatewaySerialization {
 private:
     GatewayService *svc;
@@ -140,13 +154,15 @@ public:
     /**
      * Request GatewayService and return serializred response.
      * @param retBuf buffer to return serialized response
+     * @param retSize buffer size
      * @param request serialized request
      * @param sz serialized request size
      * @return GatewayService response size
      */
     size_t query(
-        char **retBuf,
-        const char *request,
+        unsigned char *retBuf,
+        size_t retSize,
+        const unsigned char *request,
         size_t sz
     );
 };
@@ -183,27 +199,29 @@ size_t responseSizeForRequest(
 );
 
 /**
- * Calc size for serialized list
+ * Get size for serialized list
  * @param sz count ofg items
  * @return size in bytes
  */
-size_t getListResponseSize(
+size_t getMaxListResponseSize(
     size_t sz
 );
 
 /**
  * Helper function
  * @param gatewaySerializer
- * @param retBuf
- * @param buf
- * @param sz
- * @return
+ * @param retBuf return buffer
+ * @param retSize buffer size
+ * @param buf received packed
+ * @param sz received packed size
+ * @return 0 if no response
  */
 size_t makeResponse(
     GatewaySerialization *gatewaySerializer,
-    char **retBuf,
-    const char *buf,
-    ssize_t sz
+    unsigned char *retBuf,
+    size_t retSize,
+    const unsigned char *buf,
+    size_t sz
 );
 
 #endif

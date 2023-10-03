@@ -1,13 +1,13 @@
 #include <string>
 #include <iostream>
 
-#include <uv.h>
 #include <sstream>
 #include <cstring>
 
 #include "argtable3/argtable3.h"
 
 #ifdef ENABLE_LIBUV
+#include <uv.h>
 #include "uv-client.h"
 #else
 #include "udp-client.h"
@@ -19,6 +19,7 @@
 #include "ip-address.h"
 
 const char *progname = "lorawan-gateway-query";
+#define DEF_PORT 4244
 
 class CommandName {
 public:
@@ -100,7 +101,7 @@ public:
     int32_t retCode;
 
     CliGatewayQueryParams()
-        : tag(tag), queryPos(0), useTcp(false), verbose(0), port(4244), code(42), accessCode(42), offset(0), size(0),
+        : tag(tag), queryPos(0), useTcp(false), verbose(0), port(DEF_PORT), code(42), accessCode(42), offset(0), size(0),
           retCode(0)
     {
 
@@ -244,8 +245,10 @@ public:
                     req = new OperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_ASSIGN:
+                    req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_RM:
+                    req = new GatewayIdRequest(gi.gatewayId, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_FORCE_SAVE:
                     break;
@@ -296,7 +299,8 @@ static bool mergeIdAddress(
     return true;
 }
 
-static void run() {
+static void run()
+{
 	OnResp onResp(params.query, params.verbose);
     GatewayClient *client;
 #ifdef ENABLE_LIBUV
@@ -351,7 +355,7 @@ int main(int argc, char **argv) {
         }
     } else {
         params.intf = "localhost";
-        params.port = 4244;
+        params.port = DEF_PORT;
     }
 
     params.tag = QUERY_GATEWAY_ADDR;

@@ -44,13 +44,22 @@ GatewayIdentity::GatewayIdentity(
 }
 
 GatewayIdentity::GatewayIdentity(
-        uint64_t aGatewayId,
-        const std::string &address,
-        uint16_t port
+    uint64_t aGatewayId,
+    const std::string &address,
+    uint16_t port
 )
     : gatewayId(aGatewayId)
 {
     string2sockaddr(&sockaddr, address, port);
+}
+
+GatewayIdentity::GatewayIdentity(
+    const uint64_t aGatewayId,
+    const struct sockaddr &addr
+)
+    : gatewayId(aGatewayId), sockaddr(addr)
+{
+
 }
 
 /**

@@ -22,12 +22,13 @@
  */
 class GatewayIdentity {
 public:
-	uint64_t gatewayId;         // gateway identifier
+    uint64_t gatewayId;         // gateway identifier
 	struct sockaddr sockaddr;   // gateway UIPv4 or IPv6 address, 15-16 bytes long
 
 	GatewayIdentity();
 	GatewayIdentity(const GatewayIdentity &value);
     GatewayIdentity(uint64_t gatewayId);
+    GatewayIdentity(const uint64_t id, const struct sockaddr &addr);
     GatewayIdentity(uint64_t gatewayId, const std::string &addressNport);
     GatewayIdentity(uint64_t gatewayId, const std::string &address, uint16_t port);
 	bool operator==(GatewayIdentity &rhs) const;

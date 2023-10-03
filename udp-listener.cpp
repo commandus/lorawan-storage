@@ -109,7 +109,7 @@ int UDPListener::run()
         log->strm(LOG_INFO) << "Run..";
         log->flush();
     }
-    char rxBuf[256];
+    unsigned char rxBuf[256];
 
     int proto = isIPv6(&destAddr) ? IPPROTO_IPV6 : IPPROTO_IP;
     int af = isIPv6(&destAddr) ? AF_INET6 : AF_INET;
@@ -174,6 +174,8 @@ int UDPListener::run()
         struct sockaddr_storage source_addr{}; // Large enough for both IPv4 or IPv6
         socklen_t socklen = sizeof(source_addr);
 
+        unsigned char r[256];
+
         while (status != ERR_CODE_STOPPED) {
             int len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
             // Error occurred during receiving
@@ -192,16 +194,19 @@ int UDPListener::run()
                     log->strm(LOG_INFO) << "Received " << len << " bytes: " << hexString(rxBuf, len);
                     log->flush();
                 }
-                char *r;
-                size_t sz = makeResponse(serializationWrapper, &r, rxBuf, len);
-                if (r && (sz > 0)) {
+                size_t sz = makeResponse(serializationWrapper, r, sizeof(r), rxBuf, len);
+                if (sz > 0) {
                     if (sendto(sock, r, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
                         if (log) {
                             log->strm(LOG_ERR) << "Error occurred during sending " << SOCKET_ERRNO;
                             log->flush();
                         }
+                    } else {
+                        if (log && verbose > 1) {
+                            log->strm(LOG_INFO) << "Sent " << len << " bytes: " << hexString(rxBuf, len) << " successfully";
+                            log->flush();
+                        }
                     }
-                    free(r);
                 } else {
                     if (log && verbose) {
                         log->strm(LOG_ERR) << "Invalid request: " << hexString(rxBuf, len) << " (" << len << " bytes)";

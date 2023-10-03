@@ -1,7 +1,10 @@
+#include <cstring>
+
 #include "gateway-service-mem.h"
 #include "lorawan-types.h"
 #include "lorawan-error.h"
 #include "lorawan-string.h"
+#include "ip-address.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
@@ -10,7 +13,6 @@
 
 MemoryGatewayService::MemoryGatewayService()
 {
-
 }
 
 MemoryGatewayService::~MemoryGatewayService() = default;
@@ -31,20 +33,30 @@ int MemoryGatewayService::get(
     const GatewayIdentity &request
 )
 {
-#ifdef ENABLE_DEBUG
-    std::cerr << "get " << std::endl;
-#endif
-    auto r = storage.find(request.gatewayId);
-    if (r != storage.end()) {
-        retVal = r->second;
-        return CODE_OK;
+    if (request.gatewayId) {
+        // find out by gateway identifier
+        auto r = storage.find(request.gatewayId);
+        if (r != storage.end()) {
+            retVal = r->second;
+            return CODE_OK;
+        } else {
+            memset(&retVal.sockaddr, 0, sizeof(retVal.sockaddr));
+            return ERR_CODE_GATEWAY_NOT_FOUND;
+        }
+    } else {
+        // reverse find out by address
+        for (auto it(storage.begin()); it != storage.end(); it++) {
+            if (sameSocketAddress(&request.sockaddr, &it->second.sockaddr)) {
+                retVal = it->second;
+                return CODE_OK;
+            }
+        }
+        return ERR_CODE_GATEWAY_NOT_FOUND;
     }
-    return ERR_CODE_GATEWAY_NOT_FOUND;
 }
 
-
 // List entries
-void MemoryGatewayService::list(
+int  MemoryGatewayService::list(
     std::vector<GatewayIdentity> &retVal,
     size_t offset,
     size_t size
@@ -61,6 +73,7 @@ void MemoryGatewayService::list(
             break;
         retVal.push_back(it->second);
     }
+    return CODE_OK;
 }
 
 // Entries count
@@ -69,14 +82,15 @@ size_t MemoryGatewayService::size()
     return storage.size();
 }
 
-void MemoryGatewayService::put(
+int MemoryGatewayService::put(
     const GatewayIdentity &request
 )
 {
     storage[request.gatewayId] = request;
+    return CODE_OK;
 }
 
-void MemoryGatewayService::rm(
+int MemoryGatewayService::rm(
     const GatewayIdentity &request
 )
 {
@@ -84,6 +98,7 @@ void MemoryGatewayService::rm(
     if (r != storage.end()) {
         storage.erase(r);
     }
+    return CODE_OK;
 }
 
 int MemoryGatewayService::init(

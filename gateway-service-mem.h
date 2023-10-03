@@ -15,11 +15,11 @@ public:
     ~MemoryGatewayService() override;
     int get(GatewayIdentity &retVal, const GatewayIdentity &request) override;
     // List entries
-    void list(std::vector<GatewayIdentity> &retVal, size_t offset, size_t size) override;
+    int list(std::vector<GatewayIdentity> &retVal, size_t offset, size_t size) override;
     // Entries count
     size_t size() override;
-    void put(const GatewayIdentity &request) override;
-    void rm(const GatewayIdentity &addr) override;
+    int put(const GatewayIdentity &request) override;
+    int rm(const GatewayIdentity &addr) override;
 
     int init(const std::string &option, void *data) override;
     void flush() override;

@@ -16,7 +16,6 @@
 #include <unistd.h>
 
 #define SOCKET_ERRNO errno
-#define ERR_TIMEOUT EAGAIN
 #endif
 
 #ifdef ENABLE_DEBUG
@@ -29,6 +28,7 @@
 #include "ip-helper.h"
 
 #define DEF_KEEPALIVE_SECS 60
+#define DEF_READ_TIMEOUT_SECONDS    2
 
 void UDPClient::stop()
 {
@@ -110,9 +110,9 @@ void UDPClient::start() {
 
         // Set timeout
 #ifdef _MSC_VER
-        DWORD timeout = 1000;   // ms
+        DWORD timeout = DEF_READ_TIMEOUT_SECONDS * 1000;   // ms
 #else
-        struct timeval timeout { 1, 0 };
+        struct timeval timeout { DEF_READ_TIMEOUT_SECONDS, 0 };
 #endif
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout, sizeof timeout);
 
@@ -129,7 +129,9 @@ void UDPClient::start() {
                 break;
             }
 #ifdef ENABLE_DEBUG
-            std::cerr << MSG_SENT << sz << MSG_BYTES << std::endl;
+            std::cerr << MSG_SENT << sz << " " << MSG_BYTES << ": "
+            << hexString(sendBuffer, ssz)
+            << std::endl;
 #endif
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
@@ -143,7 +145,9 @@ void UDPClient::start() {
                 break;
             } else {
 #ifdef ENABLE_DEBUG
-                std::cerr << MSG_RECEIVED << len << " " << MSG_BYTES << std::endl;
+                std::cerr << MSG_RECEIVED << len << " " << MSG_BYTES
+                << ": " << hexString(rxBuf, len)
+                << std::endl;
 #endif
                 enum CliGatewayQueryTag tag = validateQuery(rxBuf, len);
                 switch (tag) {

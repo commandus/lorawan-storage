@@ -25,19 +25,20 @@ public:
     virtual int get(GatewayIdentity &retVal, const GatewayIdentity &request) = 0;
 
     // Add or replace Address = EUI and keys pair
-    virtual void put(const GatewayIdentity &identity) = 0;
+    virtual int put(const GatewayIdentity &identity) = 0;
 
     // Remove entry
-    virtual void rm(const GatewayIdentity &identity) = 0;
+    virtual int rm(const GatewayIdentity &identity) = 0;
 
     /**
      * List entries
      * @param retVal return values
      * @param offset 0..
      * @param size 0- all
+     * @return CODE_OK- success
      */
 
-    virtual void list(
+    virtual int list(
         std::vector<GatewayIdentity> &retVal,
         size_t offset,
         size_t size

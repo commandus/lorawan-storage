@@ -57,7 +57,7 @@ static std::string IP_PROTO2string(
             return "TCP";
         default:
             return "TCP, UDP";
-    };
+    }
 }
 
 // global parameters and descriptors
@@ -85,7 +85,7 @@ public:
 
     }
 
-    std::string toString() {
+    std::string toString() const {
         std::stringstream ss;
         ss
             << "Service: " << intf << ":" << port << " " << IP_PROTO2string(proto) << ".\n"

@@ -1,3 +1,4 @@
+#include <cstring>
 #include "ip-address.h"
 
 #include <sstream>
@@ -96,4 +97,28 @@ bool string2sockaddr(
         }
     }
     return r;
+}
+
+bool sameSocketAddress(
+    const struct sockaddr *a,
+    const struct sockaddr *b
+)
+{
+    if (a->sa_family != b->sa_family)
+        return false;
+
+    switch (a->sa_family) {
+        case AF_INET: {
+            struct sockaddr_in *ai = (struct sockaddr_in *) a;
+            struct sockaddr_in *bi = (struct sockaddr_in *) b;
+            return ai->sin_port == bi->sin_port && memcmp(&ai->sin_addr, &bi->sin_addr, 4);
+        }
+        case AF_INET6:
+        {
+                struct sockaddr_in6 *ai = (struct sockaddr_in6 *) a;
+                struct sockaddr_in6 *bi = (struct sockaddr_in6 *) b;
+                return ai->sin6_port == bi->sin6_port && memcmp(&ai->sin6_addr, &bi->sin6_addr, 16);
+        }
+    }
+    return false;
 }
