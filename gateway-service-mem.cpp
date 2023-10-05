@@ -102,8 +102,8 @@ int MemoryGatewayService::rm(
 }
 
 int MemoryGatewayService::init(
-        const std::string &option,
-        void *data
+    const std::string &option,
+    void *data
 )
 {
     return CODE_OK;

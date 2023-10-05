@@ -17,6 +17,7 @@
 #include "log.h"
 #include "gateway-identity.h"
 #include "ip-address.h"
+#include "ip-helper.h"
 
 const char *progname = "lorawan-gateway-query";
 #define DEF_PORT 4244
@@ -150,21 +151,19 @@ public:
         GatewayClient* client,
         const OperationResponse *response
     ) override {
-        if (verbose) {
-            std::cerr << "operation successfully completed\n";
-        }
         if (response) {
-            if (response->code) {
-                std::cerr << ERR_MESSAGE << response->code << std::endl;
-                client->stop();
-            } else {
-                if (params.verbose)
+            if (params.verbose) {
+                if (response->response != 0)
                     std::cout << response->toJsonString() << std::endl;
                 else
-                    std::cout << response->response << std::endl;
-                if (!next(client)) {
-                    client->stop();
+                    std::cerr << response->size << " items completed\n";
+            } else {
+                if (response->response != 0) {
+                    std::cerr << ERR_MESSAGE << response->response << std::endl;
                 }
+            }
+            if (!next(client)) {
+                client->stop();
             }
         } else {
             client->stop();
@@ -176,17 +175,16 @@ public:
         const GetResponse *response
     ) override {
         if (response) {
-            if (response->code) {
-                std::cerr << ERR_MESSAGE << response->code << std::endl;
-                client->stop();
-            } else {
-                if (params.verbose)
-                    std::cout << response->toJsonString() << std::endl;
-                else
-                    std::cout << sockaddr2string(&response->response.sockaddr) << std::endl;
-                if (!next(client)) {
-                    client->stop();
+            if (params.verbose)
+                std::cout << response->toJsonString() << std::endl;
+            else
+                if (isIP(&response->response.sockaddr) && response->response.gatewayId) {
+                    std::cout
+                            << std::hex << response->response.gatewayId << "\t"
+                            << sockaddr2string(&response->response.sockaddr) << std::endl;
                 }
+            if (!next(client)) {
+                client->stop();
             }
         } else {
             client->stop();
@@ -198,22 +196,17 @@ public:
         const ListResponse *response
     ) override {
         if (response) {
-            if (response->code) {
-                std::cerr << ERR_MESSAGE << response->code << std::endl;
+            if (params.verbose)
+                std::cout << response->toJsonString() << std::endl;
+            else {
+                for (int i = 0; i < response->response; i++) {
+                    std::cout << std::hex << response->identities[i].gatewayId
+                        << "\t" << sockaddr2string(&response->identities[i].sockaddr)
+                        << std::endl;
+                }
+            }
+            if (!next(client)) {
                 client->stop();
-            } else {
-                if (params.verbose)
-                    std::cout << response->toJsonString() << std::endl;
-                else {
-                    for (int i = 0; i < response->response; i++) {
-                        std::cout << std::hex << response->identities[i].gatewayId
-                            << sockaddr2string(&response->identities[i].sockaddr)
-                            << std::endl;
-                    }
-                }
-                if (!next(client)) {
-                    client->stop();
-                }
             }
         } else {
             client->stop();
@@ -248,7 +241,7 @@ public:
                     req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_RM:
-                    req = new GatewayIdRequest(gi.gatewayId, params.code, params.accessCode);
+                    req = new GatewayIdRequest((char) params.tag, gi.gatewayId, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_FORCE_SAVE:
                     break;
@@ -258,7 +251,7 @@ public:
                     if (gi.gatewayId == 0)
                         req = new GatewayAddrRequest(gi.sockaddr, params.code, params.accessCode);
                     else
-                        req = new GatewayIdRequest(gi.gatewayId, params.code, params.accessCode);
+                        req = new GatewayIdRequest((char) params.tag, gi.gatewayId, params.code, params.accessCode);
                     break;
             }
         }
@@ -326,7 +319,7 @@ int main(int argc, char **argv) {
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
     struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
-    struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 100. ");
+    struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
@@ -384,9 +377,10 @@ int main(int argc, char **argv) {
         if (a_offset->count) {
             params.offset = (size_t) *a_offset->ival;
         }
-        if (a_size->count) {
+        if (a_size->count)
             params.size = (size_t) *a_size->ival;
-        }
+        else
+            params.size = 10;
     }
 
     if (params.tag == QUERY_GATEWAY_ASSIGN) {

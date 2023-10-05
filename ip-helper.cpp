@@ -24,6 +24,13 @@ bool isIPv6(
     return addr->sa_family == AF_INET6;
 }
 
+bool isIP(
+    const struct sockaddr *addr
+)
+{
+    return addr->sa_family == AF_INET || addr->sa_family == AF_INET6;
+}
+
 void sockaddrNtoh(
     struct sockaddr *addr
 )

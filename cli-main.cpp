@@ -79,8 +79,8 @@ public:
     int32_t retCode;
 
     CliGatewayServiceDescriptorNParams()
-            : server(nullptr), proto(PROTO_UDP), port(4244), code(0), accessCode(0), verbose(0), retCode(0),
-            runAsDaemon(false)
+        : server(nullptr), proto(PROTO_UDP), port(4244), code(0), accessCode(0), verbose(0), retCode(0),
+        runAsDaemon(false)
     {
 
     }

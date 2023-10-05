@@ -26,6 +26,7 @@
 #include "lorawan-string.h"
 #include "lorawan-error.h"
 #include "ip-helper.h"
+#include "lorawan-conv.h"
 
 #define DEF_KEEPALIVE_SECS 60
 #define DEF_READ_TIMEOUT_SECONDS    2
@@ -135,9 +136,10 @@ void UDPClient::start() {
 #endif
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
-            unsigned char *rxBuf = (unsigned char *) malloc(responseSizeForRequest((const unsigned char*) query, sizeof(*query)));
+            size_t rxSize = responseSizeForRequest(sendBuffer, ssz);
+            unsigned char *rxBuf = (unsigned char *) malloc(rxSize);
 
-            ssize_t len = recvfrom(sock, (char *) rxBuf, sizeof(rxBuf), 0, (struct sockaddr *)&srcAddress, &socklen);
+            ssize_t len = recvfrom(sock, (char *) rxBuf, rxSize, 0, (struct sockaddr *)&srcAddress, &socklen);
 
             if (len < 0) {  // Error occurred during receiving
                 status = ERR_CODE_SOCKET_READ;
@@ -161,9 +163,10 @@ void UDPClient::start() {
                         break;
                     case QUERY_GATEWAY_LIST:   // List entries
                     {
-                        ListResponse *gr = (ListResponse *) rxBuf;
-                        gr->ntoh();
-                        onResponse->onList(this, gr);
+                        ListResponse gr(rxBuf, len);
+                        gr.response = NTOH8(gr.response);
+                        gr.ntoh();
+                        onResponse->onList(this, &gr);
                     }
                         break;
                     default:

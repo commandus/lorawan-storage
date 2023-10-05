@@ -41,7 +41,7 @@ public:
     uint64_t id;
     GatewayIdRequest();
     explicit GatewayIdRequest(const uint64_t id);
-    GatewayIdRequest(const uint64_t id, int32_t code, uint64_t accessCode);
+    GatewayIdRequest(char aTag, uint64_t id, int32_t code, uint64_t accessCode);
     GatewayIdRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
@@ -89,16 +89,17 @@ public:
     std::string toJsonString() const override;
 };
 
-class GetResponse : public GatewayAddrRequest {
+class GetResponse : public ServiceMessage {
 public:
-
-    GetResponse(const GatewayIdAddrRequest &request);
-
     GatewayIdentity response;
+
     GetResponse() = default;
-    explicit GetResponse(const GatewayAddrRequest& request);
+    GetResponse(const GatewayAddrRequest& request);
     GetResponse(const GatewayIdRequest &request);
     GetResponse(const unsigned char *buf, size_t sz);
+    GetResponse(const GatewayIdAddrRequest &request);
+    GetResponse(const OperationRequest &request);
+
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     size_t deserialize(const unsigned char *buf, size_t sz) override;
@@ -111,6 +112,8 @@ public:
     OperationResponse();
     explicit OperationResponse(const OperationResponse& resp);
     OperationResponse(const unsigned char *buf, size_t sz);
+    OperationResponse(const GatewayIdAddrRequest &request);
+    OperationResponse(const OperationRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     size_t deserialize(const unsigned char *buf, size_t sz) override;
@@ -119,10 +122,11 @@ public:
 
 class ListResponse : public OperationResponse {
 public:
-    GatewayIdentity identities[1];
+    std::vector<GatewayIdentity> identities;
     ListResponse();
-    explicit ListResponse(const ListResponse& resp);
+    ListResponse(const ListResponse& resp);
     ListResponse(const unsigned char *buf, size_t sz);
+    ListResponse(const OperationRequest & request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     size_t deserialize(const unsigned char *buf, size_t sz) override;

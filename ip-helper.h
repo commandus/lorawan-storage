@@ -9,6 +9,10 @@ bool isIPv6(
     struct sockaddr *addr
 );
 
+bool isIP(
+    const struct sockaddr *addr
+);
+
 void sockaddrNtoh(
     struct sockaddr *addr
 );

@@ -174,7 +174,8 @@ int UDPListener::run()
         struct sockaddr_storage source_addr{}; // Large enough for both IPv4 or IPv6
         socklen_t socklen = sizeof(source_addr);
 
-        unsigned char r[256];
+        // IPv4 up to 18, IPv6 up to 10
+        unsigned char r[300];
 
         while (status != ERR_CODE_STOPPED) {
             int len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
@@ -203,7 +204,7 @@ int UDPListener::run()
                         }
                     } else {
                         if (log && verbose > 1) {
-                            log->strm(LOG_INFO) << "Sent " << len << " bytes: " << hexString(rxBuf, len) << " successfully";
+                            log->strm(LOG_INFO) << "Sent " << sz << " bytes: " << hexString(r, sz) << " successfully";
                             log->flush();
                         }
                     }
