@@ -10,7 +10,7 @@
 #define ERR_TIMEOUT WSAETIMEDOUT
 // #define inet_pton InetPtonA
 #else
-#define INVALID_SOCKET  -1
+#define INVALID_SOCKET  (-1)
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
@@ -137,7 +137,7 @@ void UDPClient::start() {
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
             size_t rxSize = responseSizeForRequest(sendBuffer, ssz);
-            unsigned char *rxBuf = (unsigned char *) malloc(rxSize);
+            auto *rxBuf = (unsigned char *) malloc(rxSize);
 
             ssize_t len = recvfrom(sock, (char *) rxBuf, rxSize, 0, (struct sockaddr *)&srcAddress, &socklen);
 
