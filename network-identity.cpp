@@ -11,29 +11,19 @@ NetworkIdentity::NetworkIdentity() = default;
 NetworkIdentity::NetworkIdentity(
 	const DEVADDR &a,
 	const DEVICEID &value
-) 
+)
+    :   devaddr(a.u), activation(value.activation), deviceclass(value.deviceclass),
+        devEUI(value.devEUI), nwkSKey(value.nwkSKey), appSKey(value.appSKey), name(value.name)
 {
-	memmove(&devaddr.u, &a, sizeof(DEVADDR));
-	memmove(&activation, &value.activation, sizeof(activation));
-	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
-	memmove(&nwkSKey.c, &value.nwkSKey, sizeof(KEY128));
-	memmove(&appSKey.c, &value.appSKey, sizeof(KEY128));
-	memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
 NetworkIdentity::NetworkIdentity
 (
 	const DEVICEID &value
 )
+    : devaddr(0), activation(value.activation), deviceclass(value.deviceclass),
+          devEUI(value.devEUI), nwkSKey(value.nwkSKey), appSKey(value.appSKey), name(value.name)
 {
-    memset(&devaddr.u, 0, sizeof(DEVADDR));
-    memmove(&activation, &value.activation, sizeof(activation));
-    memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-    memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
-    memmove(&nwkSKey.c, &value.nwkSKey, sizeof(KEY128));
-    memmove(&appSKey.c, &value.appSKey, sizeof(KEY128));
-    memmove(&name, &value.name, sizeof(DEVICENAME));
 }
 
 std::string NetworkIdentity::toString() const

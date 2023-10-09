@@ -64,7 +64,7 @@ std::string ltimeString(
 ) {
 	if (!value)
 		value = time(nullptr);
-	struct tm tm;
+	struct tm tm{};
 	localtime_s(&tm, &value);
     return TM2String(tm, usec, format);
 }
@@ -83,7 +83,7 @@ std::string gtimeString(
 ) {
     if (!value)
         value = time(nullptr);
-    struct tm tm;
+    struct tm tm{};
     gmtime_s(&tm, &value);
     return TM2String(tm, usec, format);
 }
@@ -95,7 +95,7 @@ time_t parseDate(
     const char *v
 )
 {
-	struct tm tmd;
+	struct tm tmd{};
 	memset(&tmd, 0, sizeof(struct tm));
 
 	time_t r;
@@ -141,7 +141,7 @@ static int gettimeofday(
 }
 #endif
 
-time_t time_ms(int &ms) {
+static time_t time_ms(unsigned int &ms) {
 	struct timeval tp;
 	gettimeofday(&tp, nullptr);
 	ms = tp.tv_usec / 1000;

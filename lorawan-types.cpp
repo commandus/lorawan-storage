@@ -1238,7 +1238,7 @@ KEY128::KEY128(
 }
 
 KEY128::KEY128(
-    KEY128 &value
+    const KEY128 &value
 )
 {
     memmove(&c, &value, 16);

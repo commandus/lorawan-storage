@@ -14,7 +14,6 @@ class GatewayService {
 protected:
 public:
     GatewayService();
-    GatewayService(const GatewayService &value);
     virtual ~GatewayService();
     /**
     * request device identifier(w/o address) by network address. Return 0 if success, retVal = EUI and keys

@@ -57,9 +57,9 @@ static const char *commandLongName(
     enum CliGatewayQueryTag tag
 )
 {
-    for (int i = 0; i < COMMANDS_COUNT; i++) {
-        if (commands[i].isCommand((char *) &tag))
-            return commands[i].l;
+    for (auto command : commands) {
+        if (command.isCommand((char *) &tag))
+            return command.l;
     }
     return commands[0].l;
 }
@@ -76,9 +76,9 @@ static std::string listCommands() {
 }
 
 static CliGatewayQueryTag isTag(const char *tag) {
-    for (int i = 0; i < COMMANDS_COUNT; i++) {
-        if (commands[i].isCommand(tag)) {
-            return commands[i].s;
+    for (auto command : commands) {
+        if (command.isCommand(tag)) {
+            return command.s;
         }
     }
     return QUERY_GATEWAY_NONE;
@@ -102,7 +102,7 @@ public:
     int32_t retCode;
 
     CliGatewayQueryParams()
-        : tag(tag), queryPos(0), useTcp(false), verbose(0), port(DEF_PORT), code(42), accessCode(42), offset(0), size(0),
+        : tag(QUERY_GATEWAY_NONE), queryPos(0), useTcp(false), verbose(0), port(DEF_PORT), code(42), accessCode(42), offset(0), size(0),
           retCode(0)
     {
 
@@ -114,10 +114,10 @@ public:
             << "Service: " << intf << ":" << port << " " << (useTcp ? "TCP" : "UDP") << " "
             << "command: " << commandLongName(tag) << ", code: " << std::hex << code << ", access code: "  << accessCode << " "
             << "offset: " << std::dec << offset << ", size: "  << size << "\n";
-        for (auto it(query.begin()); it != query.end(); it++) {
-            if (it->gatewayId)
-                ss << std::hex << it->gatewayId;
-            ss << "\t" << sockaddr2string(&it->sockaddr) << "\n";
+        for (auto & it : query) {
+            if (it.gatewayId)
+                ss << std::hex << it.gatewayId;
+            ss << "\t" << sockaddr2string(&it.sockaddr) << "\n";
         }
         return ss.str();
     }
@@ -196,13 +196,13 @@ public:
         const ListResponse *response
     ) override {
         if (response) {
-            if (params.verbose)
+            if (params.verbose) {
                 std::cout << response->toJsonString() << std::endl;
-            else {
+            } else {
                 for (int i = 0; i < response->response; i++) {
                     std::cout << std::hex << response->identities[i].gatewayId
-                        << "\t" << sockaddr2string(&response->identities[i].sockaddr)
-                        << std::endl;
+                              << "\t" << sockaddr2string(&response->identities[i].sockaddr)
+                              << std::endl;
                 }
             }
             if (!next(client)) {
@@ -229,7 +229,7 @@ public:
         if (hasNext) {
             GatewayIdentity gi = params.query[params.queryPos];
             switch (params.tag) {
-                case QUERY_GATEWAY_NONE:
+                case QUERY_GATEWAY_ID:
                     break;
                 case QUERY_GATEWAY_LIST:
                     req = new OperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
@@ -248,7 +248,8 @@ public:
                     break;
                 case QUERY_GATEWAY_CLOSE_RESOURCES:
                     break;
-                default:
+                case QUERY_GATEWAY_NONE:
+                case QUERY_GATEWAY_ADDR:
                     if (gi.gatewayId == 0)
                         req = new GatewayAddrRequest(gi.sockaddr, params.code, params.accessCode);
                     else
@@ -279,7 +280,6 @@ static bool mergeIdAddress(
 )
 {
     auto pairSize = query.size() / 2;
-    int m = 1;
     for (int i = 0; i < pairSize; i++) {
         if (query[i * 2].gatewayId) {
             query[i].gatewayId = query[i * 2].gatewayId;
@@ -312,8 +312,6 @@ static void run()
 }
 
 int main(int argc, char **argv) {
-    struct arg_str *a_tag = arg_str0("g", "tag", "<a|A|L|c|p|r|f|d>", "a(default) address by id, A- id by address, L- list, c- count, p- assign id&addr, r- remove");
-
     struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | gateway-id | address:port>", 1, 100, "command: a|A|L|c|p|r|f|d, gateway id: 16 hex digits");
     struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
@@ -364,7 +362,7 @@ int main(int argc, char **argv) {
         std::string a;
         uint16_t p;
         if (splitAddress(a, p, a_query->sval[i])) {
-            params.query.emplace_back(GatewayIdentity(0, a, p));
+            params.query.emplace_back(0, a, p);
         } else {
             char *last;
             uint64_t id = strtoull(a_query->sval[i], &last, 16);
@@ -375,6 +373,9 @@ int main(int argc, char **argv) {
     }
 
     if (params.tag == QUERY_GATEWAY_LIST) {
+        if (params.query.empty()) {
+            params.query.emplace_back(0);
+        }
         if (a_offset->count) {
             params.offset = (size_t) *a_offset->ival;
         }

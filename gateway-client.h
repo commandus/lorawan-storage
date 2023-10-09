@@ -19,8 +19,8 @@ public:
     ) = 0;
     virtual void onError(
         GatewayClient* client,
-        const int32_t code,  // 0- success, != 0- failure (error code)
-        const int errorCode
+        int32_t code,  // 0- success, != 0- failure (error code)
+        int errorCode
     ) = 0;
     // TCP connection lost
     virtual void onDisconnected(

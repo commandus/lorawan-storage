@@ -74,7 +74,7 @@ static size_t serializeSocketAddress(
                 retBuf[5] = addrIn->sin_addr.S_un.S_un_b.s_b3;
                 retBuf[6] = addrIn->sin_addr.S_un.S_un_b.s_b4;
 #else
-                struct in_addr_4 *p4 = (struct in_addr_4 *) &addrIn->sin_addr.s_addr;
+                auto *p4 = (struct in_addr_4 *) &addrIn->sin_addr.s_addr;
                 retBuf[3] = p4->S_un.S_un_b.s_b1;
                 retBuf[4] = p4->S_un.S_un_b.s_b2;
                 retBuf[5] = p4->S_un.S_un_b.s_b3;

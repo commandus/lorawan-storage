@@ -31,9 +31,6 @@ int SqliteGatewayService::get(
         const GatewayIdentity &request
 )
 {
-#ifdef ENABLE_DEBUG
-    std::cerr << "get " << std::endl;
-#endif
     auto r = storage.find(request.gatewayId);
     if (r != storage.end()) {
         retVal = r->second;

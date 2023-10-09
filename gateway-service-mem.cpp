@@ -12,8 +12,7 @@
 #endif
 
 MemoryGatewayService::MemoryGatewayService()
-{
-}
+= default;
 
 MemoryGatewayService::~MemoryGatewayService() = default;
 
@@ -45,9 +44,9 @@ int MemoryGatewayService::get(
         }
     } else {
         // reverse find out by address
-        for (auto it(storage.begin()); it != storage.end(); it++) {
-            if (sameSocketAddress(&request.sockaddr, &it->second.sockaddr)) {
-                retVal = it->second;
+        for (auto & it : storage) {
+            if (sameSocketAddress(&request.sockaddr, &it.second.sockaddr)) {
+                retVal = it.second;
                 return CODE_OK;
             }
         }
@@ -63,7 +62,7 @@ int  MemoryGatewayService::list(
 ) {
     size_t o = 0;
     size_t sz = 0;
-    for (auto it(storage.begin()); it != storage.end(); it++) {
+    for (auto & it : storage) {
         if (o < offset) {
             // skip first
             o++;
@@ -72,7 +71,7 @@ int  MemoryGatewayService::list(
         sz++;
         if (sz > size)
             break;
-        retVal.push_back(it->second);
+        retVal.push_back(it.second);
     }
     return CODE_OK;
 }

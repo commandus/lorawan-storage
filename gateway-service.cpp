@@ -4,8 +4,4 @@
 
 GatewayService::GatewayService() = default;
 
-GatewayService::GatewayService(
-    const GatewayService &value
-) = default;
-
 GatewayService::~GatewayService() = default;

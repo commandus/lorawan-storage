@@ -17,7 +17,7 @@
     #define close closesocket
 #else
     #define SOCKET int
-    #define INVALID_SOCKET -1
+    #define INVALID_SOCKET (-1)
     #ifdef ESP_PLATFORM
         #include "esp_log.h"
         #include "esp_netif.h"
@@ -97,7 +97,7 @@ void UDPListener::setAddress(
     uint16_t port
 )
 {
-    struct sockaddr_in *a = (struct sockaddr_in *) &destAddr;
+    auto *a = (struct sockaddr_in *) &destAddr;
     a->sin_family = AF_INET;
     a->sin_addr.s_addr = ipv4;
     a->sin_port = htons(port);
@@ -175,7 +175,7 @@ int UDPListener::run()
         socklen_t socklen = sizeof(source_addr);
 
         // 307 bytes for IPv4 up to 18, IPv6 up to 10
-        unsigned char r[307];
+        unsigned char rBuf[307];
 
         while (status != ERR_CODE_STOPPED) {
             int len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
@@ -195,16 +195,16 @@ int UDPListener::run()
                     log->strm(LOG_INFO) << "Received " << len << " bytes: " << hexString(rxBuf, len);
                     log->flush();
                 }
-                size_t sz = makeResponse(serializationWrapper, r, sizeof(r), rxBuf, len);
+                size_t sz = makeResponse(serializationWrapper, rBuf, sizeof(rBuf), rxBuf, len);
                 if (sz > 0) {
-                    if (sendto(sock, r, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
+                    if (sendto(sock, rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
                         if (log) {
                             log->strm(LOG_ERR) << "Error occurred during sending " << SOCKET_ERRNO;
                             log->flush();
                         }
                     } else {
                         if (log && verbose > 1) {
-                            log->strm(LOG_INFO) << "Sent " << sz << " bytes: " << hexString(r, sz) << " successfully";
+                            log->strm(LOG_INFO) << "Sent " << sz << " bytes: " << hexString(rBuf, sz) << " successfully";
                             log->flush();
                         }
                     }

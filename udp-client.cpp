@@ -41,7 +41,7 @@ UDPClient::UDPClient(
     uint16_t aPort,
     ResponseIntf *aOnResponse
 )
-    : GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
+    : sock(0), addr{}, GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
 {
     auto *a = (struct sockaddr_in *) &addr;
     a->sin_addr.s_addr = ipv4;
@@ -55,10 +55,10 @@ UDPClient::UDPClient(
     uint16_t aPort,
     ResponseIntf *aOnResponse
 )
-    : GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
+    :  sock(0), addr{}, GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
 {
     memset(&addr, 0, sizeof(addr));
-    int r = 0;
+    int r;
     if (isAddrStringIPv6(aHost.c_str())) {
         auto *a = (struct sockaddr_in6 *) &addr;
         a->sin6_family = AF_INET6;
