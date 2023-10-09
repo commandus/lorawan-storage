@@ -61,15 +61,16 @@ int  MemoryGatewayService::list(
     size_t offset,
     size_t size
 ) {
-    size_t c = 0;
+    size_t o = 0;
+    size_t sz = 0;
     for (auto it(storage.begin()); it != storage.end(); it++) {
-        if (c < offset) {
+        if (o < offset) {
             // skip first
-            c++;
+            o++;
             continue;
         }
-        c++;
-        if (c > size)
+        sz++;
+        if (sz > size)
             break;
         retVal.push_back(it->second);
     }
@@ -94,11 +95,23 @@ int MemoryGatewayService::rm(
     const GatewayIdentity &request
 )
 {
-    auto r = storage.find(request.gatewayId);
-    if (r != storage.end()) {
-        storage.erase(r);
+    if (request.gatewayId) {
+        // find out by gateway identifier
+        auto r = storage.find(request.gatewayId);
+        if (r != storage.end()) {
+            storage.erase(r);
+            return CODE_OK;
+        }
+    } else {
+        // reverse find out by address
+        for (auto it(storage.begin()); it != storage.end(); it++) {
+            if (sameSocketAddress(&request.sockaddr, &it->second.sockaddr)) {
+                storage.erase(it);
+                return CODE_OK;
+            }
+        }
     }
-    return CODE_OK;
+    return ERR_CODE_GATEWAY_NOT_FOUND;
 }
 
 int MemoryGatewayService::init(

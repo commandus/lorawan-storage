@@ -107,9 +107,9 @@ std::string GatewayIdentity::toJsonString() const
 {
     std::stringstream ss;
     ss << "{"
-       << R"("gwid":")" << std::hex << gatewayId
-       << R"(", "addr":")" << sockaddr2string(&sockaddr)
-       << "}";
+       << R"("gwid": ")" << std::hex << gatewayId
+       << R"(", "addr": ")" << sockaddr2string(&sockaddr)
+       << "\"}";
     return ss.str();
 }
 

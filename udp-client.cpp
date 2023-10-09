@@ -164,7 +164,7 @@ void UDPClient::start() {
                     case QUERY_GATEWAY_LIST:   // List entries
                     {
                         ListResponse gr(rxBuf, len);
-                        gr.response = NTOH8(gr.response);
+                        gr.response = NTOH4(gr.response);
                         gr.ntoh();
                         onResponse->onList(this, &gr);
                     }

@@ -241,7 +241,8 @@ public:
                     req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_RM:
-                    req = new GatewayIdRequest((char) params.tag, gi.gatewayId, params.code, params.accessCode);
+                    // req = new GatewayIdRequest((char) params.tag, gi.gatewayId, params.code, params.accessCode);
+                    req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_FORCE_SAVE:
                     break;

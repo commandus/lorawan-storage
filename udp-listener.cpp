@@ -109,7 +109,7 @@ int UDPListener::run()
         log->strm(LOG_INFO) << "Run..";
         log->flush();
     }
-    unsigned char rxBuf[256];
+    unsigned char rxBuf[307];
 
     int proto = isIPv6(&destAddr) ? IPPROTO_IPV6 : IPPROTO_IP;
     int af = isIPv6(&destAddr) ? AF_INET6 : AF_INET;
@@ -174,8 +174,8 @@ int UDPListener::run()
         struct sockaddr_storage source_addr{}; // Large enough for both IPv4 or IPv6
         socklen_t socklen = sizeof(source_addr);
 
-        // IPv4 up to 18, IPv6 up to 10
-        unsigned char r[300];
+        // 307 bytes for IPv4 up to 18, IPv6 up to 10
+        unsigned char r[307];
 
         while (status != ERR_CODE_STOPPED) {
             int len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
