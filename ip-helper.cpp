@@ -18,7 +18,7 @@ bool isAddrStringIPv6(
 }
 
 bool isIPv6(
-    struct sockaddr *addr
+    const struct sockaddr *addr
 ) {
     return addr->sa_family == AF_INET6;
 }

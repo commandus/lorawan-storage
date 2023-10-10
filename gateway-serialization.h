@@ -32,7 +32,6 @@ public:
     ServiceMessage(const unsigned char *buf, size_t sz);
     virtual void ntoh();
     virtual size_t serialize(unsigned char *retBuf) const;
-    virtual size_t deserialize(const unsigned char *buf, size_t sz);
     virtual std::string toJsonString() const;
 };  // 5 bytes
 
@@ -40,12 +39,11 @@ class GatewayIdRequest : public ServiceMessage {
 public:
     uint64_t id;
     GatewayIdRequest();
-    explicit GatewayIdRequest(uint64_t id);
+    // explicit GatewayIdRequest(uint64_t id);
     GatewayIdRequest(char aTag, uint64_t id, int32_t code, uint64_t accessCode);
     GatewayIdRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
 };
 
@@ -53,12 +51,12 @@ class GatewayAddrRequest : public ServiceMessage {
 public:
     sockaddr addr;
     GatewayAddrRequest();
-    explicit GatewayAddrRequest(const GatewayIdentity &identity);
+    // explicit GatewayAddrRequest(const GatewayIdentity &identity);
     GatewayAddrRequest(const struct sockaddr &addr, int32_t code, uint64_t accessCode);
     GatewayAddrRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
+    size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
 };
 
@@ -66,12 +64,12 @@ class GatewayIdAddrRequest : public ServiceMessage {
 public:
     GatewayIdentity identity;
     GatewayIdAddrRequest();
-    explicit GatewayIdAddrRequest(const GatewayIdentity &identity);
+    // explicit GatewayIdAddrRequest(const GatewayIdentity &identity);
     GatewayIdAddrRequest(char aTag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
     GatewayIdAddrRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
+    size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
 };
 
@@ -80,12 +78,11 @@ public:
     uint32_t offset;
     uint8_t size;
     OperationRequest();
-    explicit OperationRequest(char tag);
+    // explicit OperationRequest(char tag);
     OperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
     OperationRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
 };
 
@@ -97,12 +94,10 @@ public:
     explicit GetResponse(const GatewayAddrRequest& request);
     explicit GetResponse(const GatewayIdRequest &request);
     GetResponse(const unsigned char *buf, size_t sz);
-    explicit GetResponse(const GatewayIdAddrRequest &request);
-    // GetResponse(const OperationRequest &request);
-
+    // explicit GetResponse(const GatewayIdAddrRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
+    size_t serializedSize() const;
     std::string toJsonString() const override;
 };
 
@@ -116,7 +111,6 @@ public:
     explicit OperationResponse(const OperationRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
 };
 
@@ -128,8 +122,8 @@ public:
     ListResponse(const unsigned char *buf, size_t sz);
     explicit ListResponse(const OperationRequest &request);
     void ntoh() override;
+    size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t deserialize(const unsigned char *buf, size_t sz) override;
     std::string toJsonString() const override;
     size_t shortenList2Fit(size_t serializedSize);
 };

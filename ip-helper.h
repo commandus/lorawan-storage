@@ -6,7 +6,7 @@ bool isAddrStringIPv6(
 );
 
 bool isIPv6(
-    struct sockaddr *addr
+    const struct sockaddr *addr
 );
 
 bool isIP(

@@ -155,7 +155,7 @@ static size_t deserializeSocketAddress(
                 return 0;
             addr->sa_family = AF_INET;
             {
-                struct sockaddr_in *addrIn = (struct sockaddr_in *) addr;
+                auto *addrIn = (struct sockaddr_in *) addr;
                 *(unsigned char *) &addrIn->sin_port = retBuf[1];
                 *((unsigned char *) &addrIn->sin_port + 1) = retBuf[2];
 
@@ -165,7 +165,7 @@ static size_t deserializeSocketAddress(
                 addrIn->sin_addr.S_un.S_un_b.s_b3 = retBuf[5];
                 addrIn->sin_addr.S_un.S_un_b.s_b4 = retBuf[6];
 #else
-                struct in_addr_4 *p4 = (struct in_addr_4 *) &addrIn->sin_addr.s_addr;
+                auto *p4 = (struct in_addr_4 *) &addrIn->sin_addr.s_addr;
                 p4->S_un.S_un_b.s_b1 = retBuf[3];
                 p4->S_un.S_un_b.s_b2 = retBuf[4];
                 p4->S_un.S_un_b.s_b3 = retBuf[5];
@@ -179,7 +179,7 @@ static size_t deserializeSocketAddress(
                 return 0;
             addr->sa_family = AF_INET6;
             {
-                struct sockaddr_in6 *addrIn = (struct sockaddr_in6 *) addr;
+                auto *addrIn = (struct sockaddr_in6 *) addr;
                 *(unsigned char *) &addrIn->sin6_port = retBuf[1];
                 *((unsigned char *) &addrIn->sin6_port + 1) = retBuf[2];
 #ifdef _MSC_VER
@@ -253,26 +253,17 @@ ServiceMessage::ServiceMessage(
     size_t sz
 )
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_SERVICE_MESSAGE) {
+        memmove(&tag, &buf[0], sizeof(tag));         // 1
+        memmove(&code, &buf[1], sizeof(code));       // 4
+        memmove(&accessCode, &buf[5], sizeof(accessCode)); // 8
+    }   // 13 bytes
 }
 
 void ServiceMessage::ntoh()
 {
     code = NTOH4(code);
     accessCode = NTOH8(accessCode);
-}
-
-size_t ServiceMessage::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    if (sz >= 13) {
-        memmove(&tag, &buf[0], sizeof(tag));         // 1
-        memmove(&code, &buf[1], sizeof(code));       // 4
-        memmove(&accessCode, &buf[5], sizeof(accessCode)); // 8
-    }
-    return 13;
 }
 
 size_t ServiceMessage::serialize(
@@ -297,6 +288,7 @@ GatewayIdRequest::GatewayIdRequest()
 {
 }
 
+/*
 GatewayIdRequest::GatewayIdRequest(
     const uint64_t aId
 )
@@ -304,6 +296,7 @@ GatewayIdRequest::GatewayIdRequest(
 {
 
 }
+*/
 
 GatewayIdRequest::GatewayIdRequest(
     char aTag,
@@ -320,23 +313,16 @@ GatewayIdRequest::GatewayIdRequest(
     const unsigned char *buf,
     size_t sz
 )
+    : ServiceMessage(buf, sz)   //  13
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_GATEWAY_ID_REQUEST) {
+        memmove(&id, &buf[13], sizeof(id));     // 8
+    }   // 21
 }
 
 void GatewayIdRequest::ntoh() {
     ServiceMessage::ntoh();
     id = NTOH8(id);
-}
-
-size_t GatewayIdRequest::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    ServiceMessage::deserialize(buf, sz);   // 13
-    memmove(&id, &buf[13], sizeof(id));     // 8
-    return SIZE_GATEWAY_ID_REQUEST;         // 21
 }
 
 size_t GatewayIdRequest::serialize(
@@ -361,6 +347,7 @@ GatewayAddrRequest::GatewayAddrRequest()
     memset(&addr, 0, sizeof(addr));
 }
 
+/*
 GatewayAddrRequest::GatewayAddrRequest(
     const GatewayIdentity& aIdentity
 )
@@ -368,13 +355,26 @@ GatewayAddrRequest::GatewayAddrRequest(
 {
     memset(&addr, 0, sizeof(addr));
 }
+ */
 
 GatewayAddrRequest::GatewayAddrRequest(
     const unsigned char *buf,
     size_t sz
 )
+    : ServiceMessage(buf, sz)
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_SERVICE_MESSAGE) {
+        size_t r = deserializeSocketAddress(&addr, &buf[SIZE_SERVICE_MESSAGE], sz - SIZE_SERVICE_MESSAGE); // 0, 7, 19
+        // SIZE_SERVICE_MESSAGE + r;        // IPv4: 20 IPv6: 32
+    }
+}
+
+size_t GatewayAddrRequest::serializedSize() const
+{
+    if (isIPv6(&addr))
+        return SIZE_SERVICE_MESSAGE + 3 + 4;        // IPv4: 20 IPv6: 32
+    else
+        return SIZE_SERVICE_MESSAGE + 3 + 16;        // IPv4: 20 IPv6: 32
 }
 
 GatewayAddrRequest::GatewayAddrRequest(
@@ -391,18 +391,6 @@ void GatewayAddrRequest::ntoh()
 {
     ServiceMessage::ntoh();
     sockaddrNtoh(&addr);
-}
-
-size_t GatewayAddrRequest::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    if (sz < SIZE_SERVICE_MESSAGE)
-        return 0;
-    ServiceMessage::deserialize(buf, sz);   // 13
-    size_t r = deserializeSocketAddress(&addr, &buf[SIZE_SERVICE_MESSAGE], sz - SIZE_SERVICE_MESSAGE); // 0, 7, 19
-    return SIZE_SERVICE_MESSAGE + r;        // IPv4: 20 IPv6: 32
 }
 
 size_t GatewayAddrRequest::serialize(
@@ -426,19 +414,31 @@ GatewayIdAddrRequest::GatewayIdAddrRequest()
 {
 }
 
+/*
 GatewayIdAddrRequest::GatewayIdAddrRequest(
     const GatewayIdentity& aIdentity
 )
     : ServiceMessage('A', 0, 0), identity(aIdentity)
 {
 }
+*/
 
 GatewayIdAddrRequest::GatewayIdAddrRequest(
     const unsigned char *buf,
     size_t sz
 )
+    : ServiceMessage(buf, sz)   // 13
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_GATEWAY_ID_REQUEST) {
+        memmove(&identity.gatewayId, &buf[SIZE_SERVICE_MESSAGE], sizeof(identity.gatewayId));   // 8
+        deserializeSocketAddress(&identity.sockaddr, &buf[SIZE_GATEWAY_ID_REQUEST],
+                                            sz - SIZE_GATEWAY_ID_REQUEST); // 0, 7, 19
+    }
+}
+
+size_t GatewayIdAddrRequest::serializedSize() const
+{
+    return SIZE_GATEWAY_ID_REQUEST + 3 + (isIPv6(&identity.sockaddr) ? 16 : 4);     // IPv4: 28 IPv6: 40
 }
 
 GatewayIdAddrRequest::GatewayIdAddrRequest(
@@ -458,16 +458,6 @@ void GatewayIdAddrRequest::ntoh()
     sockaddrNtoh(&identity.sockaddr);
 }
 
-size_t GatewayIdAddrRequest::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    ServiceMessage::deserialize(buf, sz);       // 13
-    memmove(&identity.gatewayId, &buf[SIZE_SERVICE_MESSAGE], sizeof(identity.gatewayId));   // 8
-    size_t r = deserializeSocketAddress(&identity.sockaddr, &buf[SIZE_GATEWAY_ID_REQUEST], sz - SIZE_GATEWAY_ID_REQUEST); // 0, 7, 19
-    return SIZE_GATEWAY_ID_REQUEST + r;     // IPv4: 28 IPv6: 40
-}
 
 size_t GatewayIdAddrRequest::serialize(
     unsigned char *retBuf
@@ -492,6 +482,7 @@ OperationRequest::OperationRequest()
 {
 }
 
+/*
 OperationRequest::OperationRequest(
     char tag
 )
@@ -499,6 +490,7 @@ OperationRequest::OperationRequest(
       offset(0), size(0)
 {
 }
+*/
 
 OperationRequest::OperationRequest(
     char tag,
@@ -515,24 +507,17 @@ OperationRequest::OperationRequest(
     const unsigned char *buf,
     size_t sz
 )
+    : ServiceMessage(buf, sz)   // 13
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_OPERATION_REQUEST) {
+        memmove(&offset, &buf[13], sizeof(offset));     // 4
+        memmove(&size, &buf[17], sizeof(size));         // 1
+    }   // 18
 }
 
 void OperationRequest::ntoh() {
     ServiceMessage::ntoh();
     offset = NTOH4(offset);
-}
-
-size_t OperationRequest::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    ServiceMessage::deserialize(buf, sz);           // 13
-    memmove(&offset, &buf[13], sizeof(offset));     // 4
-    memmove(&size, &buf[17], sizeof(size));         // 1
-    return SIZE_OPERATION_REQUEST;                  // 18
 }
 
 size_t OperationRequest::serialize(
@@ -558,7 +543,7 @@ std::string OperationRequest::toJsonString() const {
 GetResponse::GetResponse(
     const GatewayAddrRequest& req
 )
-    : ServiceMessage(req)
+    : ServiceMessage(req), response()
 {
 }
 
@@ -572,6 +557,7 @@ GetResponse::GetResponse(
     accessCode = request.accessCode;
 }
 
+/*
 GetResponse::GetResponse(
     const GatewayIdAddrRequest &request
 )
@@ -581,13 +567,24 @@ GetResponse::GetResponse(
     code = request.code;
     accessCode = request.accessCode;
 }
+*/
 
 GetResponse::GetResponse(
     const unsigned char* buf,
     size_t sz
 )
+    : ServiceMessage(buf, sz)   // 13
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_SERVICE_MESSAGE + sizeof(uint64_t)) {
+        memmove(&response.gatewayId, buf + SIZE_SERVICE_MESSAGE, sizeof(uint64_t)); // 8
+        deserializeSocketAddress(&response.sockaddr, buf + SIZE_SERVICE_MESSAGE + sizeof(uint64_t), sz - SIZE_SERVICE_MESSAGE - sizeof(uint64_t))
+               + SIZE_SERVICE_MESSAGE + sizeof(uint64_t); // IPv4 28 IPv6 40
+    }
+}
+
+size_t GetResponse::serializedSize() const
+{
+    return SIZE_SERVICE_MESSAGE + sizeof(uint64_t) + 3 + (isIPv6(&response.sockaddr) ? 16 : 4); // IPv4 28 IPv6 40
 }
 
 std::string GetResponse::toJsonString() const {
@@ -601,18 +598,6 @@ void GetResponse::ntoh()
     ServiceMessage::ntoh();
     response.gatewayId = NTOH8(response.gatewayId);
     sockaddrNtoh(&response.sockaddr);
-}
-
-size_t GetResponse::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    ServiceMessage::deserialize(buf, sz);            // 13
-    memmove(&response.gatewayId, buf + SIZE_SERVICE_MESSAGE, sizeof(uint64_t)); // 8
-
-    return deserializeSocketAddress(&response.sockaddr, buf + SIZE_SERVICE_MESSAGE + 8, sz - SIZE_SERVICE_MESSAGE - 8)
-        + SIZE_SERVICE_MESSAGE + 8; // IPv4 28 IPv6 40
 }
 
 size_t GetResponse::serialize(
@@ -641,9 +626,11 @@ OperationResponse::OperationResponse(
     const unsigned char *buf,
     size_t sz
 )
-    : OperationRequest()
+    : OperationRequest(buf, sz) // 18
 {
-    deserialize(buf, sz);
+    if (sz >= SIZE_OPERATION_RESPONSE) {
+        memmove(&response, buf + SIZE_OPERATION_REQUEST, sizeof(response)); // 4
+    }   // 22
 }
 
 OperationResponse::OperationResponse(
@@ -664,16 +651,6 @@ OperationResponse::OperationResponse(
 void OperationResponse::ntoh() {
     OperationRequest::ntoh();
     response = NTOH4(response);
-}
-
-size_t OperationResponse::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    OperationRequest::deserialize(buf, sz);                             // 18
-    memmove(&response, buf + SIZE_OPERATION_REQUEST, sizeof(response)); // 4
-    return SIZE_OPERATION_RESPONSE;                                     // 22
 }
 
 size_t OperationResponse::serialize(
@@ -710,8 +687,30 @@ ListResponse::ListResponse(
     const unsigned char *buf,
     size_t sz
 )
+    : OperationResponse(buf, sz)       // 22
 {
     deserialize(buf, sz);
+    size_t ofs = SIZE_OPERATION_RESPONSE;
+    response = 0;
+    while (true) {
+        if (ofs >= sz)
+            break;
+        GatewayIdentity gi;
+        memmove(&gi.gatewayId, &buf[ofs], sizeof(uint64_t));  // 8
+        ofs += 8;
+        ofs += deserializeSocketAddress(&gi.sockaddr, &buf[ofs], sz - ofs); // 0, 7, 19
+        identities.push_back(gi);
+        response++;
+    }
+}
+
+size_t ListResponse::serializedSize() const
+{
+    size_t ofs = SIZE_OPERATION_RESPONSE;
+    for (auto id : identities) {
+        ofs += 8 + 3 + (isIPv6(&id.sockaddr) ? 16 : 4); // 0, 7, 19
+    }
+    return ofs;
 }
 
 ListResponse::ListResponse(
@@ -728,26 +727,6 @@ void ListResponse::ntoh()
         it->gatewayId = NTOH8(it->gatewayId);
         sockaddrNtoh(&it->sockaddr);
     }
-}
-
-size_t ListResponse::deserialize(
-    const unsigned char *buf,
-    size_t sz
-)
-{
-    size_t ofs = OperationResponse::deserialize(buf, sz);   // 22
-    response = 0;
-    while (true) {
-        if (ofs >= sz)
-            break;
-        GatewayIdentity gi;
-        memmove(&gi.gatewayId, &buf[ofs], sizeof(uint64_t));  // 8
-        ofs += 8;
-        ofs += deserializeSocketAddress(&gi.sockaddr, &buf[ofs], sz - ofs); // 0, 7, 19
-        identities.push_back(gi);
-        response++;
-    }
-    return ofs;
 }
 
 /**
@@ -839,8 +818,8 @@ static size_t getListResponseSize(
 )
 {
     size_t r = SIZE_OPERATION_RESPONSE;
-    for (auto it(list.begin()); it != list.end(); it++) {
-        r += sizeof(uint64_t) + serializeSocketAddress(nullptr, &it->sockaddr);
+    for (const auto & it : list) {
+        r += sizeof(uint64_t) + serializeSocketAddress(nullptr, &it.sockaddr);
     }
     return r;
 }
@@ -925,7 +904,7 @@ size_t GatewaySerialization::query(
             auto gr = (OperationRequest *) pMsg;
             r = new ListResponse(*gr);
             svc->list(((ListResponse *) r)->identities, gr->offset, gr->size);
-            size_t sz = ((ListResponse *) r)->identities.size();
+            size_t idSize = ((ListResponse *) r)->identities.size();
             size_t serSize = getListResponseSize(((ListResponse *) r)->identities);
             if (serSize > retSize) {
                 serSize = ((ListResponse *) r)->shortenList2Fit(serSize);
