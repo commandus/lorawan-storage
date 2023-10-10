@@ -78,6 +78,7 @@
 #define ERR_SOCKET_CONNECT		    	"Socket can not connect to "
 #define ERR_SOCKET_ADDRESS		    	"Can not assign address to socket "
 #define ERR_SOCKET_LISTEN		    	"Can not listen socket "
+#define ERR_SOCKET_SET  		    	"Can set socket"
 #define ERR_SELECT						"Select error"
 #define ERR_INVALID_PACKET				"Invalid packet"
 #define ERR_INVALID_JSON				"Invalid JSON"
@@ -374,7 +375,7 @@
 
 #define MSG_RESTART_REQUEST             "Restart"
 
-#define MSG_REQUIRED_SIZE               "Required size "
+#define MSG_CHECK_SYSLOG 	            "Check syslog."
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

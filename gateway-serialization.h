@@ -223,4 +223,6 @@ size_t makeResponse(
     size_t sz
 );
 
+const char * tag2string(enum CliGatewayQueryTag value);
+
 #endif

@@ -19,7 +19,7 @@
 #include "ip-address.h"
 #include "ip-helper.h"
 
-const char *progname = "lorawan-gateway-query";
+const char *programName = "lorawan-gateway-query";
 #define DEF_PORT 4244
 
 class CommandName {
@@ -155,8 +155,11 @@ public:
             if (params.verbose) {
                 if (response->response != 0)
                     std::cout << response->toJsonString() << std::endl;
-                else
-                    std::cerr << response->size << " items completed\n";
+                else {
+                    std::cerr << tag2string((CliGatewayQueryTag)response->tag)
+                    // << " " << (int) response->size
+                    << " completed\n";
+                }
             } else {
                 if (response->response != 0) {
                     std::cerr << ERR_MESSAGE << response->response << std::endl;
@@ -298,7 +301,7 @@ static void run()
 	OnResp onResp(params.query, params.verbose);
     GatewayClient *client;
 #ifdef ENABLE_LIBUV
-    client = new UvClient(useTcp, intf, port, &onResp);
+    client = new UvClient(params.useTcp, params.intf, params.port, &onResp);
 #else
     client = new UDPClient(params.intf, params.port, &onResp);
 #endif
@@ -403,8 +406,8 @@ int main(int argc, char **argv) {
     // special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || errorCount) {
 		if (errorCount)
-			arg_print_errors(stderr, a_end, progname);
-		std::cerr << "Usage: " << progname << std::endl;
+			arg_print_errors(stderr, a_end, programName);
+		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << "LoRaWAN gateway storage query" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");

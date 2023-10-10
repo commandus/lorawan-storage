@@ -13,17 +13,19 @@ typedef SSIZE_T ssize_t;
 #endif
 
 
-#include "identity-listener.h"
+#include "gateway-listener.h"
 
-class UVListener : public IdentityListener{
+class UVListener : public GatewayListener{
 private:
     // libuv handler
     void *uv;
     struct sockaddr servaddr;
+    LogIntf *log;
+    int verbose;
 public:
     int status;
     explicit UVListener(
-        IdentitySerialization *aSerializationWrapper
+        GatewaySerialization *aSerializationWrapper
     );
     virtual ~UVListener();
     void setAddress(
@@ -36,6 +38,7 @@ public:
     ) override;
     int run() override;
     void stop() override;
+    void setLog(int verbose, LogIntf *log) override;
 };
 
 #endif

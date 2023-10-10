@@ -8,10 +8,10 @@ typedef SSIZE_T ssize_t;
 
 #include <string>
 #include <uv.h>
-#include "identity-serialization.h"
-#include "identity-client.h"
+#include "gateway-serialization.h"
+#include "gateway-client.h"
 
-class UvClient : public IdentityClient {
+class UvClient : public GatewayClient {
 private:
     bool useTcp;
     struct sockaddr serverAddress;
@@ -19,11 +19,14 @@ private:
 
     uv_tcp_t tcpSocket;
     uv_connect_t connectReq;
+
+    ServiceMessage* query;
+
     int status;
     uv_loop_t *loop;
 
     void init();
-    void query(
+    void qquery(
         void *buf,
         size_t len
     );
@@ -44,9 +47,10 @@ public:
     /**
      * Prepare to send request
      * @param value
+     * @return previous message, NULL if not exists
      */
-    void request(
-        GetRequest* value
+    ServiceMessage* request(
+        ServiceMessage* value
     ) override;
     void start() override;
     void stop() override;

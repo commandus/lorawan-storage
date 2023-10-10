@@ -31,14 +31,9 @@
 #include "log.h"
 #include "daemonize.h"
 #include "ip-address.h"
+#include "lorawan-msg.h"
 
-const char *progname = "lorawan-gateway-storage";
-
-#define MSG_DONE            	"Stopped gracefully"
-#define MSG_ERROR            	"Error "
-#define MSG_INTERRUPTED     	"Interrupted"
-#define MSG_DAEMON_STARTED  	"Started"
-#define MSG_DAEMON_STARTED_1 	". Check syslog."
+const char *programName = "lorawan-gateway-storage";
 
 enum IP_PROTO {
     PROTO_UDP,
@@ -111,7 +106,7 @@ static void done() {
     if (svc.server) {
         delete svc.server;
         svc.server = nullptr;
-        std::cerr << MSG_DONE << std::endl;
+        std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
         exit(0);
     }
 }
@@ -153,7 +148,7 @@ void run() {
 
     auto serializationWrapper = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
-    server = new UVListener(serializationWrapper);
+    svc.server = new UVListener(serializationWrapper);
 #else
     svc.server = new UDPListener(serializationWrapper);
 #endif
@@ -161,7 +156,7 @@ void run() {
     svc.server->setLog(svc.verbose, &svc);
 	int r = svc.server->run();
     if (r)
-        std::cerr << MSG_ERROR << r << ": " << std::endl;
+        std::cerr << ERR_MESSAGE << r << ": " << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -220,8 +215,8 @@ int main(int argc, char **argv) {
 	// special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || nerrors) {
 		if (nerrors)
-			arg_print_errors(stderr, a_end, progname);
-		std::cerr << "Usage: " << progname << std::endl;
+			arg_print_errors(stderr, a_end, programName);
+		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
 		std::cerr << "LoRaWAN gateway storage example" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
@@ -236,12 +231,14 @@ int main(int argc, char **argv) {
 #endif
 
     if (svc.runAsDaemon) {
-		char wd[PATH_MAX];
-		std::string progpath = getcwd(wd, PATH_MAX);	
+		char workDir[PATH_MAX];
+		std::string programPath = getcwd(workDir, PATH_MAX);
 		if (svc.verbose)
-			std::cerr << MSG_DAEMON_STARTED << progpath << "/" << progname << MSG_DAEMON_STARTED_1 << std::endl;
-		OPEN_SYSLOG(progname)
-        Daemonize daemon(progname, progpath, run, stop, done);
+			std::cerr << MSG_LISTENER_DAEMON_RUN
+                      << "(" << programPath << "/" << programName << "). "
+                      << MSG_CHECK_SYSLOG << std::endl;
+		OPEN_SYSLOG(programName)
+        Daemonize daemon(programName, programPath, run, stop, done);
 		// CLOSESYSLOG()
 	} else {
 		setSignalHandler();

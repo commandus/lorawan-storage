@@ -18,6 +18,7 @@
 
 #include "uv-mem.h"
 #include "lorawan-error.h"
+#include "lorawan-conv.h"
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -27,30 +28,65 @@
 
 #define DEF_KEEPALIVE_SECS 60
 
+static void parseResponse(
+    UvClient *client,
+    const unsigned char *buf,
+    ssize_t nRead
+) {
+    if (!client)
+        return;
+    enum CliGatewayQueryTag tag = validateQuery(buf, nRead);
+    switch (tag) {
+        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
+        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
+        {
+            GetResponse gr(buf, nRead);
+            gr.ntoh();
+            client->onResponse->onGet(client, &gr);
+        }
+            break;
+        case QUERY_GATEWAY_LIST:   // List entries
+        {
+            ListResponse gr(buf, nRead);
+            gr.response = NTOH4(gr.response);
+            gr.ntoh();
+            client->onResponse->onList(client, &gr);
+        }
+            break;
+        default:
+        {
+            OperationResponse gr(buf, nRead);
+            gr.ntoh();
+            client->onResponse->onStatus(client, &gr);
+        }
+            break;
+    }
+}
+
 static void onTCPRead(
 	uv_stream_t* strm,
-	ssize_t nread,
+	ssize_t nRead,
 	const uv_buf_t* buf
 ) {
     auto client = (UvClient*) strm->data;
-    if (nread < 0) {
-        if (nread == UV__EOF) {
+    if (!client)
+        return;
+    if (nRead < 0) {
+        if (nRead == UV__EOF) {
             client->tcpConnected = false;
-            client->onResponse->onDisconnected(client);
+            client->onResponse->onError(client, ERR_CODE_SOCKET_READ, nRead);
             return;
         } else {
 #ifdef ENABLE_DEBUG
-            std::cerr << ERR_SOCKET_READ << " " << nread << ": " << uv_err_name(nread) << std::endl;
+            std::cerr << ERR_SOCKET_READ << " " << nRead << ": " << uv_err_name(nRead) << std::endl;
             client->onResponse->onGet(client, false, nullptr);
 #endif
         }
     } else {
 #ifdef ENABLE_DEBUG
-        std::cerr << "Read  " << nread << " bytes: " << hexString(buf->base, nread) << std::endl;
+        std::cerr << "Read  " << nRead << " bytes: " << hexString(buf->base, nRead) << std::endl;
 #endif
-        GetResponse gr = GetResponse(buf->base, nread);
-        gr.ntoh();
-        client->onResponse->onGet(client, true, &gr);
+        parseResponse(client, (const unsigned char *) buf->base, nRead);
     }
     freeBuffer(buf);
 }
@@ -93,13 +129,8 @@ static void onUDPread(
         std::cerr << "Read " << bytesRead << " bytes: " << hexString(buf->base, bytesRead) << std::endl;
 #endif
     }
-    if (client) {
-        if (client->onResponse) {
-            GetResponse gr = GetResponse(buf->base, bytesRead);
-            gr.ntoh();
-            client->onResponse->onGet(client, true, &gr);
-        }
-    }
+    parseResponse(client, (const unsigned char *) buf->base, bytesRead);
+    freeBuffer(buf);
 }
 
 static void onClientUDPSent(
@@ -113,7 +144,7 @@ static void onClientUDPSent(
 #ifdef ENABLE_DEBUG
         std::cerr << ERR_SOCKET_WRITE << status << ": " << uv_strerror(status) << std::endl;
 #endif
-        client->onResponse->onGet(client, false, nullptr);
+        client->onResponse->onError(client, ERR_CODE_SOCKET_WRITE, status);
         free(req);
         return;
     }
@@ -134,7 +165,7 @@ static int sendTcp(
 #ifdef ENABLE_DEBUG
         std::cerr << ERR_SOCKET_WRITE << r << ": " << uv_strerror(r) << std::endl;
 #endif
-        client->onResponse->onGet(client, false, nullptr);
+        client->onResponse->onError(client, ERR_CODE_SOCKET_WRITE, r);
     }
     return r;
 }
@@ -211,7 +242,7 @@ UvClient::UvClient(
     uint16_t aPort,
 	ResponseIntf *aOnResponse
 )
-	: IdentityClient(aOnResponse), useTcp(aUseTcp), status(0), tcpConnected(false)
+	: GatewayClient(aOnResponse), useTcp(aUseTcp), status(0), tcpConnected(false), query(nullptr)
 {
     int r;
     if (isAddrStringIPv6(aHost.c_str()))
@@ -223,7 +254,7 @@ UvClient::UvClient(
     init();
 }
 
-void UvClient::query(
+void UvClient::qquery(
 	void* buf,
 	size_t size
 )
@@ -257,7 +288,8 @@ void UvClient::query(
 		std::cerr << ERR_MESSAGE << r << ": " << uv_strerror(r) << std::endl;
 #endif
 		status = ERR_CODE_SOCKET_CREATE;
-        onResponse->onGet(this, false, nullptr);
+        onResponse->onError(ершыб )Get(this, false, nullptr);
+        client->onResponse->onError(client, ERR_CODE_SOCKET_READ, nRead);
 		return;
 	}
 	status = CODE_OK;
@@ -268,12 +300,13 @@ UvClient::~UvClient()
     stop();
 }
 
-void UvClient::request(
-	GetRequest* value
+ServiceMessage* UvClient::request(
+    ServiceMessage* value
 )
 {
-    value->ntoh();
-	query(value, sizeof(GetRequest));
+    ServiceMessage* r = query;
+    query = value;
+    return r;
 }
 
 void UvClient::start() {

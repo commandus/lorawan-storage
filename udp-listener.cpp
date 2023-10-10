@@ -36,15 +36,16 @@
 #include "lorawan-string.h"
 #include "lorawan-error.h"
 #include "ip-helper.h"
+#include "lorawan-msg.h"
 
 #define DEF_KEEPALIVE_SECS 60
 
 #ifdef _MSC_VER
 #define SOCKET_ERRNO WSAGetLastError()
-#define ERR_TIMEOUT WSAETIMEDOUT
+#define SOCKET_ERROR_TIMEOUT WSAETIMEDOUT
 #else
 #define SOCKET_ERRNO errno
-#define ERR_TIMEOUT EAGAIN
+#define SOCKET_ERROR_TIMEOUT EAGAIN
 #endif
 
 /**
@@ -105,10 +106,6 @@ void UDPListener::setAddress(
 
 int UDPListener::run()
 {
-    if (log && verbose > 1) {
-        log->strm(LOG_INFO) << "Run..";
-        log->flush();
-    }
     unsigned char rxBuf[307];
 
     int proto = isIPv6(&destAddr) ? IPPROTO_IPV6 : IPPROTO_IP;
@@ -119,7 +116,8 @@ int UDPListener::run()
         SOCKET sock = socket(af, SOCK_DGRAM, proto);
         if (sock == INVALID_SOCKET) {
             if (log) {
-                log->strm(LOG_ERR) << 1 << "Unable to create socket, error " << SOCKET_ERRNO;
+                log->strm(LOG_ERR) << ERR_SOCKET_CREATE
+                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
             r = ERR_CODE_SOCKET_CREATE;
@@ -134,7 +132,8 @@ int UDPListener::run()
         int enable = 1;
         if (setsockopt(sock, IPPROTO_IP, IP_PKTINFO, (const char*) &enable, sizeof(enable))) {
             if (log) {
-                log->strm(LOG_ERR) << "Socket unable to enable receive packet information, error " << SOCKET_ERRNO;
+                log->strm(LOG_ERR) << ERR_SOCKET_SET
+                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
         }
@@ -155,22 +154,22 @@ int UDPListener::run()
 #endif
         if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof timeout)) {
             if (log) {
-                log->strm(LOG_ERR) << "Socket unable to set timeout, error " << SOCKET_ERRNO;
+                log->strm(LOG_ERR) << ERR_SOCKET_SET
+                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
         }
 
         if (bind(sock, (struct sockaddr *) &destAddr, sizeof(destAddr)) < 0) {
             if (log) {
-                log->strm(LOG_ERR) << "Socket unable to bind, error " << SOCKET_ERRNO;
+                log->strm(LOG_ERR) << ERR_SOCKET_BIND
+                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
+            shutdown(sock, 0);
+            close(sock);
+            return ERR_CODE_SOCKET_BIND;
         }
-        if (log && verbose > 1) {
-            log->strm(LOG_INFO) << "Socket bound ";
-            log->flush();
-        }
-
         struct sockaddr_storage source_addr{}; // Large enough for both IPv4 or IPv6
         socklen_t socklen = sizeof(source_addr);
 
@@ -178,14 +177,15 @@ int UDPListener::run()
         unsigned char rBuf[307];
 
         while (status != ERR_CODE_STOPPED) {
-            int len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
+            ssize_t len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
             // Error occurred during receiving
             if (len < 0) {
-                if (SOCKET_ERRNO == ERR_TIMEOUT) {    // timeout occurs
+                if (SOCKET_ERRNO == SOCKET_ERROR_TIMEOUT) {    // timeout occurs
                     continue;
                 }
                 if (log) {
-                    log->strm(LOG_ERR) << "Receive error " << SOCKET_ERRNO;
+                    log->strm(LOG_ERR) << ERR_SOCKET_READ
+                        << " " << ERR_MESSAGE << SOCKET_ERRNO;
                     log->flush();
                 }
                 continue;
@@ -199,33 +199,28 @@ int UDPListener::run()
                 if (sz > 0) {
                     if (sendto(sock, rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
                         if (log) {
-                            log->strm(LOG_ERR) << "Error occurred during sending " << SOCKET_ERRNO;
+                            log->strm(LOG_ERR) << ERR_SOCKET_WRITE
+                                << " " << ERR_MESSAGE << SOCKET_ERRNO;
                             log->flush();
                         }
                     } else {
                         if (log && verbose > 1) {
-                            log->strm(LOG_INFO) << "Sent " << sz << " bytes: " << hexString(rBuf, sz) << " successfully";
+                            log->strm(LOG_INFO) << MSG_SENT
+                                << sz << " " << MSG_BYTES << ": " << hexString(rBuf, sz);
                             log->flush();
                         }
                     }
                 } else {
                     if (log && verbose) {
-                        log->strm(LOG_ERR) << "Invalid request: " << hexString(rxBuf, len) << " (" << len << " bytes)";
+                        log->strm(LOG_ERR) << ERR_INVALID_PACKET << ": " << hexString(rxBuf, len)
+                            << " (" << len << " " << MSG_BYTES << ")";
                         log->flush();
                     }
                 }
             }
         }
-        if (log && verbose > 1) {
-            log->strm(LOG_INFO) << "Shutting down socket and restarting..";
-            log->flush();
-        }
         shutdown(sock, 0);
         close(sock);
-    }
-    if (log && verbose > 1) {
-        log->strm(LOG_INFO) << "Run.";
-        log->flush();
     }
     return r;
 }

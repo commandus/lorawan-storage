@@ -1138,3 +1138,29 @@ ServiceMessage* deserialize(
         r->ntoh();
     return r;
 }
+
+const char* tag2string(
+    enum CliGatewayQueryTag value
+)
+{
+    switch (value) {
+        case QUERY_GATEWAY_ADDR:
+            return "address";
+        case QUERY_GATEWAY_ID:
+            return "identifier";
+        case QUERY_GATEWAY_LIST:
+            return "list";
+        case QUERY_GATEWAY_COUNT:
+            return "count";
+        case QUERY_GATEWAY_ASSIGN:
+            return "assign";
+        case QUERY_GATEWAY_RM:
+            return "remove";
+        case QUERY_GATEWAY_FORCE_SAVE:
+            return "save";
+        case QUERY_GATEWAY_CLOSE_RESOURCES:
+            return "close";
+        default:
+            return "";
+    }
+}
