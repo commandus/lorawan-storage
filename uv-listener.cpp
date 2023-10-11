@@ -28,15 +28,15 @@
 
 static void getAddrNPort(
 	uv_tcp_t *stream,
-	std::string &retname,
+	std::string &retName,
 	int &retPort
 )
 {
-	struct sockaddr_storage name;
+	struct sockaddr_storage name{};
 	auto *n = (struct sockaddr *)&name;
 	int nameSize = sizeof(name);
 	if (uv_tcp_getpeername(stream, n, &nameSize)) {
-		retname = "";
+        retName = "";
         retPort = 0;
 		return;
 	}
@@ -48,7 +48,7 @@ static void getAddrNPort(
 		uv_inet_ntop(name.ss_family, &((struct sockaddr_in6 *)n)->sin6_addr, addr, sizeof(addr));
         retPort = ntohs(((struct sockaddr_in6 *)n)->sin6_port);
 	}
-	retname = addr;
+    retName = addr;
 }
 
 /**
@@ -86,7 +86,7 @@ static void onUDPRead(
   	if (bytesRead < 0) {
     	if (bytesRead != UV_EOF) {
 #ifdef ENABLE_DEBUG
-      		std::cerr << ERR_SOCKET_READ << " " << bytesRead << ": " << uv_err_name(bytesRead) << std::endl;
+      		std::cerr << ERR_SOCKET_READ << MSG_SPACE << bytesRead << MSG_COLON_N_SPACE << uv_err_name(bytesRead) << std::endl;
 #endif			
     	}
   	} else {
@@ -97,13 +97,15 @@ static void onUDPRead(
           std::string host;
           int port;
           getSocketAddrNPort(addr, host, port);
-          std::cerr << "Receive UDP packet " << host << ":" << port << " " << bytesRead << " bytes: " << hexString(buf->base, bytesRead);
-          std::cerr << std::endl;
+          std::cerr << MSG_RECEIVED
+                  << hexString(buf->base, bytesRead)
+                  << MSG_SPACE << MSG_OPAREN << host << ":" << port
+                  << MSG_SPACE << bytesRead << MSG_SPACE << MSG_BYTES << MSG_CPAREN << std::endl;
 #endif
             // 307 bytes for IPv4 up to 18, IPv6 up to 10
             unsigned char writeBuffer[307];
-            size_t sz = makeResponse(((UVListener*) handle->loop->data)->serializationWrapper, writeBuffer, sizeof(writeBuffer),
-                                     (const unsigned char *) buf->base, bytesRead);
+            size_t sz = makeResponse(((UVListener*) handle->loop->data)->serializationWrapper,
+                writeBuffer, sizeof(writeBuffer), (const unsigned char *) buf->base, bytesRead);
 
             if (sz > 0) {
                 uv_buf_t wrBuf = uv_buf_init((char *) writeBuffer, sz);
@@ -111,13 +113,8 @@ static void onUDPRead(
                 req->data = writeBuffer; // to free up if need it
                 uv_udp_send(req, handle, &wrBuf, 1, addr,
                     [](uv_udp_send_t *req, int status) {
-                        if (req) {
-                            /*
-                            if (req->data)
-                                free(req->data);
-                            */
+                        if (req)
                             free(req);
-                        }
                     });
             }
         }
@@ -134,7 +131,8 @@ static void onReadTCP(
 	if (readCount <= 0) {
 		if (readCount != UV_EOF) {
 #ifdef ENABLE_DEBUG
-			std::cerr << ERR_SOCKET_READ << " " << readCount << ": " << uv_err_name(readCount) << std::endl;
+			std::cerr << ERR_SOCKET_READ << MSG_SPACE
+                << readCount << MSG_COLON_N_SPACE << uv_err_name(readCount) << std::endl;
 #endif			
 		}
 		// client disconnected, close socket
@@ -144,8 +142,10 @@ static void onReadTCP(
         std::string addr;
         int port;
         getAddrNPort((uv_tcp_t *)client, addr, port);
-        std::cerr << "Receive TCP packet " << addr << ":" << port << " " << readCount << " bytes: " << hexString(buf->base, readCount);
-        std::cerr << std::endl;
+        std::cerr << MSG_RECEIVED
+            << hexString(buf->base, readCount)
+            << MSG_SPACE << MSG_OPAREN << "TCP " << addr << ":" << port << MSG_SPACE << readCount
+            << MSG_SPACE << MSG_BYTES << MSG_CPAREN << std::endl;
 #endif
         unsigned char writeBuffer[307];
         size_t sz = makeResponse(((UVListener*) client->loop->data)->serializationWrapper,
@@ -157,17 +157,14 @@ static void onReadTCP(
 			req->data = writeBuffer; // to free up if required
 			uv_write(req, client, &writeBuf, 1,
                  [](uv_write_t *req, int status) {
-                     if (req) {
-                         freeReqData(req);
+                     if (req)
                          free(req);
-                     }
                 }
             );
         }
         bool keepalive = true;
-        if (!keepalive) {
+        if (!keepalive)
             uv_close((uv_handle_t *)client, onCloseClient);
-        }
 	}
     freeBuffer(buf);
 }
@@ -187,7 +184,7 @@ static void onConnect(
 	uv_tcp_init(server->loop, client);
     uv_tcp_keepalive(client, 1, DEF_KEEPALIVE_SECS);
 #ifdef ENABLE_DEBUG
-    std::cerr << "Connection established" << std::endl;
+    std::cerr << MSG_CONNECTED << std::endl;
 #endif
     if (uv_accept(server, (uv_stream_t *)client) == 0) {
 		uv_read_start((uv_stream_t *)client, allocBuffer, onReadTCP);
@@ -212,22 +209,23 @@ UVListener::UVListener(
 // http://stackoverflow.com/questions/25615340/closing-libuv-handles-correctly
 void UVListener::stop()
 {
-	auto *loop = (uv_loop_t *) uv;
-    if (!loop || status == ERR_CODE_STOPPED)
+	auto *uvLoop = (uv_loop_t *) uv;
+    if (!uvLoop || status == ERR_CODE_STOPPED)
         return;
     status = ERR_CODE_STOPPED;
-    uv_stop(loop);
-    int result = uv_loop_close(loop);
-	if (result == UV_EBUSY) {
-		uv_walk(loop, [](uv_handle_t* handle, void* arg) {
+    uv_stop(uvLoop);
+    int result = uv_loop_close(uvLoop);
+
+	if (result == UV_EBUSY && uv_loop_alive(uvLoop)) {
+		uv_walk(uvLoop, [](uv_handle_t* handle, void* arg) {
 			if (!uv_is_closing(handle))
 				uv_close(handle, nullptr);
 			}, nullptr);
 		int r;
 		do {
-			r = uv_run(loop, UV_RUN_ONCE);
+			r = uv_run(uvLoop, UV_RUN_ONCE);
 		} while (r != 0);
-        uv_loop_close(loop);
+        uv_loop_close(uvLoop);
 	}
 }
 
@@ -247,7 +245,7 @@ void UVListener::setAddress(
     uint16_t port
 )
 {
-    struct sockaddr_in *a = (struct sockaddr_in *) &servaddr;
+    auto *a = (struct sockaddr_in *) &servaddr;
     a->sin_family = AF_INET;
     a->sin_addr.s_addr = ipv4;
     a->sin_port = htons(port);
@@ -255,9 +253,6 @@ void UVListener::setAddress(
 
 int UVListener::run()
 {
-#ifdef ENABLE_DEBUG	
-	std::cerr << "Run.." << std::endl;
-#endif	
 	auto *loop = (uv_loop_t *) uv;
 	// TCP
 	uv_tcp_t tcpSocket;
@@ -298,9 +293,11 @@ int UVListener::run()
     return status;
 }
 
+/**
+ * 	Call stop() before destroy
+ */
 UVListener::~UVListener()
 {
-	stop();
 }
 
 void UVListener::setLog(

@@ -78,13 +78,12 @@ static void onTCPRead(
             return;
         } else {
 #ifdef ENABLE_DEBUG
-            std::cerr << ERR_SOCKET_READ << " " << nRead << ": " << uv_err_name(nRead) << std::endl;
-            client->onResponse->onGet(client, false, nullptr);
+            std::cerr << ERR_SOCKET_READ << MSG_SPACE << nRead << MSG_COLON_N_SPACE << uv_err_name(nRead) << std::endl;
 #endif
         }
     } else {
 #ifdef ENABLE_DEBUG
-        std::cerr << "Read  " << nRead << " bytes: " << hexString(buf->base, nRead) << std::endl;
+        std::cerr << MSG_READ_BYTES << hexString(buf->base, nRead) << MSG_OPAREN << nRead << MSG_BYTES << MSG_CPAREN << std::endl;
 #endif
         parseResponse(client, (const unsigned char *) buf->base, nRead);
     }
@@ -116,7 +115,7 @@ static void onUDPread(
     if (bytesRead < 0) {
         if (bytesRead != UV__EOF) {
 #ifdef ENABLE_DEBUG
-            std::cerr << ERR_SOCKET_READ << " " << bytesRead << ": " << uv_err_name(bytesRead) << std::endl;
+            std::cerr << ERR_SOCKET_READ << MSG_SPACE << bytesRead << MSG_COLON_N_SPACE << uv_err_name(bytesRead) << std::endl;
 #endif
         }
         return;
@@ -126,7 +125,7 @@ static void onUDPread(
         return;
     } else {
 #ifdef ENABLE_DEBUG
-        std::cerr << "Read " << bytesRead << " bytes: " << hexString(buf->base, bytesRead) << std::endl;
+        std::cerr << MSG_READ_BYTES << hexString(buf->base, bytesRead) << MSG_OPAREN << bytesRead << MSG_CPAREN << std::endl;
 #endif
     }
     parseResponse(client, (const unsigned char *) buf->base, bytesRead);
@@ -142,7 +141,7 @@ static void onClientUDPSent(
     auto *client = (UvClient *) req->data;
     if (status) {
 #ifdef ENABLE_DEBUG
-        std::cerr << ERR_SOCKET_WRITE << status << ": " << uv_strerror(status) << std::endl;
+        std::cerr << ERR_SOCKET_WRITE << status << MSG_COLON_N_SPACE << uv_strerror(status) << std::endl;
 #endif
         client->onResponse->onError(client, ERR_CODE_SOCKET_WRITE, status);
         free(req);
@@ -163,7 +162,7 @@ static int sendTcp(
     int r = uv_write(write_req, tcp, &buf, buf_count, onWriteEnd);
     if (r < 0) {
 #ifdef ENABLE_DEBUG
-        std::cerr << ERR_SOCKET_WRITE << r << ": " << uv_strerror(r) << std::endl;
+        std::cerr << ERR_SOCKET_WRITE << r << MSG_COLON_N_SPACE << uv_strerror(r) << std::endl;
 #endif
         client->onResponse->onError(client, ERR_CODE_SOCKET_WRITE, r);
     }
@@ -177,7 +176,7 @@ static void onConnect(
 {
 	if (status < 0) {
 #ifdef ENABLE_DEBUG		
-		std::cerr << ERR_SOCKET_CONNECT << status << ": " << uv_strerror(status) << std::endl;
+		std::cerr << ERR_SOCKET_CONNECT << status << MSG_COLON_N_SPACE << uv_strerror(status) << std::endl;
 #endif
         if (status != -125)
 		    return;
@@ -207,7 +206,7 @@ void UvClient::init()
         int r = uv_udp_recv_start(&udpSocket, allocBuffer, onUDPread);
         if (r < 0) {
 #ifdef ENABLE_DEBUG
-            std::cerr << ERR_SOCKET_READ << r << ": " << uv_strerror(r) << std::endl;
+            std::cerr << ERR_SOCKET_READ << r << MSG_COLON_N_SPACE << uv_strerror(r) << std::endl;
             return;
 #endif
         }
@@ -254,20 +253,19 @@ UvClient::UvClient(
     init();
 }
 
-void UvClient::qquery(
-	void* buf,
-	size_t size
-)
+void UvClient::initiateQuery()
 {
+    query->ntoh();
+    size_t sz = query->serialize((unsigned char *) sendBuffer);
 #ifdef ENABLE_DEBUG
-    std::cerr << "Query " << size << " bytes";
-    if (size > 0)
-        std::cerr <<": " << hexString(buf, size);
+    std::cerr << MSG_QUERY << MSG_SPACE << sz << MSG_SPACE << MSG_BYTES;
+    if (sz > 0)
+        std::cerr << MSG_COLON_N_SPACE << hexString(sendBuffer, sz);
     std::cerr << std::endl;
 #endif
 	int r;
-    dataBuf = buf;
-    dataSize = size;
+    dataBuf = sendBuffer;
+    dataSize = sz;
 	if (useTcp) {
         // TCP
         if (!tcpConnected) {
@@ -279,17 +277,16 @@ void UvClient::qquery(
 	} else {
         // UDP
         auto *sendReq = (uv_udp_send_t *) malloc(sizeof(uv_udp_send_t));
-        uv_buf_t uvBuf = uv_buf_init((char *) buf, size);
+        uv_buf_t uvBuf = uv_buf_init((char *) sendBuffer, sz);
         sendReq->data = this;
         r = uv_udp_send(sendReq, &udpSocket, &uvBuf, 1, (const struct sockaddr *) &serverAddress, onClientUDPSent);
     }
 	if (r) {
 #ifdef ENABLE_DEBUG
-		std::cerr << ERR_MESSAGE << r << ": " << uv_strerror(r) << std::endl;
+		std::cerr << ERR_MESSAGE << r << MSG_COLON_N_SPACE << uv_strerror(r) << std::endl;
 #endif
 		status = ERR_CODE_SOCKET_CREATE;
-        onResponse->onError(ершыб )Get(this, false, nullptr);
-        client->onResponse->onError(client, ERR_CODE_SOCKET_READ, nRead);
+        onResponse->onError(this, ERR_CODE_SOCKET_READ, r);
 		return;
 	}
 	status = CODE_OK;
@@ -306,6 +303,7 @@ ServiceMessage* UvClient::request(
 {
     ServiceMessage* r = query;
     query = value;
+    initiateQuery();
     return r;
 }
 

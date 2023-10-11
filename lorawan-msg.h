@@ -248,8 +248,11 @@
 #define ERR_STOPPED                                     "Stopped"
 #define ERR_ACCESS_DENIED                               "Access denied"
 
-
 // Message en-us locale strings
+#define MSG_COLON_N_SPACE               ": "
+#define MSG_SPACE                       " "
+#define MSG_OPAREN                      "("
+#define MSG_CPAREN                      ")"
 #define MSG_PROG_NAME_NETWORK			"LoRaWAN network listener"
 #define MSG_PROG_NAME_GATEWAY_USB       "LoRaWAN USB gateway"
 #define MSG_PROTO_DB_PROG_NAME			"proto-db helper utility"
@@ -376,6 +379,7 @@
 #define MSG_RESTART_REQUEST             "Restart"
 
 #define MSG_CHECK_SYSLOG 	            "Check syslog."
+#define MSG_QUERY                       "Query"
 
 const char *logLevelString(int logLevel);
 const char *logLevelColor(int logLevel);

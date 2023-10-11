@@ -104,10 +104,11 @@ CliGatewayServiceDescriptorNParams svc;
 
 static void done() {
     if (svc.server) {
+        svc.server->stop();
         delete svc.server;
         svc.server = nullptr;
         std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
-        exit(0);
+        exit(svc.retCode);
     }
 }
 
@@ -154,9 +155,9 @@ void run() {
 #endif
     svc.server->setAddress(svc.intf, svc.port);
     svc.server->setLog(svc.verbose, &svc);
-	int r = svc.server->run();
-    if (r)
-        std::cerr << ERR_MESSAGE << r << ": " << std::endl;
+    svc.retCode = svc.server->run();
+    if (svc.retCode)
+        std::cerr << ERR_MESSAGE << svc.retCode << ": " << std::endl;
 }
 
 int main(int argc, char **argv) {

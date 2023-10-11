@@ -833,12 +833,8 @@ size_t GatewaySerialization::query(
 {
     if (!svc)
         return 0;
-    if (sz < SIZE_SERVICE_MESSAGE) {
-#ifdef ENABLE_DEBUG
-        std::cerr << MSG_REQUIRED_SIZE << sizeof(GatewayAddrRequest)  << std::endl;
-#endif
+    if (sz < SIZE_SERVICE_MESSAGE)
         return 0;
-    }
     ServiceMessage *pMsg = deserialize((const unsigned char *) request, sz);
     if (!pMsg) {
 #ifdef ENABLE_DEBUG

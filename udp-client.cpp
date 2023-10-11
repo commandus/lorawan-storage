@@ -103,7 +103,7 @@ void UDPClient::start() {
         if (sock == INVALID_SOCKET) {
             status = ERR_CODE_SOCKET_CREATE;
 #ifdef ENABLE_DEBUG
-            std::cerr << ERR_SOCKET_CREATE << " " << errno << ": " << strerror(errno) << std::endl;
+            std::cerr << ERR_SOCKET_CREATE << MSG_SPACE << errno << MSG_COLON_N_SPACE << strerror(errno) << std::endl;
 #endif
             onResponse->onError(this, ERR_CODE_SOCKET_CREATE, SOCKET_ERRNO);
             break;
@@ -130,7 +130,7 @@ void UDPClient::start() {
                 break;
             }
 #ifdef ENABLE_DEBUG
-            std::cerr << MSG_SENT << sz << " " << MSG_BYTES << ": "
+            std::cerr << MSG_SENT << sz << MSG_SPACE << MSG_BYTES << MSG_COLON_N_SPACE
             << hexString(sendBuffer, ssz)
             << std::endl;
 #endif
@@ -147,8 +147,8 @@ void UDPClient::start() {
                 break;
             } else {
 #ifdef ENABLE_DEBUG
-                std::cerr << MSG_RECEIVED << len << " " << MSG_BYTES
-                << ": " << hexString(rxBuf, len)
+                std::cerr << MSG_RECEIVED << len << MSG_SPACE << MSG_BYTES
+                << MSG_COLON_N_SPACE << hexString(rxBuf, len)
                 << std::endl;
 #endif
                 enum CliGatewayQueryTag tag = validateQuery(rxBuf, len);

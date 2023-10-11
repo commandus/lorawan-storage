@@ -266,9 +266,6 @@ public:
                 delete previousMessage;
         }
         params.queryPos++;
-        if (verbose > 1) {
-            std::cerr << "next " << params.queryPos << "\n";
-        }
         return hasNext;
     }
 };

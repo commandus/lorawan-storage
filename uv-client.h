@@ -13,6 +13,7 @@ typedef SSIZE_T ssize_t;
 
 class UvClient : public GatewayClient {
 private:
+    char sendBuffer[40];    // max request size is 40 bytes
     bool useTcp;
     struct sockaddr serverAddress;
     uv_udp_t udpSocket;
@@ -26,10 +27,7 @@ private:
     uv_loop_t *loop;
 
     void init();
-    void qquery(
-        void *buf,
-        size_t len
-    );
+    void initiateQuery();
 
 public:
     bool tcpConnected;
