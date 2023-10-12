@@ -164,7 +164,7 @@ void run() {
 int main(int argc, char **argv) {
 	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4244");
 #ifdef ENABLE_SQLITE
-    struct arg_str *a_db = arg_str1("d", "db", "<file>", "database file name. Default " DEF_DB);
+    struct arg_str *a_db = arg_str0("d", "db", "<file>", "database file name. Default " DEF_DB);
 #endif
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");

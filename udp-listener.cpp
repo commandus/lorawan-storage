@@ -192,7 +192,7 @@ int UDPListener::run()
             } else {
                 // Data received
                 if (log && verbose > 1) {
-                    log->strm(LOG_INFO) << "Received " << len << " bytes: " << hexString(rxBuf, len);
+                    log->strm(LOG_INFO) << MSG_RECEIVED << len << MSG_SPACE << MSG_BYTES << MSG_COLON_N_SPACE << hexString(rxBuf, len);
                     log->flush();
                 }
                 size_t sz = makeResponse(serializationWrapper, rBuf, sizeof(rBuf), rxBuf, len);

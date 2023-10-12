@@ -1,4 +1,5 @@
 #include <sstream>
+#include <iostream>
 #include "gateway-service-sqlite.h"
 #include "lorawan-types.h"
 #include "lorawan-error.h"
@@ -184,6 +185,7 @@ int SqliteGatewayService::rm(
     else
         statement << "addr = '" <<  sockaddr2string(&request.sockaddr) << "'";
     int r = sqlite3_exec(db, statement.str().c_str(), nullptr, nullptr, &zErrMsg);
+    std::cerr << statement.str() << std::endl;
     if (r != SQLITE_OK) {
         if (zErrMsg) {
             sqlite3_free(zErrMsg);

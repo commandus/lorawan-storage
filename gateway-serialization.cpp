@@ -1103,7 +1103,7 @@ ServiceMessage* deserialize(
             r = new GatewayIdAddrRequest(buf, sz);
             break;
         case 'r':   // Remove entry
-            if (sz < SIZE_GATEWAY_ASSIGN_ID_ADDR_4_REQUEST)
+            if (sz < SIZE_GATEWAY_ID_REQUEST)   // it can contain id only(no address)
                 return nullptr;
             r = new GatewayIdAddrRequest(buf, sz);
             break;
