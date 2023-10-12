@@ -1,15 +1,12 @@
 #ifndef GATEWAY_SERVICE_GEN_H_
 #define GATEWAY_SERVICE_GEN_H_ 1
 
-#include <vector>
-#include <mutex>
-#include <map>
 #include "gateway-service.h"
+#include "sqlite3.h"
 
 class SqliteGatewayService: public GatewayService {
 protected:
-    std::map<uint64_t, GatewayIdentity> storage;
-    void clear();
+    sqlite3 *db;
 public:
     SqliteGatewayService();
     ~SqliteGatewayService() override;

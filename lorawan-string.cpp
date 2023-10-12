@@ -559,3 +559,10 @@ void string2FREQUENCY(
 	if (len < sizeof(FREQUENCY))
 		memset(&retVal + len, 0, sizeof(FREQUENCY) - len);
 }
+
+uint64_t string2gatewayId(
+    const std::string& value
+)
+{
+    return strtoull(value.c_str(), nullptr, 16);
+}

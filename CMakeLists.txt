@@ -144,6 +144,14 @@ else()
 	if (ENABLE_SQLITE)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_SQLITE)
 		set(GATEWAY_SRC gateway-service-sqlite.cpp)
+		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+			find_package(unofficial-sqlite3 CONFIG REQUIRED)
+			set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
+		else ()
+			find_package(SQLite3 REQUIRED)
+			set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
+			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
+		endif ()
 	else()
 		set(GATEWAY_SRC gateway-service-mem.cpp)
 	endif()
@@ -155,12 +163,13 @@ else()
 		cli-main.cpp ${LSNR_SRC}
 		${GATEWAY_SRC} gateway-serialization.cpp
 		third-party/daemonize.cpp
+		file-helper.cpp
 		${ARGTABLE}
 	)
 	add_executable(lorawan-gateway-service ${LORAWAN_GATEWAY_SERVICE_SRC})
-	target_link_libraries(lorawan-gateway-service PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
+	target_link_libraries(lorawan-gateway-service PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan ${BACKEND_DB_LIB})
 	target_compile_definitions(lorawan-gateway-service PRIVATE ${GATEWAY_DEF})
-	target_include_directories(lorawan-gateway-service PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+	target_include_directories(lorawan-gateway-service PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS} ${BACKEND_DB_INC})
 
 	#
 	# lorawan-gateway-query

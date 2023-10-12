@@ -108,4 +108,9 @@ LDFLAGS="$LDFLAGS -L/usr/local/lib"
 # Checks for header files. Add /usr/local/include for OS X.
 CFLAGS="$CFLAGS -I/usr/local/include"
 
+if test "$sqlite" = "true"; then
+AC_CHECK_HEADERS(sqlite3.h)
+AC_CHECK_LIB(sqlite3,sqlite3_close)
+fi
+
 AC_OUTPUT
