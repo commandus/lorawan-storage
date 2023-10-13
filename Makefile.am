@@ -1,10 +1,10 @@
 SUBDIRS = .
 ACLOCAL_AMFLAGS = -I m4
 
-VERSION = "0.1"
-VERSION_INFO = 0:1:0
+VERSION = 0.1
 
-common_flags = -I. -Ithird-party
+# ../../third-party for make distcheck happy
+common_flags = -I. -Ithird-party -I../../third-party
 
 AM_CPPFLAGS=$(common_flags)
 AM_CXXFLAGS=$(common_flags) -std=c++11
@@ -55,15 +55,16 @@ SRC_AES = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
 nobase_dist_include_HEADERS = \
-	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
-	third-party/argtable3/argtable3.h third-party/strptime.h \
-	gateway-client.h gateway-service-sqlite.h log.h \
+	gateway-client.h gateway-service-sqlite.h log.h log-intf.h \
 	lorawan-error.h lorawan-types.h udp-client.h uv-listener.h \
 	gateway-listener.h gateway-service.h ip-helper.h lorawan-const.h \
 	lorawan-msg.h network-identity.h udp-listener.h uv-mem.h \
 	gateway-serialization.h gateway-service-mem.h \
 	lorawan-conv.h lorawan-string.h platform-specific.h uv-client.h \
-	lorawan-date.h gateway-identity.h ip-address.h file-helper.h
+	lorawan-date.h gateway-identity.h ip-address.h file-helper.h \
+	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
+	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c \
+	third-party/argtable3/argtable3.h third-party/strptime.h third-party/daemonize.h
 
 #
 # liblorawan

@@ -60,8 +60,8 @@ UDPListener::UDPListener(
 }
 
 void UDPListener::setLog(
-    int aVerbose,
-    LogIntf *aLog
+        int aVerbose,
+        Log *aLog
 )
 {
     verbose = aVerbose;

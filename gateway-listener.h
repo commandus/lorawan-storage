@@ -2,7 +2,7 @@
 #define GATEWAY_LISTENER_H
 
 #include "gateway-serialization.h"
-#include "LogIntf.h"
+#include "log-intf.h"
 
 class GatewayListener {
 public:
@@ -29,7 +29,7 @@ public:
 
     virtual void stop() = 0;
 
-    virtual void setLog(int verbose, LogIntf *log) = 0;
+    virtual void setLog(int verbose, Log *log) = 0;
 
     virtual ~GatewayListener() = default;
 };

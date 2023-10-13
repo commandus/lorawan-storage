@@ -57,7 +57,7 @@ static std::string IP_PROTO2string(
 }
 
 // global parameters and descriptors
-class CliGatewayServiceDescriptorNParams : public LogIntf
+class CliGatewayServiceDescriptorNParams : public Log
 {
 public:
     GatewayListener *server = nullptr;

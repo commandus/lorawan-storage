@@ -13,7 +13,7 @@
 class UDPListener : public GatewayListener {
 private:
     struct sockaddr destAddr;
-    LogIntf *log;
+    Log *log;
     int verbose;
 public:
     int status; // ERR_CODE_STOPPED - stop request
@@ -31,7 +31,7 @@ public:
     ) override;
     int run() override;
     void stop() override;
-    void setLog(int verbose, LogIntf *log) override;
+    void setLog(int verbose, Log *log) override;
 };
 
 #endif
