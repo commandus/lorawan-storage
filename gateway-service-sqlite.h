@@ -6,6 +6,7 @@
 
 class SqliteGatewayService: public GatewayService {
 protected:
+    std::string dbName;
     sqlite3 *db;
 public:
     SqliteGatewayService();
@@ -18,7 +19,7 @@ public:
     int put(const GatewayIdentity &request) override;
     int rm(const GatewayIdentity &addr) override;
 
-    int init(const std::string &option, void *data) override;
+    int init(const std::string &dbName, void *db) override;
     void flush() override;
     void done() override;
 };

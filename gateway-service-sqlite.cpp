@@ -1,7 +1,6 @@
 #include <sstream>
 #include <iostream>
 #include "gateway-service-sqlite.h"
-#include "lorawan-types.h"
 #include "lorawan-error.h"
 #include "lorawan-string.h"
 #include "ip-address.h"
@@ -146,8 +145,8 @@ size_t SqliteGatewayService::size()
 
 /**
  * UPSERT SQLite >= 3.24.0
- * @param request
- * @return
+ * @param request gateway identifier or address
+ * @return 0- success
  */
 int SqliteGatewayService::put(
     const GatewayIdentity &request
@@ -226,12 +225,16 @@ static int createDatabaseFile(
 }
 
 int SqliteGatewayService::init(
-    const std::string &dbName,
-    void *data
+    const std::string &databaseName,
+    void *database
 )
 {
-    if (db)
-        sqlite3_close(db);
+    dbName = databaseName;
+    if (database) {
+        // use external db
+        db = (sqlite3 *) database;
+        return CODE_OK;
+    }
     if (!file::fileExists(dbName)) {
         int r = createDatabaseFile(dbName);
         if (r)
@@ -247,6 +250,11 @@ int SqliteGatewayService::init(
 
 void SqliteGatewayService::flush()
 {
+    // re-open database file
+    // external db closed
+    if (db)
+        sqlite3_close(db);
+    sqlite3_open(dbName.c_str(), &db);
 }
 
 void SqliteGatewayService::done()

@@ -15,7 +15,7 @@ ARGTABLE_SRC = \
 AES_SRC = \
 	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
 CLI_SRC = \
-	cli-query-main.cpp gateway-serialization.cpp
+	cli-query-main.cpp service-serialization.cpp gateway-serialization.cpp
 
 LSNR_SRC =
 GATEWAY_DEF = $(COMMON_CPP_FLAGS)
@@ -57,9 +57,10 @@ SRC_ARGTABLE = third-party/argtable3/argtable3.c
 nobase_dist_include_HEADERS = \
 	gateway-client.h gateway-service-sqlite.h log.h log-intf.h \
 	lorawan-error.h lorawan-types.h udp-client.h uv-listener.h \
-	gateway-listener.h gateway-service.h ip-helper.h lorawan-const.h \
+	gateway-listener.h gateway-service.h identity-service.h \
+	ip-helper.h lorawan-const.h \
 	lorawan-msg.h network-identity.h udp-listener.h uv-mem.h \
-	gateway-serialization.h gateway-service-mem.h \
+	service-serialization.h gateway-serialization.h gateway-service-mem.h \
 	lorawan-conv.h lorawan-string.h platform-specific.h uv-client.h \
 	lorawan-date.h gateway-identity.h ip-address.h file-helper.h \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
@@ -71,10 +72,12 @@ nobase_dist_include_HEADERS = \
 #
 SRC_LIBLORAWAN = \
 	lorawan-types.cpp lorawan-string.cpp lorawan-conv.cpp network-identity.cpp \
-	gateway-identity.cpp lorawan-date.cpp gateway-service.cpp ip-helper.cpp ip-address.cpp \
+	gateway-identity.cpp lorawan-date.cpp gateway-service.cpp identity-service.cpp \
+	ip-helper.cpp ip-address.cpp \
 	third-party/strptime.cpp
 
-LORAWAN_GATEWAY_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) gateway-serialization.cpp \
+LORAWAN_GATEWAY_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) \
+    service-serialization.cpp gateway-serialization.cpp \
 	file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)

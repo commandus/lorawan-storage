@@ -107,9 +107,10 @@ else()
 	#
 	set(SRC_LIBLORAWAN
 		lorawan-types.cpp lorawan-string.cpp lorawan-conv.cpp network-identity.cpp
-		gateway-identity.cpp gateway-service.cpp
+		gateway-identity.cpp gateway-service.cpp identity-service.cpp
 		ip-helper.cpp lorawan-date.cpp ip-address.cpp third-party/strptime.cpp
-    )
+		service-serialization.cpp
+	)
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
@@ -161,7 +162,7 @@ else()
 	#
 	set(LORAWAN_GATEWAY_SERVICE_SRC
 		cli-main.cpp ${LSNR_SRC}
-		${GATEWAY_SRC} gateway-serialization.cpp
+		${GATEWAY_SRC} gateway-serialization.cpp identity-serialization.cpp
 		third-party/daemonize.cpp
 		file-helper.cpp
 		${ARGTABLE}

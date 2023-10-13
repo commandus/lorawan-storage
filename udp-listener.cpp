@@ -195,7 +195,11 @@ int UDPListener::run()
                     log->strm(LOG_INFO) << MSG_RECEIVED << len << MSG_SPACE << MSG_BYTES << MSG_COLON_N_SPACE << hexString(rxBuf, len);
                     log->flush();
                 }
-                size_t sz = makeResponse(serializationWrapper, rBuf, sizeof(rBuf), rxBuf, len);
+                size_t sz;
+                if (len > 0)
+                    sz = serializationWrapper->query(rBuf, sizeof(rBuf), rxBuf, len);
+                else
+                    sz = 0;
                 if (sz > 0) {
                     if (sendto(sock, rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
                         if (log) {

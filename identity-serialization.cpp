@@ -1,4 +1,4 @@
-#include "gateway-serialization.h"
+#include "identity-serialization.h"
 #include "lorawan-conv.h"
 #include "ip-helper.h"
 
@@ -7,6 +7,7 @@
 
 #include "lorawan-error.h"
 #include "ip-address.h"
+#include "lorawan-string.h"
 
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"
@@ -14,9 +15,9 @@
 
 #define SIZE_OPERATION_REQUEST 18
 #define SIZE_OPERATION_RESPONSE 22
-#define SIZE_GATEWAY_ID_REQUEST   21
-#define SIZE_DEVICE_ADDR_REQUEST 20
-#define SIZE_DEVICE_EUI_ADDR_REQUEST 28
+#define SIZE_DEVICE_EUI_REQUEST   21
+#define SIZE_DEVICE_ADDR_REQUEST 17
+#define SIZE_DEVICE_EUI_ADDR_REQUEST 25
 
 #define SIZE_DEVICE_GET_ADDR_4_RESPONSE 28
 #define SIZE_DEVICE_GET_ADDR_6_RESPONSE 40
@@ -27,157 +28,123 @@
 #include "lorawan-msg.h"
 #endif
 
-GatewayIdRequest::GatewayIdRequest()
-    : ServiceMessage(QUERY_GATEWAY_ADDR, 0, 0), id(0)
+IdentityEUIRequest::IdentityEUIRequest()
+    : ServiceMessage(QUERY_IDENTITY_ADDR, 0, 0), eui(0)
 {
 }
 
-GatewayIdRequest::GatewayIdRequest(
+IdentityEUIRequest::IdentityEUIRequest(
     char aTag,
-    const uint64_t aId,
+    const DEVEUI &aEUI,
     int32_t code,
     uint64_t accessCode
 )
-    : ServiceMessage(aTag, code, accessCode), id(aId)
+    : ServiceMessage(aTag, code, accessCode), eui(aEUI)
 {
 
 }
 
-GatewayIdRequest::GatewayIdRequest(
+IdentityEUIRequest::IdentityEUIRequest(
     const unsigned char *buf,
     size_t sz
 )
     : ServiceMessage(buf, sz)   //  13
 {
-    if (sz >= SIZE_GATEWAY_ID_REQUEST) {
-        memmove(&id, &buf[13], sizeof(id));     // 8
+    if (sz >= SIZE_DEVICE_EUI_REQUEST) {
+        memmove(&eui.u, &buf[13], sizeof(eui.u));     // 8
     }   // 21
 }
 
-void GatewayIdRequest::ntoh() {
+void IdentityEUIRequest::ntoh() {
     ServiceMessage::ntoh();
-    id = NTOH8(id);
+    eui.u = NTOH8(eui.u);
 }
 
-size_t GatewayIdRequest::serialize(
+size_t IdentityEUIRequest::serialize(
     unsigned char *retBuf
 ) const
 {
     ServiceMessage::serialize(retBuf);      // 13
-    memmove(&retBuf[13], &id, sizeof(id));  // 8
-    return SIZE_GATEWAY_ID_REQUEST;         // 21
+    memmove(&retBuf[13], &eui.u, sizeof(eui.u));  // 8
+    return SIZE_DEVICE_EUI_REQUEST;         // 21
 }
 
-std::string GatewayIdRequest::toJsonString() const
+std::string IdentityEUIRequest::toJsonString() const
 {
     std::stringstream ss;
-    ss << R"("gwid":")" << std::hex << id;
+    ss << R"("eui":")" << DEVEUI2string(eui);
     return ss.str();
 }
 
-GatewayAddrRequest::GatewayAddrRequest()
-    : ServiceMessage(QUERY_GATEWAY_ID, 0, 0)
+IdentityAddrRequest::IdentityAddrRequest()
+    : ServiceMessage(QUERY_IDENTITY_ADDR, 0, 0)
 {
-    memset(&addr, 0, sizeof(addr));
+    memset(&addr.u, 0, sizeof(addr.u));
 }
 
-/*
-GatewayAddrRequest::GatewayAddrRequest(
-    const GatewayIdentity& aIdentity
-)
-    : ServiceMessage(QUERY_GATEWAY_ID, 0, 0)
-{
-    memset(&addr, 0, sizeof(addr));
-}
- */
-
-GatewayAddrRequest::GatewayAddrRequest(
+IdentityAddrRequest::IdentityAddrRequest(
     const unsigned char *buf,
     size_t sz
 )
     : ServiceMessage(buf, sz)
 {
-    if (sz >= SIZE_SERVICE_MESSAGE) {
-        size_t r = deserializeSocketAddress(&addr, &buf[SIZE_SERVICE_MESSAGE], sz - SIZE_SERVICE_MESSAGE); // 0, 7, 19
-        // SIZE_SERVICE_MESSAGE + r;        // IPv4: 20 IPv6: 32
+    if (sz >= SIZE_DEVICE_ADDR_REQUEST) {
+        memmove(&addr.u, buf + SIZE_SERVICE_MESSAGE, sizeof(addr.u)); // 4
     }
 }
 
-size_t GatewayAddrRequest::serializedSize() const
-{
-    if (isIPv6(&addr))
-        return SIZE_SERVICE_MESSAGE + 3 + 4;        // IPv4: 20 IPv6: 32
-    else
-        return SIZE_SERVICE_MESSAGE + 3 + 16;        // IPv4: 20 IPv6: 32
-}
-
-GatewayAddrRequest::GatewayAddrRequest(
-    const struct sockaddr &aAddr,
+IdentityAddrRequest::IdentityAddrRequest(
+    const DEVADDR &aAddr,
     int32_t code,
     uint64_t accessCode
 )
-    : ServiceMessage(QUERY_GATEWAY_ID, code, accessCode)
+    : ServiceMessage(QUERY_IDENTITY_EUI, code, accessCode)
 {
-    memmove(&addr, &aAddr, sizeof(addr));
+    addr.u = aAddr.u;
 }
 
-void GatewayAddrRequest::ntoh()
+void IdentityAddrRequest::ntoh()
 {
     ServiceMessage::ntoh();
-    sockaddrNtoh(&addr);
+    addr.u = NTOH4(addr.u);
 }
 
-size_t GatewayAddrRequest::serialize(
+size_t IdentityAddrRequest::serialize(
     unsigned char *retBuf
 ) const
 {
     ServiceMessage::serialize(retBuf);      // 13
-    size_t r = serializeSocketAddress(&retBuf[SIZE_SERVICE_MESSAGE], &addr); // 0, 7, 19
-    return SIZE_SERVICE_MESSAGE + r;        // IPv4: 20 IPv6: 32
+    memmove(retBuf + SIZE_SERVICE_MESSAGE, &addr.u, sizeof(addr.u)); // 4
+    return SIZE_DEVICE_ADDR_REQUEST;        // 17
 }
 
-std::string GatewayAddrRequest::toJsonString() const
+std::string IdentityAddrRequest::toJsonString() const
 {
     std::stringstream ss;
-    ss << R"({"addr": ")" << sockaddr2string(&addr) << "\"}";
+    ss << R"({"addr": ")" << DEVADDR2string(addr) << "\"}";
     return ss.str();
 }
 
-GatewayIdAddrRequest::GatewayIdAddrRequest()
-    : ServiceMessage(QUERY_GATEWAY_ASSIGN, 0, 0), identity()
+IdentityEUIAddrRequest::IdentityEUIAddrRequest()
+    : ServiceMessage(QUERY_IDENTITY_ASSIGN, 0, 0), identity()
 {
 }
 
-/*
-GatewayIdAddrRequest::GatewayIdAddrRequest(
-    const GatewayIdentity& aIdentity
-)
-    : ServiceMessage(QUERY_GATEWAY_ID, 0, 0), identity(aIdentity)
-{
-}
-*/
-
-GatewayIdAddrRequest::GatewayIdAddrRequest(
+IdentityEUIAddrRequest::IdentityEUIAddrRequest(
     const unsigned char *buf,
     size_t sz
 )
     : ServiceMessage(buf, sz)   // 13
 {
-    if (sz >= SIZE_GATEWAY_ID_REQUEST) {
-        memmove(&identity.gatewayId, &buf[SIZE_SERVICE_MESSAGE], sizeof(identity.gatewayId));   // 8
-        deserializeSocketAddress(&identity.sockaddr, &buf[SIZE_GATEWAY_ID_REQUEST],
-                                            sz - SIZE_GATEWAY_ID_REQUEST); // 0, 7, 19
-    }
+    if (sz >= SIZE_DEVICE_EUI_ADDR_REQUEST) {
+        memmove(&identity.devid.devEUI.u, buf + SIZE_SERVICE_MESSAGE, sizeof(identity.devid.devEUI.u));   // 8
+        memmove(&identity.devaddr.u, buf + SIZE_SERVICE_MESSAGE + sizeof(identity.devid.devEUI.u), sizeof(identity.devaddr.u));   // 4
+    }   // 25
 }
 
-size_t GatewayIdAddrRequest::serializedSize() const
-{
-    return SIZE_GATEWAY_ID_REQUEST + 3 + (isIPv6(&identity.sockaddr) ? 16 : 4);     // IPv4: 28 IPv6: 40
-}
-
-GatewayIdAddrRequest::GatewayIdAddrRequest(
+IdentityEUIAddrRequest::IdentityEUIAddrRequest(
     char aTag,
-    const GatewayIdentity &aIdentity,
+    const NETWORKIDENTITY &aIdentity,
     int32_t code,
     uint64_t accessCode
 )
@@ -185,25 +152,24 @@ GatewayIdAddrRequest::GatewayIdAddrRequest(
 {
 }
 
-void GatewayIdAddrRequest::ntoh()
+void IdentityEUIAddrRequest::ntoh()
 {
     ServiceMessage::ntoh();
-    identity.gatewayId = NTOH8(identity.gatewayId);
-    sockaddrNtoh(&identity.sockaddr);
+    identity.devid.devEUI.u = NTOH8(identity.devid.devEUI.u);
+    identity.devaddr.u = NTOH4(identity.devaddr.u);
 }
 
-
-size_t GatewayIdAddrRequest::serialize(
+size_t IdentityEUIAddrRequest::serialize(
     unsigned char *retBuf
 ) const
 {
     ServiceMessage::serialize(retBuf);      // 13
-    memmove(&retBuf[SIZE_SERVICE_MESSAGE], &identity.gatewayId, sizeof(identity.gatewayId)); // 8
-    size_t r = serializeSocketAddress(&retBuf[SIZE_GATEWAY_ID_REQUEST], &identity.sockaddr); // 0, 7, 19
-    return SIZE_GATEWAY_ID_REQUEST + r;     // IPv4: 28 IPv6: 40
+    memmove(retBuf + SIZE_SERVICE_MESSAGE, &identity.devid.devEUI.u, sizeof(identity.devid.devEUI.u)); // 8
+    memmove(retBuf + SIZE_SERVICE_MESSAGE + sizeof(identity.devid.devEUI.u), &identity.devaddr.u, sizeof(identity.devaddr.u)); // 4
+    return SIZE_DEVICE_EUI_ADDR_REQUEST;     // 25
 }
 
-std::string GatewayIdAddrRequest::toJsonString() const
+std::string IdentityEUIAddrRequest::toJsonString() const
 {
     std::stringstream ss;
     ss << R"({"identity": ")" << identity.toJsonString() << "\"}";
@@ -686,7 +652,7 @@ enum CliGatewayQueryTag validateGatewayQuery(
 {
     switch (buffer[0]) {
         case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
-            if (size < SIZE_GATEWAY_ID_REQUEST)
+            if (size < SIZE_DEVICE_EUI_REQUEST)
                 return QUERY_GATEWAY_NONE;
             return QUERY_GATEWAY_ADDR;
         case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
@@ -766,7 +732,7 @@ ServiceMessage* deserialize(
     ServiceMessage *r;
     switch (buf[0]) {
         case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
-            if (sz < SIZE_GATEWAY_ID_REQUEST)
+            if (sz < SIZE_DEVICE_EUI_REQUEST)
                 return nullptr;
             r = new GatewayIdRequest(buf, sz);
             break;
@@ -781,7 +747,7 @@ ServiceMessage* deserialize(
             r = new GatewayIdAddrRequest(buf, sz);
             break;
         case QUERY_GATEWAY_RM:   // Remove entry
-            if (sz < SIZE_GATEWAY_ID_REQUEST)   // it can contain id only(no address)
+            if (sz < SIZE_DEVICE_EUI_REQUEST)   // it can contain id only(no address)
                 return nullptr;
             r = new GatewayIdAddrRequest(buf, sz);
             break;

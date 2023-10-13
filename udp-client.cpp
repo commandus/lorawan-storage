@@ -136,7 +136,7 @@ void UDPClient::start() {
 #endif
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
-            size_t rxSize = responseSizeForRequest(sendBuffer, ssz);
+            size_t rxSize = responseSizeForGatewayRequest(sendBuffer, ssz);
             auto *rxBuf = (unsigned char *) malloc(rxSize);
 
             ssize_t len = recvfrom(sock, (char *) rxBuf, rxSize, 0, (struct sockaddr *)&srcAddress, &socklen);
@@ -151,7 +151,7 @@ void UDPClient::start() {
                 << MSG_COLON_N_SPACE << hexString(rxBuf, len)
                 << std::endl;
 #endif
-                enum CliGatewayQueryTag tag = validateQuery(rxBuf, len);
+                enum CliGatewayQueryTag tag = validateGatewayQuery(rxBuf, len);
                 switch (tag) {
                     case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
                     case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.

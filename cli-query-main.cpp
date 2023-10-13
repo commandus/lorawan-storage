@@ -156,7 +156,7 @@ public:
                 if (response->response != 0)
                     std::cout << response->toJsonString() << std::endl;
                 else {
-                    std::cerr << tag2string((CliGatewayQueryTag)response->tag)
+                    std::cerr << gatewayTag2string((CliGatewayQueryTag) response->tag)
                     // << " " << (int) response->size
                     << " completed\n";
                 }
