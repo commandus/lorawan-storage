@@ -13,14 +13,14 @@
 #include "platform-defs.h"
 #endif
 
+// 13 + 4 + 1
 #define SIZE_OPERATION_REQUEST 18
 #define SIZE_OPERATION_RESPONSE 22
 #define SIZE_DEVICE_EUI_REQUEST   21
 #define SIZE_DEVICE_ADDR_REQUEST 17
 #define SIZE_DEVICE_EUI_ADDR_REQUEST 25
-
-#define SIZE_DEVICE_GET_ADDR_4_RESPONSE 28
-#define SIZE_DEVICE_GET_ADDR_6_RESPONSE 40
+#define SIZE_NETWORK_IDENTITY 95
+#define SIZE_GET_RESPONSE 108
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -166,7 +166,7 @@ size_t IdentityEUIAddrRequest::serialize(
     ServiceMessage::serialize(retBuf);      // 13
     memmove(retBuf + SIZE_SERVICE_MESSAGE, &identity.devid.devEUI.u, sizeof(identity.devid.devEUI.u)); // 8
     memmove(retBuf + SIZE_SERVICE_MESSAGE + sizeof(identity.devid.devEUI.u), &identity.devaddr.u, sizeof(identity.devaddr.u)); // 4
-    return SIZE_DEVICE_EUI_ADDR_REQUEST;     // 25
+    return SIZE_DEVICE_EUI_ADDR_REQUEST;    // 25
 }
 
 std::string IdentityEUIAddrRequest::toJsonString() const
@@ -176,23 +176,13 @@ std::string IdentityEUIAddrRequest::toJsonString() const
     return ss.str();
 }
 
-OperationRequest::OperationRequest()
-    : ServiceMessage(QUERY_GATEWAY_LIST, 0, 0),
+IdentityOperationRequest::IdentityOperationRequest()
+    : ServiceMessage(QUERY_IDENTITY_LIST, 0, 0),
       offset(0), size(0)
 {
 }
 
-/*
-OperationRequest::OperationRequest(
-    char tag
-)
-    : ServiceMessage(tag, 0, 0),
-      offset(0), size(0)
-{
-}
-*/
-
-OperationRequest::OperationRequest(
+IdentityOperationRequest::IdentityOperationRequest(
     char tag,
     size_t aOffset,
     size_t aSize,
@@ -203,7 +193,7 @@ OperationRequest::OperationRequest(
 {
 }
 
-OperationRequest::OperationRequest(
+IdentityOperationRequest::IdentityOperationRequest(
     const unsigned char *buf,
     size_t sz
 )
@@ -215,12 +205,12 @@ OperationRequest::OperationRequest(
     }   // 18
 }
 
-void OperationRequest::ntoh() {
+void IdentityOperationRequest::ntoh() {
     ServiceMessage::ntoh();
     offset = NTOH4(offset);
 }
 
-size_t OperationRequest::serialize(
+size_t IdentityOperationRequest::serialize(
     unsigned char *retBuf
 ) const
 {
@@ -232,7 +222,7 @@ size_t OperationRequest::serialize(
     return SIZE_OPERATION_REQUEST;                      // 18
 }
 
-std::string OperationRequest::toJsonString() const {
+std::string IdentityOperationRequest::toJsonString() const {
     std::stringstream ss;
     ss << R"({"offset": )" << offset
         << ", \"size\": " << (int) size
@@ -240,233 +230,259 @@ std::string OperationRequest::toJsonString() const {
     return ss.str();
 }
 
-GetResponse::GetResponse(
-    const GatewayAddrRequest& req
+IdentityGetResponse::IdentityGetResponse(
+    const IdentityAddrRequest& req
 )
-    : ServiceMessage(req), response()
+    : ServiceMessage(req), response(req.addr)
 {
 }
 
-GetResponse::GetResponse(
-    const GatewayIdRequest &request
+IdentityGetResponse::IdentityGetResponse(
+    const IdentityEUIRequest &request
 )
-    : response(request.id)
-{
-    tag = request.tag;
-    code = request.code;
-    accessCode = request.accessCode;
-}
-
-/*
-GetResponse::GetResponse(
-    const GatewayIdAddrRequest &request
-)
-    : response(request.identity.gatewayId, request.identity.sockaddr)
+    : ServiceMessage(request), response(request.eui)
 {
     tag = request.tag;
     code = request.code;
     accessCode = request.accessCode;
 }
-*/
 
-GetResponse::GetResponse(
+static void ntohNETWORKIDENTITY(
+    NETWORKIDENTITY &value
+)
+{
+    value.devaddr.u = NTOH4(value.devaddr.u);
+    value.devid.devEUI.u = NTOH8(value.devid.devEUI.u);
+    // OTAA
+    value.devid.appEUI.u = NTOH8(value.devid.appEUI.u);
+    value.devid.devNonce.u = NTOH2(value.devid.devNonce.u);
+}
+
+static void serializeNETWORKIDENTITY(
+    unsigned char* retBuf,
+    const NETWORKIDENTITY &response
+)
+{
+    unsigned char *p = retBuf + SIZE_SERVICE_MESSAGE;
+
+    memmove(p, &response.devaddr.u, sizeof(uint32_t)); // 4
+    p += sizeof(uint32_t);
+    *(ACTIVATION *) p = response.devid.activation;	    // 1 activation type: ABP or OTAA
+    p++;
+    *(DEVICECLASS *) p = response.devid.deviceclass;	// 1 activation type: ABP or OTAA
+    p++;
+    ((DEVEUI *) p)->u = response.devid.devEUI.u;	    // 8 device identifier (ABP device may not store EUI) (14)
+    p += 8;
+    memmove(p, &response.devid.nwkSKey, 16);	        // 16 shared session key
+    p += 16;
+    memmove(p, &response.devid.appSKey, 16);	        // 16 private key
+    p += 16;
+    *(LORAWAN_VERSION *) p = response.devid.version;	// 1 (47)
+    p++;
+    // OTAA
+    ((DEVEUI *) p)->u = response.devid.appEUI.u;	    // 8 OTAA application identifier
+    p += 8;
+    memmove(p, &response.devid.appKey, 16);	            // 16 OTAA application private key
+    p += 16;
+    memmove(p, &response.devid.nwkKey, 16);	            // 16 OTAA OTAA network key
+    p += 16;
+    ((DEVNONCE *) p)->u = response.devid.devNonce.u;	// 2 last device nonce (87)
+    p += 2;
+    // added for searching
+    memmove(p, &response.devid.name, 8);	            // 8 (95)
+}
+
+static void deserializeNETWORKIDENTITY(
+    NETWORKIDENTITY &retVal,
+    const unsigned char* buf
+)
+{
+    memmove(&retVal.devaddr.u, buf, sizeof(uint32_t)); // 4
+    unsigned char *p = (unsigned char *) buf + sizeof(uint32_t);
+    retVal.devid.activation = *(ACTIVATION *) p;	    // 1 activation type: ABP or OTAA
+    p++;
+    retVal.devid.deviceclass = *(DEVICECLASS *) p;	// 1 activation type: ABP or OTAA
+    p++;
+    retVal.devid.devEUI.u = ((DEVEUI *) p)->u;	    // 8 device identifier (ABP device may not store EUI)
+    p += 8;
+    memmove(&retVal.devid.nwkSKey, p, 16);	        // 16 shared session key
+    p += 16;
+    memmove(&retVal.devid.appSKey, p, 16);	        // 16 private key
+    p += 16;
+    retVal.devid.version = *(LORAWAN_VERSION *) p;	// 1
+    p++;
+    // OTAA
+    retVal.devid.appEUI.u = ((DEVEUI *) p)->u;	    // 8 OTAA application identifier
+    p += 8;
+    memmove(&retVal.devid.appKey, p, 16);	            // 16 OTAA application private key
+    p += 16;
+    memmove(&retVal.devid.nwkKey, p, 16);	            // 16 OTAA OTAA network key
+    p += 16;
+    retVal.devid.devNonce.u = ((DEVNONCE *) p)->u;	// 2 last device nonce
+    p += 2;
+    // added for searching
+    memmove(&retVal.devid.name, p, 8);	            // 8
+}
+
+IdentityGetResponse::IdentityGetResponse(
     const unsigned char* buf,
     size_t sz
 )
     : ServiceMessage(buf, sz)   // 13
 {
-    if (sz >= SIZE_SERVICE_MESSAGE + sizeof(uint64_t)) {
-        memmove(&response.gatewayId, buf + SIZE_SERVICE_MESSAGE, sizeof(uint64_t)); // 8
-        deserializeSocketAddress(&response.sockaddr, buf + SIZE_SERVICE_MESSAGE + sizeof(uint64_t), sz - SIZE_SERVICE_MESSAGE - sizeof(uint64_t))
-               + SIZE_SERVICE_MESSAGE + sizeof(uint64_t); // IPv4 28 IPv6 40
+    if (sz >= SIZE_GET_RESPONSE) {
+        deserializeNETWORKIDENTITY(response, buf + 13);
     }
 }
 
-size_t GetResponse::serializedSize() const
-{
-    return SIZE_SERVICE_MESSAGE + sizeof(uint64_t) + 3 + (isIPv6(&response.sockaddr) ? 16 : 4); // IPv4 28 IPv6 40
-}
-
-std::string GetResponse::toJsonString() const {
+std::string IdentityGetResponse::toJsonString() const {
     std::stringstream ss;
     ss << response.toJsonString();
     return ss.str();
 }
 
-void GetResponse::ntoh()
+void IdentityGetResponse::ntoh()
 {
     ServiceMessage::ntoh();
-    response.gatewayId = NTOH8(response.gatewayId);
-    sockaddrNtoh(&response.sockaddr);
+    ntohNETWORKIDENTITY(response);
 }
 
-size_t GetResponse::serialize(
+size_t IdentityGetResponse::serialize(
     unsigned char *retBuf
 ) const
 {
     ServiceMessage::serialize(retBuf);                   // 13
-    memmove(retBuf + SIZE_SERVICE_MESSAGE, &response.gatewayId, sizeof(uint64_t));     // 8
-    return serializeSocketAddress(retBuf + SIZE_SERVICE_MESSAGE + 8, &response.sockaddr)     // 0, 7, 19
-        + SIZE_SERVICE_MESSAGE + 8; // IPv4 28 IPv6 40
+    serializeNETWORKIDENTITY(retBuf + SIZE_SERVICE_MESSAGE, this->response);
+    return SIZE_GET_RESPONSE;                           // 13 + 95 = 108
 }
 
-OperationResponse::OperationResponse()
-    : OperationRequest(), response(0)
+IdentityOperationResponse::IdentityOperationResponse()
+    : IdentityOperationRequest(), response(0)
 {
 }
 
-OperationResponse::OperationResponse(
-    const OperationResponse& resp
+IdentityOperationResponse::IdentityOperationResponse(
+    const IdentityOperationResponse& resp
 )
-    : OperationRequest(resp)
+    : IdentityOperationRequest(resp)
 {
 }
 
-OperationResponse::OperationResponse(
+IdentityOperationResponse::IdentityOperationResponse(
     const unsigned char *buf,
     size_t sz
 )
-    : OperationRequest(buf, sz) // 18
+    : IdentityOperationRequest(buf, sz) // 18
 {
     if (sz >= SIZE_OPERATION_RESPONSE) {
         memmove(&response, buf + SIZE_OPERATION_REQUEST, sizeof(response)); // 4
     }   // 22
 }
 
-OperationResponse::OperationResponse(
-    const GatewayIdAddrRequest &request
+IdentityOperationResponse::IdentityOperationResponse(
+    const IdentityEUIAddrRequest &request
 )
-    : OperationRequest(request.tag, 0, 0, request.code, request.accessCode)
+    : IdentityOperationRequest(request.tag, 0, 0, request.code, request.accessCode)
 {
 }
 
-OperationResponse::OperationResponse(
-    const OperationRequest &request
+IdentityOperationResponse::IdentityOperationResponse(
+    const IdentityOperationRequest &request
 )
-    : OperationRequest(request)
+    : IdentityOperationRequest(request)
 {
 
 }
 
-void OperationResponse::ntoh() {
-    OperationRequest::ntoh();
+void IdentityOperationResponse::ntoh() {
+    IdentityOperationRequest::ntoh();
     response = NTOH4(response);
 }
 
-size_t OperationResponse::serialize(
+size_t IdentityOperationResponse::serialize(
     unsigned char *retBuf
 ) const
 {
-    OperationRequest::serialize(retBuf);                                // 18
+    IdentityOperationRequest::serialize(retBuf);                                // 18
     if (retBuf)
         memmove(retBuf + SIZE_OPERATION_REQUEST, &response,
                 sizeof(response));                                      // 4
     return SIZE_OPERATION_RESPONSE;                                     // 22
 }
 
-std::string OperationResponse::toJsonString() const {
+std::string IdentityOperationResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"request": )" << OperationRequest::toJsonString()
+    ss << R"({"request": )" << IdentityOperationRequest::toJsonString()
        << ", \"response\": " << response << "}";
     return ss.str();
 }
 
-ListResponse::ListResponse()
-    : OperationResponse()
+IdentityListResponse::IdentityListResponse()
+    : IdentityOperationResponse()
 {
 }
 
-ListResponse::ListResponse(
-    const ListResponse& resp
+IdentityListResponse::IdentityListResponse(
+    const IdentityListResponse& resp
 )
-    : OperationResponse(resp)
+    : IdentityOperationResponse(resp)
 {
 }
 
-ListResponse::ListResponse(
+IdentityListResponse::IdentityListResponse(
     const unsigned char *buf,
     size_t sz
 )
-    : OperationResponse(buf, sz)       // 22
+    : IdentityOperationResponse(buf, sz)       // 22
 {
-    deserialize(buf, sz);
+    deserializeIdentity(buf, sz);
     size_t ofs = SIZE_OPERATION_RESPONSE;
     response = 0;
     while (true) {
-        if (ofs >= sz)
+        if (ofs + SIZE_NETWORK_IDENTITY > sz)
             break;
-        GatewayIdentity gi;
-        memmove(&gi.gatewayId, &buf[ofs], sizeof(uint64_t));  // 8
-        ofs += 8;
-        ofs += deserializeSocketAddress(&gi.sockaddr, &buf[ofs], sz - ofs); // 0, 7, 19
-        identities.push_back(gi);
+        NETWORKIDENTITY ni;
+        deserializeNETWORKIDENTITY(ni, buf + ofs);
+        ofs += SIZE_NETWORK_IDENTITY;
+        identities.push_back(ni);
         response++;
     }
 }
 
-size_t ListResponse::serializedSize() const
-{
-    size_t ofs = SIZE_OPERATION_RESPONSE;
-    for (auto id : identities) {
-        ofs += 8 + 3 + (isIPv6(&id.sockaddr) ? 16 : 4); // 0, 7, 19
-    }
-    return ofs;
-}
-
-ListResponse::ListResponse(
-    const OperationRequest &request
+IdentityListResponse::IdentityListResponse(
+    const IdentityOperationRequest &request
 )
-    : OperationResponse(request)
+    : IdentityOperationResponse(request)
 {
 }
 
-void ListResponse::ntoh()
+void IdentityListResponse::ntoh()
 {
-    OperationResponse::ntoh();
+    IdentityOperationResponse::ntoh();
     for (auto it(identities.begin()); it != identities.end(); it++) {
-        it->gatewayId = NTOH8(it->gatewayId);
-        sockaddrNtoh(&it->sockaddr);
+        ntohNETWORKIDENTITY(*it);
     }
 }
 
-/**
- * IP v4 sizes:
- *  1   22 + 15 = 37
- *  2   22 + 2 * 15 = 52
- *  ..
- *  10   22 + 10 * 15 = 172
- *  18   22 + 18 * 15 = 292
- * IP v6 sizes:
- *  1   22 + 27 = 49
- *  2   22 + 2 * 27 = 76
- *  ..
- *  10   22 + 10 * 27 = 292
- * @param retBuf
- * @return
- */
-size_t ListResponse::serialize(
+size_t IdentityListResponse::serialize(
     unsigned char *retBuf
 ) const
 {
-    size_t ofs = OperationResponse::serialize(retBuf);   // 22
+    size_t ofs = IdentityOperationResponse::serialize(retBuf);   // 22
     if (retBuf) {
         for (auto it(identities.begin()); it != identities.end(); it++) {
-            memmove(&retBuf[ofs], &it->gatewayId, sizeof(uint64_t));  // 8
-            ofs += 8;
-            ofs += serializeSocketAddress(&retBuf[ofs], &it->sockaddr);   // 0, 7, 19
+            serializeNETWORKIDENTITY(retBuf + ofs, *it);
+            ofs += SIZE_NETWORK_IDENTITY;
         }
     } else {
-        for (auto it(identities.begin()); it != identities.end(); it++) {
-            ofs += 8;
-            ofs += serializeSocketAddress(nullptr, &it->sockaddr);   // 0, 7, 19
-        }
+        ofs += SIZE_NETWORK_IDENTITY * identities.size();
     }
     return ofs;
 }
 
-std::string ListResponse::toJsonString() const {
+std::string IdentityListResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"result": )" << OperationResponse::toJsonString()
+    ss << R"({"result": )" << IdentityOperationResponse::toJsonString()
        << ", \"gateways\": [";
     bool isFirst = true;
     for (auto i = 0; i < response; i++) {
@@ -480,7 +496,7 @@ std::string ListResponse::toJsonString() const {
     return ss.str();
 }
 
-size_t ListResponse::shortenList2Fit(
+size_t IdentityListResponse::shortenList2Fit(
     size_t serializedSize
 ) {
     size_t r = this->serialize(nullptr);
@@ -491,8 +507,8 @@ size_t ListResponse::shortenList2Fit(
     return r;
 }
 
-GatewaySerialization::GatewaySerialization(
-    GatewayService *aSvc,
+IdentitySerialization::IdentitySerialization(
+    IdentityService *aSvc,
     int32_t aCode,
     uint64_t aAccessCode
 )
@@ -506,25 +522,14 @@ GatewaySerialization::GatewaySerialization(
  * @param sz count ofg items
  * @return size in bytes
  */
-static size_t getMaxGatewayListResponseSize(
+static size_t getMaxIdentityListResponseSize(
     size_t sz
 )
 {
     return SIZE_OPERATION_RESPONSE + sz * (sizeof(uint64_t) + 19);
 }
 
-static size_t getListResponseSize(
-    const std::vector<GatewayIdentity> &list
-)
-{
-    size_t r = SIZE_OPERATION_RESPONSE;
-    for (const auto & it : list) {
-        r += sizeof(uint64_t) + serializeSocketAddress(nullptr, &it.sockaddr);
-    }
-    return r;
-}
-
-size_t GatewaySerialization::query(
+size_t IdentitySerialization::query(
     unsigned char *retBuf,
     size_t retSize,
     const unsigned char *request,
@@ -535,7 +540,7 @@ size_t GatewaySerialization::query(
         return 0;
     if (sz < SIZE_SERVICE_MESSAGE)
         return 0;
-    ServiceMessage *pMsg = deserialize((const unsigned char *) request, sz);
+    ServiceMessage *pMsg = deserializeIdentity((const unsigned char *) request, sz);
     if (!pMsg) {
 #ifdef ENABLE_DEBUG
         std::cerr << "Wrong message" << std::endl;
@@ -549,82 +554,81 @@ size_t GatewaySerialization::query(
             << "," << pMsg->accessCode
             << std::endl;
 #endif
-        auto r = new OperationResponse;
+        auto r = new IdentityOperationResponse;
         r->code = ERR_CODE_ACCESS_DENIED;
         r->ntoh();
         *retBuf = r->serialize(retBuf);
         delete pMsg;
-        return sizeof(OperationResponse);
+        return sizeof(IdentityOperationResponse);
     }
 
     ServiceMessage *r = nullptr;
     switch (request[0]) {
-        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
+        case QUERY_IDENTITY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
             {
-                auto gr = (GatewayIdRequest *) pMsg;
-                r = new GetResponse(*gr);
-                memmove(&((GetResponse*) r)->response.sockaddr, &gr->id, sizeof(gr->id));
-                svc->get(((GetResponse*) r)->response, ((GetResponse*) r)->response);
+                auto gr = (IdentityEUIRequest *) pMsg;
+                r = new IdentityGetResponse(*gr);
+                memmove(&((IdentityGetResponse*) r)->response.devid, &gr->eui, sizeof(gr->eui));
+                svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
                 break;
             }
-        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier. Return 0 if success
+        case QUERY_IDENTITY_EUI:   // request gateway address (with identifier) by identifier. Return 0 if success
             {
-                auto gr = (GatewayAddrRequest *) pMsg;
-                r = new GetResponse(*gr);
-                memmove(&((GetResponse*) r)->response.sockaddr, &gr->addr, sizeof(struct sockaddr));
-                r->code = svc->get(((GetResponse*) r)->response, ((GetResponse*) r)->response);
+                auto gr = (IdentityAddrRequest *) pMsg;
+                r = new IdentityGetResponse(*gr);
+                memmove(&((IdentityGetResponse*) r)->response.devaddr, &gr->addr, sizeof(uint32_t));
+                r->code = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
                 break;
             }
-        case QUERY_GATEWAY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
+        case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
             {
-                auto gr = (GatewayIdAddrRequest *) pMsg;
-                r = new OperationResponse(*gr);
-                int errCode = svc->put(gr->identity);
-                ((OperationResponse *) r)->response = errCode;
+                auto gr = (IdentityEUIAddrRequest *) pMsg;
+                r = new IdentityOperationResponse(*gr);
+                int errCode = svc->put(gr->identity.devaddr, gr->identity.devid);
+                ((IdentityOperationResponse *) r)->response = errCode;
                 if (errCode == 0)
-                    ((OperationResponse *) r)->size = 1;    // count of placed entries
+                    ((IdentityOperationResponse *) r)->size = 1;    // count of placed entries
                 break;
             }
-        case QUERY_GATEWAY_RM:   // Remove entry
+        case QUERY_IDENTITY_RM:   // Remove entry
             {
-                auto gr = (GatewayIdAddrRequest *) pMsg;
-                r = new OperationResponse(*gr);
-                int errCode = svc->rm(gr->identity);
-                ((OperationResponse *) r)->response = errCode;
+                auto gr = (IdentityEUIAddrRequest *) pMsg;
+                r = new IdentityOperationResponse(*gr);
+                int errCode = svc->rm(gr->identity.devaddr);
+                ((IdentityOperationResponse *) r)->response = errCode;
                 if (errCode == 0)
-                    ((OperationResponse *) r)->size = 1;    // count of deleted entries
+                    ((IdentityOperationResponse *) r)->size = 1;    // count of deleted entries
                 break;
             }
-        case QUERY_GATEWAY_LIST:   // List entries
+        case QUERY_IDENTITY_LIST:   // List entries
         {
-            auto gr = (OperationRequest *) pMsg;
-            r = new ListResponse(*gr);
-            svc->list(((ListResponse *) r)->identities, gr->offset, gr->size);
-            size_t idSize = ((ListResponse *) r)->identities.size();
-            size_t serSize = getListResponseSize(((ListResponse *) r)->identities);
+            auto gr = (IdentityOperationRequest *) pMsg;
+            r = new IdentityListResponse(*gr);
+            svc->list(((IdentityListResponse *) r)->identities, gr->offset, gr->size);
+            size_t idSize = ((IdentityListResponse *) r)->identities.size();
+            size_t serSize = SIZE_OPERATION_RESPONSE + (idSize * SIZE_NETWORK_IDENTITY);
             if (serSize > retSize) {
-                serSize = ((ListResponse *) r)->shortenList2Fit(serSize);
+                serSize = ((IdentityListResponse *) r)->shortenList2Fit(serSize);
                 if (serSize > retSize) {
                     delete r;
                     r = nullptr;
                 }
                 break;
             }
-            break;
-        }
-        case QUERY_GATEWAY_COUNT:   // count
+            break;        }
+        case QUERY_IDENTITY_COUNT:   // count
         {
-            auto gr = (OperationRequest *) pMsg;
-            r = new OperationResponse(*gr);
+            auto gr = (IdentityOperationRequest *) pMsg;
+            r = new IdentityOperationResponse(*gr);
             r->tag = gr->tag;
             r->code = CODE_OK;
             r->accessCode = gr->accessCode;
-            ((OperationResponse *) r)->response = svc->size();
+            ((IdentityOperationResponse *) r)->response = svc->size();
             break;
         }
-        case QUERY_GATEWAY_FORCE_SAVE:   // force save
+        case QUERY_IDENTITY_FORCE_SAVE:   // force save
             break;
-        case QUERY_GATEWAY_CLOSE_RESOURCES:   // close resources
+        case QUERY_IDENTITY_CLOSE_RESOURCES:   // close resources
             break;
         default:
             break;
@@ -645,48 +649,48 @@ size_t GatewaySerialization::query(
  * @param size buffer size
  * @return query tag
  */
-enum CliGatewayQueryTag validateGatewayQuery(
+enum IdentityQueryTag validateIdentityQuery(
     const unsigned char *buffer,
     size_t size
 )
 {
     switch (buffer[0]) {
-        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
+        case QUERY_IDENTITY_ADDR:   // request gateway identifier(with address) by network address.
             if (size < SIZE_DEVICE_EUI_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_ADDR;
-        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_ADDR;
+        case QUERY_IDENTITY_EUI:   // request gateway address (with identifier) by identifier.
             if (size < SIZE_DEVICE_ADDR_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_ID;
-        case QUERY_GATEWAY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_EUI;
+        case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
             if (size < SIZE_DEVICE_ADDR_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_ASSIGN;
-        case QUERY_GATEWAY_RM:   // Remove entry
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_ASSIGN;
+        case QUERY_IDENTITY_RM:   // Remove entry
             if (size < SIZE_DEVICE_ADDR_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_RM;
-        case QUERY_GATEWAY_LIST:   // List entries
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_RM;
+        case QUERY_IDENTITY_LIST:   // List entries
             if (size < SIZE_OPERATION_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_LIST;
-        case QUERY_GATEWAY_COUNT:   // list count
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_LIST;
+        case QUERY_IDENTITY_COUNT:   // list count
             if (size < SIZE_OPERATION_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_COUNT;
-        case QUERY_GATEWAY_FORCE_SAVE:   // force save
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_COUNT;
+        case QUERY_IDENTITY_FORCE_SAVE:   // force save
             if (size < SIZE_OPERATION_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_FORCE_SAVE;
-        case QUERY_GATEWAY_CLOSE_RESOURCES:   // close resources
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_FORCE_SAVE;
+        case QUERY_IDENTITY_CLOSE_RESOURCES:   // close resources
             if (size < SIZE_OPERATION_REQUEST)
-                return QUERY_GATEWAY_NONE;
-            return QUERY_GATEWAY_CLOSE_RESOURCES;
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_CLOSE_RESOURCES;
     default:
             break;
     }
-    return QUERY_GATEWAY_NONE;
+    return QUERY_IDENTITY_NONE;
 }
 
 /**
@@ -695,25 +699,25 @@ enum CliGatewayQueryTag validateGatewayQuery(
  * @param size buffer size
  * @return size in bytes
  */
-size_t responseSizeForGatewayRequest(
+size_t responseSizeForIdentityRequest(
     const unsigned char *buffer,
     size_t size
 )
 {
-    enum CliGatewayQueryTag tag = validateGatewayQuery(buffer, size);
+    enum IdentityQueryTag tag = validateIdentityQuery(buffer, size);
     switch (tag) {
-        case QUERY_GATEWAY_ADDR:    // request gateway identifier(with address) by network address.
-        case QUERY_GATEWAY_ID:      // request gateway address (with identifier) by identifier.
-            return SIZE_DEVICE_GET_ADDR_6_RESPONSE;    // IPv4: 28 IPv6: 40
-        case QUERY_GATEWAY_LIST:    // List entries
+        case QUERY_IDENTITY_ADDR:       // request gateway identifier(with address) by network address.
+        case QUERY_IDENTITY_EUI:        // request gateway address (with identifier) by identifier.
+            return SIZE_GET_RESPONSE;   //
+        case QUERY_IDENTITY_LIST:       // List entries
             {
-                OperationRequest lr(buffer, size);
-                return getMaxGatewayListResponseSize(lr.size);
+                IdentityOperationRequest lr(buffer, size);
+                return getMaxIdentityListResponseSize(lr.size);
             }
         default:
             break;
     }
-    return SIZE_OPERATION_RESPONSE; // OperationResponse
+    return SIZE_OPERATION_RESPONSE; // IdentityOperationResponse
 }
 
 /**
@@ -722,7 +726,7 @@ size_t responseSizeForGatewayRequest(
  * @param sz buffer size
  * @return return NULL if packet is invalid
  */
-ServiceMessage* deserialize(
+ServiceMessage* deserializeIdentity(
     const unsigned char *buf,
     size_t sz
 )
@@ -731,45 +735,45 @@ ServiceMessage* deserialize(
         return nullptr;
     ServiceMessage *r;
     switch (buf[0]) {
-        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
+        case QUERY_IDENTITY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
             if (sz < SIZE_DEVICE_EUI_REQUEST)
                 return nullptr;
-            r = new GatewayIdRequest(buf, sz);
+            r = new IdentityEUIRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier. Return 0 if success
+        case QUERY_IDENTITY_EUI:   // request gateway address (with identifier) by identifier. Return 0 if success
             if (sz < SIZE_DEVICE_ADDR_REQUEST)
                 return nullptr;
-            r = new GatewayAddrRequest(buf, sz);
+            r = new IdentityAddrRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
+        case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
             if (sz < SIZE_DEVICE_EUI_ADDR_REQUEST)
                 return nullptr;
-            r = new GatewayIdAddrRequest(buf, sz);
+            r = new IdentityEUIAddrRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_RM:   // Remove entry
+        case QUERY_IDENTITY_RM:   // Remove entry
             if (sz < SIZE_DEVICE_EUI_REQUEST)   // it can contain id only(no address)
                 return nullptr;
-            r = new GatewayIdAddrRequest(buf, sz);
+            r = new IdentityEUIAddrRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_LIST:   // List entries
+        case QUERY_IDENTITY_LIST:   // List entries
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new IdentityOperationRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_COUNT:   // count
+        case QUERY_IDENTITY_COUNT:   // count
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new IdentityOperationRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_FORCE_SAVE:   // force save
+        case QUERY_IDENTITY_FORCE_SAVE:   // force save
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new IdentityOperationRequest(buf, sz);
             break;
-        case QUERY_GATEWAY_CLOSE_RESOURCES:   // close resources
+        case QUERY_IDENTITY_CLOSE_RESOURCES:   // close resources
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new IdentityOperationRequest(buf, sz);
             break;
         default:
             r = nullptr;
@@ -779,26 +783,26 @@ ServiceMessage* deserialize(
     return r;
 }
 
-const char* gatewayTag2string(
-    enum CliGatewayQueryTag value
+const char* identityTag2string(
+    enum IdentityQueryTag value
 )
 {
     switch (value) {
-        case QUERY_GATEWAY_ADDR:
+        case QUERY_IDENTITY_ADDR:
             return "address";
-        case QUERY_GATEWAY_ID:
+        case QUERY_IDENTITY_EUI:
             return "identifier";
-        case QUERY_GATEWAY_LIST:
+        case QUERY_IDENTITY_LIST:
             return "list";
-        case QUERY_GATEWAY_COUNT:
+        case QUERY_IDENTITY_COUNT:
             return "count";
-        case QUERY_GATEWAY_ASSIGN:
+        case QUERY_IDENTITY_ASSIGN:
             return "assign";
-        case QUERY_GATEWAY_RM:
+        case QUERY_IDENTITY_RM:
             return "remove";
-        case QUERY_GATEWAY_FORCE_SAVE:
+        case QUERY_IDENTITY_FORCE_SAVE:
             return "save";
-        case QUERY_GATEWAY_CLOSE_RESOURCES:
+        case QUERY_IDENTITY_CLOSE_RESOURCES:
             return "close";
         default:
             return "";

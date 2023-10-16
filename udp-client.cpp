@@ -151,19 +151,19 @@ void UDPClient::start() {
                 << MSG_COLON_N_SPACE << hexString(rxBuf, len)
                 << std::endl;
 #endif
-                enum CliGatewayQueryTag tag = validateGatewayQuery(rxBuf, len);
+                enum GatewayQueryTag tag = validateGatewayQuery(rxBuf, len);
                 switch (tag) {
                     case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
                     case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
                     {
-                        GetResponse gr(rxBuf, len);
+                        GatewayGetResponse gr(rxBuf, len);
                         gr.ntoh();
                         onResponse->onGet(this, &gr);
                     }
                         break;
                     case QUERY_GATEWAY_LIST:   // List entries
                     {
-                        ListResponse gr(rxBuf, len);
+                        GatewayListResponse gr(rxBuf, len);
                         gr.response = NTOH4(gr.response);
                         gr.ntoh();
                         onResponse->onList(this, &gr);
@@ -171,7 +171,7 @@ void UDPClient::start() {
                         break;
                     default:
                     {
-                        OperationResponse gr(rxBuf, len);
+                        GatewayOperationResponse gr(rxBuf, len);
                         gr.ntoh();
                         onResponse->onStatus(this, &gr);
                     }

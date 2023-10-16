@@ -11,7 +11,7 @@ typedef SSIZE_T ssize_t;
 #include "gateway-identity.h"
 #include "service-serialization.h"
 
-enum CliGatewayQueryTag {
+enum GatewayQueryTag {
     QUERY_GATEWAY_NONE = '\0',
     QUERY_GATEWAY_ADDR = 'A',
     QUERY_GATEWAY_ID = 'I',
@@ -59,52 +59,52 @@ public:
     std::string toJsonString() const override;
 };
 
-class OperationRequest : public ServiceMessage {
+class GatewayOperationRequest : public ServiceMessage {
 public:
     uint32_t offset;
     uint8_t size;
-    OperationRequest();
-    OperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
-    OperationRequest(const unsigned char *buf, size_t sz);
+    GatewayOperationRequest();
+    GatewayOperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
+    GatewayOperationRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
 };
 
-class GetResponse : public ServiceMessage {
+class GatewayGetResponse : public ServiceMessage {
 public:
     GatewayIdentity response;
 
-    GetResponse() = default;
-    explicit GetResponse(const GatewayAddrRequest& request);
-    explicit GetResponse(const GatewayIdRequest &request);
-    GetResponse(const unsigned char *buf, size_t sz);
+    GatewayGetResponse() = default;
+    explicit GatewayGetResponse(const GatewayAddrRequest& request);
+    explicit GatewayGetResponse(const GatewayIdRequest &request);
+    GatewayGetResponse(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     size_t serializedSize() const;
     std::string toJsonString() const override;
 };
 
-class OperationResponse : public OperationRequest {
+class GatewayOperationResponse : public GatewayOperationRequest {
 public:
     uint32_t response;
-    OperationResponse();
-    OperationResponse(const OperationResponse& resp);
-    OperationResponse(const unsigned char *buf, size_t sz);
-    explicit OperationResponse(const GatewayIdAddrRequest &request);
-    explicit OperationResponse(const OperationRequest &request);
+    GatewayOperationResponse();
+    GatewayOperationResponse(const GatewayOperationResponse& resp);
+    GatewayOperationResponse(const unsigned char *buf, size_t sz);
+    explicit GatewayOperationResponse(const GatewayIdAddrRequest &request);
+    explicit GatewayOperationResponse(const GatewayOperationRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
 };
 
-class ListResponse : public OperationResponse {
+class GatewayListResponse : public GatewayOperationResponse {
 public:
     std::vector<GatewayIdentity> identities;
-    ListResponse();
-    ListResponse(const ListResponse& resp);
-    ListResponse(const unsigned char *buf, size_t sz);
-    explicit ListResponse(const OperationRequest &request);
+    GatewayListResponse();
+    GatewayListResponse(const GatewayListResponse& resp);
+    GatewayListResponse(const unsigned char *buf, size_t sz);
+    explicit GatewayListResponse(const GatewayOperationRequest &request);
     void ntoh() override;
     size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
@@ -145,7 +145,7 @@ public:
  * @param sz buffer size
  * @return return NULL if packet is invalid
  */
-ServiceMessage* deserialize(
+ServiceMessage* deserializeGateway(
     const unsigned char *buf,
     size_t sz
 );
@@ -156,7 +156,7 @@ ServiceMessage* deserialize(
  * @param size buffer size
  * @return query tag
  */
-enum CliGatewayQueryTag validateGatewayQuery(
+enum GatewayQueryTag validateGatewayQuery(
     const unsigned char *buffer,
     size_t size
 );
@@ -172,6 +172,6 @@ size_t responseSizeForGatewayRequest(
     size_t size
 );
 
-const char* gatewayTag2string(enum CliGatewayQueryTag value);
+const char* gatewayTag2string(enum GatewayQueryTag value);
 
 #endif

@@ -24,7 +24,7 @@ const char *programName = "lorawan-gateway-query";
 
 class CommandName {
 public:
-    enum CliGatewayQueryTag s;
+    enum GatewayQueryTag s;
     const char* l;
     bool isCommand(
         const char* cmd
@@ -54,7 +54,7 @@ static const CommandName commands[9] = {
 #define COMMANDS_COUNT 9
 
 static const char *commandLongName(
-    enum CliGatewayQueryTag tag
+    enum GatewayQueryTag tag
 )
 {
     for (auto command : commands) {
@@ -75,7 +75,7 @@ static std::string listCommands() {
     return ss.str();
 }
 
-static CliGatewayQueryTag isTag(const char *tag) {
+static GatewayQueryTag isTag(const char *tag) {
     for (auto command : commands) {
         if (command.isCommand(tag)) {
             return command.s;
@@ -87,7 +87,7 @@ static CliGatewayQueryTag isTag(const char *tag) {
 // global parameters
 class CliGatewayQueryParams {
 public:
-    CliGatewayQueryTag tag;
+    GatewayQueryTag tag;
     std::vector<GatewayIdentity> query;
     size_t queryPos;
     bool useTcp;
@@ -149,14 +149,14 @@ public:
 
     void onStatus(
         GatewayClient* client,
-        const OperationResponse *response
+        const GatewayOperationResponse *response
     ) override {
         if (response) {
             if (params.verbose) {
                 if (response->response != 0)
                     std::cout << response->toJsonString() << std::endl;
                 else {
-                    std::cerr << gatewayTag2string((CliGatewayQueryTag) response->tag)
+                    std::cerr << gatewayTag2string((GatewayQueryTag) response->tag)
                     // << " " << (int) response->size
                     << " completed\n";
                 }
@@ -175,7 +175,7 @@ public:
 
     void onGet(
         GatewayClient* client,
-        const GetResponse *response
+        const GatewayGetResponse *response
     ) override {
         if (response) {
             if (params.verbose)
@@ -196,7 +196,7 @@ public:
 
     void onList(
         GatewayClient* client,
-        const ListResponse *response
+        const GatewayListResponse *response
     ) override {
         if (response) {
             if (params.verbose) {
@@ -235,10 +235,10 @@ public:
                 case QUERY_GATEWAY_ID:
                     break;
                 case QUERY_GATEWAY_LIST:
-                    req = new OperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
+                    req = new GatewayOperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_COUNT:
-                    req = new OperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
+                    req = new GatewayOperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_ASSIGN:
                     req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
@@ -354,7 +354,7 @@ int main(int argc, char **argv) {
 
     params.query.reserve(a_query->count);
     for (int i = 0; i < a_query->count; i++) {
-        enum CliGatewayQueryTag tag = isTag(a_query->sval[i]);
+        enum GatewayQueryTag tag = isTag(a_query->sval[i]);
         if (tag != QUERY_GATEWAY_NONE) {
             params.tag = tag;
             continue;

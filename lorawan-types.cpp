@@ -1401,6 +1401,26 @@ DEVICEID::DEVICEID() {
 }
 
 DEVICEID::DEVICEID(
+    const DEVEUI &deveui
+)
+    : devEUI(deveui)
+{
+    this->activation = ABP;
+    this->deviceclass = CLASS_A;
+
+    memset(&this->nwkSKey.c, 0, sizeof(KEY128));
+    memset(&this->appSKey.c, 0, sizeof(KEY128));
+
+    memset(&this->appEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->nwkKey.c, 0, sizeof(KEY128));
+    memset(&this->appKey.c, 0, sizeof(KEY128));
+    this->devNonce.u = 0;
+    memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
+    memset(&this->name.c, 0, sizeof(DEVICENAME));
+    version.major = 1;
+}
+
+DEVICEID::DEVICEID(
     ACTIVATION activation,
     DEVICECLASS deviceclass,
     const DEVEUI &devEUI,
@@ -1449,6 +1469,26 @@ DEVICEID::DEVICEID(
     memset(&this->appKey.c, 0, sizeof(KEY128));
     this->devNonce.u = 0;
     memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
+}
+
+DEVICEID::DEVICEID(
+    uint64_t id
+)
+    : devEUI(id)
+{
+    this->activation = ABP;
+    this->deviceclass = CLASS_A;
+    memset(&this->devEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->nwkSKey.c, 0, sizeof(KEY128));
+    memset(&this->appSKey.c, 0, sizeof(KEY128));
+
+    memset(&this->appEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->nwkKey.c, 0, sizeof(KEY128));
+    memset(&this->appKey.c, 0, sizeof(KEY128));
+    this->devNonce.u = 0;
+    memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
+    memset(&this->name.c, 0, sizeof(DEVICENAME));
+    version.major = 1;
 }
 
 DEVICEID::DEVICEID(
@@ -1616,6 +1656,13 @@ NETWORKIDENTITY::NETWORKIDENTITY(
 )
 {
     set(DEVADDR(0), id);
+}
+
+NETWORKIDENTITY::NETWORKIDENTITY(
+    const DEVADDR &addr
+)
+{
+    set(addr, 0);
 }
 
 void NETWORKIDENTITY::set(

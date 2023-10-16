@@ -8,10 +8,10 @@ typedef SSIZE_T ssize_t;
 #include <cinttypes>
 #endif
 #include "identity-service.h"
-#include "gateway-identity.h"
 #include "service-serialization.h"
 
-enum CliIdentityQueryTag {
+enum IdentityQueryTag {
+    QUERY_IDENTITY_NONE = '\0',
     QUERY_IDENTITY_ADDR = 'a',
     QUERY_IDENTITY_EUI = 'i',
     QUERY_IDENTITY_LIST = 'l',
@@ -56,54 +56,52 @@ public:
     std::string toJsonString() const override;
 };
 
-class OperationRequest : public ServiceMessage {
+class IdentityOperationRequest : public ServiceMessage {
 public:
     uint32_t offset;
     uint8_t size;
-    OperationRequest();
-    OperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
-    OperationRequest(const unsigned char *buf, size_t sz);
+    IdentityOperationRequest();
+    IdentityOperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
+    IdentityOperationRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
 };
 
-class GetResponse : public ServiceMessage {
+class IdentityGetResponse : public ServiceMessage {
 public:
     NETWORKIDENTITY response;
 
-    GetResponse() = default;
-    explicit GetResponse(const IdentityAddrRequest& request);
-    explicit GetResponse(const IdentityEUIRequest &request);
-    GetResponse(const unsigned char *buf, size_t sz);
+    IdentityGetResponse() = default;
+    explicit IdentityGetResponse(const IdentityAddrRequest& request);
+    explicit IdentityGetResponse(const IdentityEUIRequest &request);
+    IdentityGetResponse(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
-    size_t serializedSize() const;
     std::string toJsonString() const override;
 };
 
-class OperationResponse : public OperationRequest {
+class IdentityOperationResponse : public IdentityOperationRequest {
 public:
     uint32_t response;
-    OperationResponse();
-    OperationResponse(const OperationResponse& resp);
-    OperationResponse(const unsigned char *buf, size_t sz);
-    explicit OperationResponse(const IdentityEUIAddrRequest &request);
-    explicit OperationResponse(const OperationRequest &request);
+    IdentityOperationResponse();
+    IdentityOperationResponse(const IdentityOperationResponse& resp);
+    IdentityOperationResponse(const unsigned char *buf, size_t sz);
+    explicit IdentityOperationResponse(const IdentityEUIAddrRequest &request);
+    explicit IdentityOperationResponse(const IdentityOperationRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
 };
 
-class ListResponse : public OperationResponse {
+class IdentityListResponse : public IdentityOperationResponse {
 public:
     std::vector<NETWORKIDENTITY> identities;
-    ListResponse();
-    ListResponse(const ListResponse& resp);
-    ListResponse(const unsigned char *buf, size_t sz);
-    explicit ListResponse(const OperationRequest &request);
+    IdentityListResponse();
+    IdentityListResponse(const IdentityListResponse& resp);
+    IdentityListResponse(const unsigned char *buf, size_t sz);
+    explicit IdentityListResponse(const IdentityOperationRequest &request);
     void ntoh() override;
-    size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
     size_t shortenList2Fit(size_t serializedSize);
@@ -142,7 +140,7 @@ public:
  * @param sz buffer size
  * @return return NULL if packet is invalid
  */
-ServiceMessage* deserialize(
+ServiceMessage* deserializeIdentity(
     const unsigned char *buf,
     size_t sz
 );
@@ -153,7 +151,7 @@ ServiceMessage* deserialize(
  * @param size buffer size
  * @return query tag
  */
-enum CliIdentityQueryTag validateIdentityQuery(
+enum IdentityQueryTag validateIdentityQuery(
     const unsigned char *buffer,
     size_t size
 );
@@ -169,6 +167,8 @@ size_t responseSizeForIdentityRequest(
     size_t size
 );
 
-const char* identityTag2string(enum CliIdentityQueryTag value);
+const char* identityTag2string(
+    enum IdentityQueryTag value
+);
 
 #endif

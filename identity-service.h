@@ -34,10 +34,10 @@ public:
     virtual int getNetworkIdentity(NETWORKIDENTITY &retval, const DEVEUI &eui) = 0;
 
     // Add or replace Address = EUI and keys pair
-    virtual void put(DEVADDR &devaddr, DEVICEID &id) = 0;
+    virtual int put(DEVADDR &devaddr, DEVICEID &id) = 0;
 
     // Remove entry
-    virtual void rm(DEVADDR &addr) = 0;
+    virtual int rm(DEVADDR &addr) = 0;
 
     /**
      * List entries

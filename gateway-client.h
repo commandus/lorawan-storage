@@ -7,15 +7,15 @@ class ResponseIntf {
 public:
     virtual void onGet(
         GatewayClient* client,
-        const GetResponse *response
+        const GatewayGetResponse *response
     ) = 0;
     virtual void onStatus(
         GatewayClient* client,
-        const OperationResponse *response
+        const GatewayOperationResponse *response
     ) = 0;
     virtual void onList(
         GatewayClient* client,
-        const ListResponse *response
+        const GatewayListResponse *response
     ) = 0;
     virtual void onError(
         GatewayClient* client,

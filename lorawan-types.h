@@ -476,6 +476,9 @@ typedef PACK( struct {
 class NETWORKIDENTITY;
 class DEVICEID {
 public:
+    DEVICEID(uint64_t devEUI);
+    DEVICEID(const DEVEUI &devEUI);
+
     // value, no key
 	ACTIVATION activation;	///< activation type: ABP or OTAA
 	DEVICECLASS deviceclass;
@@ -501,7 +504,6 @@ public:
 	bool operator==(const DEVEUI &rhs) const {
 		return rhs == devEUI;
 	}
-
 	bool operator<(const DEVICEID &rhs) const {
 		return rhs.devEUI.u < devEUI.u;
 	}
@@ -511,6 +513,7 @@ public:
 	bool operator!=(const DEVICEID &rhs) const {
 		return rhs.devEUI.u != devEUI.u;
 	}
+
 	DEVICEID();
     DEVICEID(
         ACTIVATION activation,
@@ -556,16 +559,17 @@ public:
 class NETWORKIDENTITY {
 public:
 	// key
-	DEVADDR devaddr;		///< network address
-	DEVICEID devid;
+	DEVADDR devaddr;		///< network address 4 bytes
+	DEVICEID devid;         // 91 bytes
 
 	NETWORKIDENTITY();
 	NETWORKIDENTITY(const DEVADDR &a, const DEVICEID &id);
     explicit NETWORKIDENTITY(const DEVICEID &id);
+    explicit NETWORKIDENTITY(const DEVADDR &addr);
 	void set(const NETWORKIDENTITY &id);
 	void set(const DEVADDR &addr, const DEVICEID &value);
 	std::string toString() const;
     std::string toJsonString() const;
-};
+};  // 95 bytes
 
 #endif

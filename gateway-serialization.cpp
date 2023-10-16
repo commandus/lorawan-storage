@@ -210,14 +210,14 @@ std::string GatewayIdAddrRequest::toJsonString() const
     return ss.str();
 }
 
-OperationRequest::OperationRequest()
+GatewayOperationRequest::GatewayOperationRequest()
     : ServiceMessage(QUERY_GATEWAY_LIST, 0, 0),
       offset(0), size(0)
 {
 }
 
 /*
-OperationRequest::OperationRequest(
+GatewayOperationRequest::GatewayOperationRequest(
     char tag
 )
     : ServiceMessage(tag, 0, 0),
@@ -226,7 +226,7 @@ OperationRequest::OperationRequest(
 }
 */
 
-OperationRequest::OperationRequest(
+GatewayOperationRequest::GatewayOperationRequest(
     char tag,
     size_t aOffset,
     size_t aSize,
@@ -237,7 +237,7 @@ OperationRequest::OperationRequest(
 {
 }
 
-OperationRequest::OperationRequest(
+GatewayOperationRequest::GatewayOperationRequest(
     const unsigned char *buf,
     size_t sz
 )
@@ -249,12 +249,12 @@ OperationRequest::OperationRequest(
     }   // 18
 }
 
-void OperationRequest::ntoh() {
+void GatewayOperationRequest::ntoh() {
     ServiceMessage::ntoh();
     offset = NTOH4(offset);
 }
 
-size_t OperationRequest::serialize(
+size_t GatewayOperationRequest::serialize(
     unsigned char *retBuf
 ) const
 {
@@ -266,7 +266,7 @@ size_t OperationRequest::serialize(
     return SIZE_OPERATION_REQUEST;                      // 18
 }
 
-std::string OperationRequest::toJsonString() const {
+std::string GatewayOperationRequest::toJsonString() const {
     std::stringstream ss;
     ss << R"({"offset": )" << offset
         << ", \"size\": " << (int) size
@@ -274,14 +274,14 @@ std::string OperationRequest::toJsonString() const {
     return ss.str();
 }
 
-GetResponse::GetResponse(
+GatewayGetResponse::GatewayGetResponse(
     const GatewayAddrRequest& req
 )
     : ServiceMessage(req), response()
 {
 }
 
-GetResponse::GetResponse(
+GatewayGetResponse::GatewayGetResponse(
     const GatewayIdRequest &request
 )
     : response(request.id)
@@ -292,7 +292,7 @@ GetResponse::GetResponse(
 }
 
 /*
-GetResponse::GetResponse(
+GatewayGetResponse::GatewayGetResponse(
     const GatewayIdAddrRequest &request
 )
     : response(request.identity.gatewayId, request.identity.sockaddr)
@@ -303,7 +303,7 @@ GetResponse::GetResponse(
 }
 */
 
-GetResponse::GetResponse(
+GatewayGetResponse::GatewayGetResponse(
     const unsigned char* buf,
     size_t sz
 )
@@ -316,25 +316,25 @@ GetResponse::GetResponse(
     }
 }
 
-size_t GetResponse::serializedSize() const
+size_t GatewayGetResponse::serializedSize() const
 {
     return SIZE_SERVICE_MESSAGE + sizeof(uint64_t) + 3 + (isIPv6(&response.sockaddr) ? 16 : 4); // IPv4 28 IPv6 40
 }
 
-std::string GetResponse::toJsonString() const {
+std::string GatewayGetResponse::toJsonString() const {
     std::stringstream ss;
     ss << response.toJsonString();
     return ss.str();
 }
 
-void GetResponse::ntoh()
+void GatewayGetResponse::ntoh()
 {
     ServiceMessage::ntoh();
     response.gatewayId = NTOH8(response.gatewayId);
     sockaddrNtoh(&response.sockaddr);
 }
 
-size_t GetResponse::serialize(
+size_t GatewayGetResponse::serialize(
     unsigned char *retBuf
 ) const
 {
@@ -344,86 +344,86 @@ size_t GetResponse::serialize(
         + SIZE_SERVICE_MESSAGE + 8; // IPv4 28 IPv6 40
 }
 
-OperationResponse::OperationResponse()
-    : OperationRequest(), response(0)
+GatewayOperationResponse::GatewayOperationResponse()
+    : GatewayOperationRequest(), response(0)
 {
 }
 
-OperationResponse::OperationResponse(
-    const OperationResponse& resp
+GatewayOperationResponse::GatewayOperationResponse(
+    const GatewayOperationResponse& resp
 )
-    : OperationRequest(resp)
+    : GatewayOperationRequest(resp)
 {
 }
 
-OperationResponse::OperationResponse(
+GatewayOperationResponse::GatewayOperationResponse(
     const unsigned char *buf,
     size_t sz
 )
-    : OperationRequest(buf, sz) // 18
+    : GatewayOperationRequest(buf, sz) // 18
 {
     if (sz >= SIZE_OPERATION_RESPONSE) {
         memmove(&response, buf + SIZE_OPERATION_REQUEST, sizeof(response)); // 4
     }   // 22
 }
 
-OperationResponse::OperationResponse(
+GatewayOperationResponse::GatewayOperationResponse(
     const GatewayIdAddrRequest &request
 )
-    : OperationRequest(request.tag, 0, 0, request.code, request.accessCode)
+    : GatewayOperationRequest(request.tag, 0, 0, request.code, request.accessCode)
 {
 }
 
-OperationResponse::OperationResponse(
-    const OperationRequest &request
+GatewayOperationResponse::GatewayOperationResponse(
+    const GatewayOperationRequest &request
 )
-    : OperationRequest(request)
+    : GatewayOperationRequest(request)
 {
 
 }
 
-void OperationResponse::ntoh() {
-    OperationRequest::ntoh();
+void GatewayOperationResponse::ntoh() {
+    GatewayOperationRequest::ntoh();
     response = NTOH4(response);
 }
 
-size_t OperationResponse::serialize(
+size_t GatewayOperationResponse::serialize(
     unsigned char *retBuf
 ) const
 {
-    OperationRequest::serialize(retBuf);                                // 18
+    GatewayOperationRequest::serialize(retBuf);                                // 18
     if (retBuf)
         memmove(retBuf + SIZE_OPERATION_REQUEST, &response,
                 sizeof(response));                                      // 4
     return SIZE_OPERATION_RESPONSE;                                     // 22
 }
 
-std::string OperationResponse::toJsonString() const {
+std::string GatewayOperationResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"request": )" << OperationRequest::toJsonString()
+    ss << R"({"request": )" << GatewayOperationRequest::toJsonString()
        << ", \"response\": " << response << "}";
     return ss.str();
 }
 
-ListResponse::ListResponse()
-    : OperationResponse()
+GatewayListResponse::GatewayListResponse()
+    : GatewayOperationResponse()
 {
 }
 
-ListResponse::ListResponse(
-    const ListResponse& resp
+GatewayListResponse::GatewayListResponse(
+    const GatewayListResponse& resp
 )
-    : OperationResponse(resp)
+    : GatewayOperationResponse(resp)
 {
 }
 
-ListResponse::ListResponse(
+GatewayListResponse::GatewayListResponse(
     const unsigned char *buf,
     size_t sz
 )
-    : OperationResponse(buf, sz)       // 22
+    : GatewayOperationResponse(buf, sz)       // 22
 {
-    deserialize(buf, sz);
+    deserializeGateway(buf, sz);
     size_t ofs = SIZE_OPERATION_RESPONSE;
     response = 0;
     while (true) {
@@ -438,7 +438,7 @@ ListResponse::ListResponse(
     }
 }
 
-size_t ListResponse::serializedSize() const
+size_t GatewayListResponse::serializedSize() const
 {
     size_t ofs = SIZE_OPERATION_RESPONSE;
     for (auto id : identities) {
@@ -447,16 +447,16 @@ size_t ListResponse::serializedSize() const
     return ofs;
 }
 
-ListResponse::ListResponse(
-    const OperationRequest &request
+GatewayListResponse::GatewayListResponse(
+    const GatewayOperationRequest &request
 )
-    : OperationResponse(request)
+    : GatewayOperationResponse(request)
 {
 }
 
-void ListResponse::ntoh()
+void GatewayListResponse::ntoh()
 {
-    OperationResponse::ntoh();
+    GatewayOperationResponse::ntoh();
     for (auto it(identities.begin()); it != identities.end(); it++) {
         it->gatewayId = NTOH8(it->gatewayId);
         sockaddrNtoh(&it->sockaddr);
@@ -478,11 +478,11 @@ void ListResponse::ntoh()
  * @param retBuf
  * @return
  */
-size_t ListResponse::serialize(
+size_t GatewayListResponse::serialize(
     unsigned char *retBuf
 ) const
 {
-    size_t ofs = OperationResponse::serialize(retBuf);   // 22
+    size_t ofs = GatewayOperationResponse::serialize(retBuf);   // 22
     if (retBuf) {
         for (auto it(identities.begin()); it != identities.end(); it++) {
             memmove(&retBuf[ofs], &it->gatewayId, sizeof(uint64_t));  // 8
@@ -498,9 +498,9 @@ size_t ListResponse::serialize(
     return ofs;
 }
 
-std::string ListResponse::toJsonString() const {
+std::string GatewayListResponse::toJsonString() const {
     std::stringstream ss;
-    ss << R"({"result": )" << OperationResponse::toJsonString()
+    ss << R"({"result": )" << GatewayOperationResponse::toJsonString()
        << ", \"gateways\": [";
     bool isFirst = true;
     for (auto i = 0; i < response; i++) {
@@ -514,7 +514,7 @@ std::string ListResponse::toJsonString() const {
     return ss.str();
 }
 
-size_t ListResponse::shortenList2Fit(
+size_t GatewayListResponse::shortenList2Fit(
     size_t serializedSize
 ) {
     size_t r = this->serialize(nullptr);
@@ -569,7 +569,7 @@ size_t GatewaySerialization::query(
         return 0;
     if (sz < SIZE_SERVICE_MESSAGE)
         return 0;
-    ServiceMessage *pMsg = deserialize((const unsigned char *) request, sz);
+    ServiceMessage *pMsg = deserializeGateway((const unsigned char *) request, sz);
     if (!pMsg) {
 #ifdef ENABLE_DEBUG
         std::cerr << "Wrong message" << std::endl;
@@ -583,12 +583,12 @@ size_t GatewaySerialization::query(
             << "," << pMsg->accessCode
             << std::endl;
 #endif
-        auto r = new OperationResponse;
+        auto r = new GatewayOperationResponse;
         r->code = ERR_CODE_ACCESS_DENIED;
         r->ntoh();
         *retBuf = r->serialize(retBuf);
         delete pMsg;
-        return sizeof(OperationResponse);
+        return sizeof(GatewayOperationResponse);
     }
 
     ServiceMessage *r = nullptr;
@@ -596,48 +596,48 @@ size_t GatewaySerialization::query(
         case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
             {
                 auto gr = (GatewayIdRequest *) pMsg;
-                r = new GetResponse(*gr);
-                memmove(&((GetResponse*) r)->response.sockaddr, &gr->id, sizeof(gr->id));
-                svc->get(((GetResponse*) r)->response, ((GetResponse*) r)->response);
+                r = new GatewayGetResponse(*gr);
+                memmove(&((GatewayGetResponse*) r)->response.sockaddr, &gr->id, sizeof(gr->id));
+                svc->get(((GatewayGetResponse*) r)->response, ((GatewayGetResponse*) r)->response);
                 break;
             }
         case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier. Return 0 if success
             {
                 auto gr = (GatewayAddrRequest *) pMsg;
-                r = new GetResponse(*gr);
-                memmove(&((GetResponse*) r)->response.sockaddr, &gr->addr, sizeof(struct sockaddr));
-                r->code = svc->get(((GetResponse*) r)->response, ((GetResponse*) r)->response);
+                r = new GatewayGetResponse(*gr);
+                memmove(&((GatewayGetResponse*) r)->response.sockaddr, &gr->addr, sizeof(struct sockaddr));
+                r->code = svc->get(((GatewayGetResponse*) r)->response, ((GatewayGetResponse*) r)->response);
                 break;
             }
         case QUERY_GATEWAY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
             {
                 auto gr = (GatewayIdAddrRequest *) pMsg;
-                r = new OperationResponse(*gr);
+                r = new GatewayOperationResponse(*gr);
                 int errCode = svc->put(gr->identity);
-                ((OperationResponse *) r)->response = errCode;
+                ((GatewayOperationResponse *) r)->response = errCode;
                 if (errCode == 0)
-                    ((OperationResponse *) r)->size = 1;    // count of placed entries
+                    ((GatewayOperationResponse *) r)->size = 1;    // count of placed entries
                 break;
             }
         case QUERY_GATEWAY_RM:   // Remove entry
             {
                 auto gr = (GatewayIdAddrRequest *) pMsg;
-                r = new OperationResponse(*gr);
+                r = new GatewayOperationResponse(*gr);
                 int errCode = svc->rm(gr->identity);
-                ((OperationResponse *) r)->response = errCode;
+                ((GatewayOperationResponse *) r)->response = errCode;
                 if (errCode == 0)
-                    ((OperationResponse *) r)->size = 1;    // count of deleted entries
+                    ((GatewayOperationResponse *) r)->size = 1;    // count of deleted entries
                 break;
             }
         case QUERY_GATEWAY_LIST:   // List entries
         {
-            auto gr = (OperationRequest *) pMsg;
-            r = new ListResponse(*gr);
-            svc->list(((ListResponse *) r)->identities, gr->offset, gr->size);
-            size_t idSize = ((ListResponse *) r)->identities.size();
-            size_t serSize = getListResponseSize(((ListResponse *) r)->identities);
+            auto gr = (GatewayOperationRequest *) pMsg;
+            r = new GatewayListResponse(*gr);
+            svc->list(((GatewayListResponse *) r)->identities, gr->offset, gr->size);
+            size_t idSize = ((GatewayListResponse *) r)->identities.size();
+            size_t serSize = getListResponseSize(((GatewayListResponse *) r)->identities);
             if (serSize > retSize) {
-                serSize = ((ListResponse *) r)->shortenList2Fit(serSize);
+                serSize = ((GatewayListResponse *) r)->shortenList2Fit(serSize);
                 if (serSize > retSize) {
                     delete r;
                     r = nullptr;
@@ -648,12 +648,12 @@ size_t GatewaySerialization::query(
         }
         case QUERY_GATEWAY_COUNT:   // count
         {
-            auto gr = (OperationRequest *) pMsg;
-            r = new OperationResponse(*gr);
+            auto gr = (GatewayOperationRequest *) pMsg;
+            r = new GatewayOperationResponse(*gr);
             r->tag = gr->tag;
             r->code = CODE_OK;
             r->accessCode = gr->accessCode;
-            ((OperationResponse *) r)->response = svc->size();
+            ((GatewayOperationResponse *) r)->response = svc->size();
             break;
         }
         case QUERY_GATEWAY_FORCE_SAVE:   // force save
@@ -679,7 +679,7 @@ size_t GatewaySerialization::query(
  * @param size buffer size
  * @return query tag
  */
-enum CliGatewayQueryTag validateGatewayQuery(
+enum GatewayQueryTag validateGatewayQuery(
     const unsigned char *buffer,
     size_t size
 )
@@ -734,20 +734,20 @@ size_t responseSizeForGatewayRequest(
     size_t size
 )
 {
-    enum CliGatewayQueryTag tag = validateGatewayQuery(buffer, size);
+    enum GatewayQueryTag tag = validateGatewayQuery(buffer, size);
     switch (tag) {
         case QUERY_GATEWAY_ADDR:    // request gateway identifier(with address) by network address.
         case QUERY_GATEWAY_ID:      // request gateway address (with identifier) by identifier.
             return SIZE_DEVICE_GET_ADDR_6_RESPONSE;    // IPv4: 28 IPv6: 40
         case QUERY_GATEWAY_LIST:    // List entries
             {
-                OperationRequest lr(buffer, size);
+                GatewayOperationRequest lr(buffer, size);
                 return getMaxGatewayListResponseSize(lr.size);
             }
         default:
             break;
     }
-    return SIZE_OPERATION_RESPONSE; // OperationResponse
+    return SIZE_OPERATION_RESPONSE; // GatewayOperationResponse
 }
 
 /**
@@ -756,7 +756,7 @@ size_t responseSizeForGatewayRequest(
  * @param sz buffer size
  * @return return NULL if packet is invalid
  */
-ServiceMessage* deserialize(
+ServiceMessage* deserializeGateway(
     const unsigned char *buf,
     size_t sz
 )
@@ -788,22 +788,22 @@ ServiceMessage* deserialize(
         case QUERY_GATEWAY_LIST:   // List entries
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new GatewayOperationRequest(buf, sz);
             break;
         case QUERY_GATEWAY_COUNT:   // count
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new GatewayOperationRequest(buf, sz);
             break;
         case QUERY_GATEWAY_FORCE_SAVE:   // force save
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new GatewayOperationRequest(buf, sz);
             break;
         case QUERY_GATEWAY_CLOSE_RESOURCES:   // close resources
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
-            r = new OperationRequest(buf, sz);
+            r = new GatewayOperationRequest(buf, sz);
             break;
         default:
             r = nullptr;
@@ -814,7 +814,7 @@ ServiceMessage* deserialize(
 }
 
 const char* gatewayTag2string(
-    enum CliGatewayQueryTag value
+    enum GatewayQueryTag value
 )
 {
     switch (value) {
