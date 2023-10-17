@@ -65,7 +65,7 @@ AC_ARG_ENABLE([libuv],
 esac],[libuv=false])
 AM_CONDITIONAL([ENABLE_LIBUV], [test x$libuv = xtrue])
 
-AC_ARG_ENABLE([gen],
+AC_ARG_ENABLE([sqlite],
 [  --enable-sqlite    Turn on SQLite backend],
 [case "${enableval}" in
   yes) sqlite=true ;;

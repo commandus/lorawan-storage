@@ -31,15 +31,12 @@ CLI_SRC += udp-client.cpp
 endif
 
 if ENABLE_SQLITE
-	GATEWAY_DEF += -DENABLE_SQLITE
-	GATEWAY_SRC = gateway-service-sqlite.cpp
-	EXTRA_LIB_SVC = -lsqlite3
+GATEWAY_DEF += -DENABLE_SQLITE
+GATEWAY_SRC = identity-service-sqlite.cpp gateway-service-sqlite.cpp sqlite-helper.cpp
+EXTRA_LIB_SVC = -lsqlite3
 else
-	GATEWAY_SRC = gateway-service-mem.cpp
-	gateway-service-mem.cpp
+GATEWAY_SRC = identity-service-mem.cpp gateway-service-mem.cpp
 endif
-
-GATEWAY_SRC = gateway-service-mem.cpp
 
 # Static library used for build binaries, so build library first.
 $(bin_PROGRAMS): $(lib_LIBRARIES)
@@ -55,12 +52,13 @@ SRC_AES = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
 nobase_dist_include_HEADERS = \
-	gateway-client.h gateway-service-sqlite.h log.h log-intf.h \
+	gateway-client.h log-intf.h \
+	identity-service.h identity-service-mem.h identity-service-sqlite.h \
+	gateway-service.h gateway-service-mem.h gateway-service-sqlite.h log.h \
 	lorawan-error.h lorawan-types.h udp-client.h uv-listener.h \
-	storage-listener.h gateway-service.h identity-service.h \
-	ip-helper.h lorawan-const.h \
+	storage-listener.h ip-helper.h sqlite-helper.h lorawan-const.h \
 	lorawan-msg.h network-identity.h udp-listener.h uv-mem.h \
-	service-serialization.h gateway-serialization.h gateway-service-mem.h \
+	service-serialization.h gateway-serialization.h identity-serialization.h \
 	lorawan-conv.h lorawan-string.h platform-specific.h uv-client.h \
 	lorawan-date.h gateway-identity.h ip-address.h file-helper.h \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
@@ -77,7 +75,7 @@ SRC_LIBLORAWAN = \
 	third-party/strptime.cpp
 
 LORAWAN_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) \
-    service-serialization.cpp gateway-serialization.cpp \
+    identity-serialization.cpp service-serialization.cpp gateway-serialization.cpp \
 	file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)

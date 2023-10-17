@@ -154,7 +154,7 @@ else()
 			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
 		endif ()
 	else()
-		set(GATEWAY_SRC gateway-service-mem.cpp)
+		set(GATEWAY_SRC identity-service-mem.cpp gateway-service-mem.cpp)
 	endif()
 
 	#

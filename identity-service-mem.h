@@ -1,16 +1,14 @@
-#ifndef IDENTITY_SERVICE_GEN_H_
-#define IDENTITY_SERVICE_GEN_H_ 1
+#ifndef IDENTITY_SERVICE_MEM_H_
+#define IDENTITY_SERVICE_MEM_H_ 1
 
-#include <sqlite3.h>
 #include "identity-service.h"
 
-class SqliteIdentityService: public IdentityService {
+class MemoryIdentityService: public IdentityService {
 protected:
-    std::string dbName;
-    sqlite3 *db;
+    std::map<DEVADDR, DEVICEID> storage;
 public:
-    SqliteIdentityService();
-    ~SqliteIdentityService() override;
+    MemoryIdentityService();
+    ~MemoryIdentityService() override;
     int get(DEVICEID &retVal, const DEVADDR &request) override;
     // List entries
     int list(std::vector<NETWORKIDENTITY> &retVal, size_t offset, size_t size) override;
