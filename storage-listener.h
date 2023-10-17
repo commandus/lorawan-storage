@@ -1,16 +1,19 @@
 #ifndef GATEWAY_LISTENER_H
 #define GATEWAY_LISTENER_H
 
+#include "identity-serialization.h"
 #include "gateway-serialization.h"
 #include "log-intf.h"
 
-class GatewayListener {
+class StorageListener {
 public:
-    GatewaySerialization *serializationWrapper;
+    IdentitySerialization *identitySerialization;
+    GatewaySerialization *gatewaySerialization;
 
-    explicit GatewayListener(
-            GatewaySerialization *aSerializationWrapper
-    ) : serializationWrapper(aSerializationWrapper)
+    explicit StorageListener(
+        IdentitySerialization *aIdentitySerialization,
+        GatewaySerialization *aSerializationWrapper
+    ) : identitySerialization(aIdentitySerialization), gatewaySerialization(aSerializationWrapper)
     {
 
     }
@@ -31,7 +34,7 @@ public:
 
     virtual void setLog(int verbose, Log *log) = 0;
 
-    virtual ~GatewayListener() = default;
+    virtual ~StorageListener() = default;
 };
 
 

@@ -8,9 +8,9 @@
 #include <sys/socket.h>
 #endif
 
-#include "gateway-listener.h"
+#include "storage-listener.h"
 
-class UDPListener : public GatewayListener {
+class UDPListener : public StorageListener {
 private:
     struct sockaddr destAddr;
     Log *log;
@@ -18,6 +18,7 @@ private:
 public:
     int status; // ERR_CODE_STOPPED - stop request
     explicit UDPListener(
+        IdentitySerialization *aIdentitySerialization,
         GatewaySerialization *aSerializationWrapper
     );
     virtual ~UDPListener();

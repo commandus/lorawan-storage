@@ -14,30 +14,33 @@ protected:
     // LoraWAN network identifier
     NETID netid;
 public:
-    IdentityService();
-    IdentityService(const IdentityService &value);
-    virtual ~IdentityService();
+    IdentityService() = default;
+
+    IdentityService(const IdentityService &value) = default;
+
+    virtual ~IdentityService() = default;
+
     /**
     * request device identifier(w/o address) by network address. Return 0 if success, retVal = EUI and keys
     * @param retVal device identifier
     * @param devAddr network address
     * @return LORA_OK- success
     */
-    virtual int get(DEVICEID &retVal, DEVADDR &devAddr) = 0;
+    virtual int get(DEVICEID &retVal, const DEVADDR &devAddr) = 0;
 
     /**
     * request network identity(with address) by network address. Return 0 if success, retval = EUI and keys
     * @param retval network identity(with address)
     * @param eui device EUI
-    * @return LORA_OK- success
+    * @return CODE_OK- success
     */
     virtual int getNetworkIdentity(NETWORKIDENTITY &retval, const DEVEUI &eui) = 0;
 
     // Add or replace Address = EUI and keys pair
-    virtual int put(DEVADDR &devaddr, DEVICEID &id) = 0;
+    virtual int put(const DEVADDR &devaddr, const DEVICEID &id) = 0;
 
     // Remove entry
-    virtual int rm(DEVADDR &addr) = 0;
+    virtual int rm(const DEVADDR &addr) = 0;
 
     /**
      * List entries
@@ -46,10 +49,11 @@ public:
      * @param size 0- all
      */
 
-    virtual void list(
+    virtual int list(
         std::vector<NETWORKIDENTITY> &retval,
         size_t offset,
-        size_t size) = 0;
+        size_t size
+    ) = 0;
 
     // Entries count
     virtual size_t size() = 0;
@@ -63,31 +67,9 @@ public:
     // close resources
     virtual void done() = 0;
 
-    // parseRX list of identifiers, wildcards or regexes and copy found EUI into retval
-    virtual int parseIdentifiers(
-        std::vector<DEVEUI> &retval,
-        const std::vector<std::string> &list,
-        bool useRegex
-    ) = 0;
+    virtual NETID *getNetworkId();
 
-    // parseRX list of names, wildcards or regexes and copy found EUI into retval
-    virtual int parseNames(
-        std::vector<DEVEUI> &retval,
-        const std::vector<std::string> &list,
-        bool useRegex
-    ) = 0;
-
-    virtual bool canControlService(
-        const DEVADDR &addr
-    ) = 0;
-
-    int joinAccept(
-        JOIN_ACCEPT_FRAME_HEADER &retval,
-        NETWORKIDENTITY &NETWORKIDENTITY
-    );
-
-    NETID* getNetworkId();
-    void setNetworkId(
+    virtual void setNetworkId(
         const NETID &value
     );
 
@@ -95,7 +77,12 @@ public:
      * Return next network address if available
      * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
      */
-    virtual int next(NETWORKIDENTITY &retval) = 0;
+    virtual int next(NETWORKIDENTITY &retVal) = 0;
+
+    int joinAccept(
+        JOIN_ACCEPT_FRAME_HEADER &retVal,
+        NETWORKIDENTITY &networkIdentity
+    );
 };
 
 #endif

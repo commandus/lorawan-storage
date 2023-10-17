@@ -18,7 +18,7 @@ if(${ESP_PLATFORM})
     set(IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 endif()
 
-project("lorawan-gateway-storage" VERSION 1.0)
+project("lorawan-storage" VERSION 1.0)
 
 if(${ESP_PLATFORM})
 else()
@@ -48,7 +48,7 @@ else()
 		file(GLOB PO_FILES ${PO_PATH}/*.po)
 		# Generated file list
 		set(MO_FILES)
-		set(PRG lorawan-gateway-service)
+		set(PRG lorawan-service)
 		set(LOCALE_INSTALL_DIR /usr/share/locale)
 		foreach(_poFile ${PO_FILES})
 			GET_FILENAME_COMPONENT(_poFileName ${_poFile} NAME)
@@ -144,7 +144,7 @@ else()
 
 	if (ENABLE_SQLITE)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_SQLITE)
-		set(GATEWAY_SRC gateway-service-sqlite.cpp)
+		set(GATEWAY_SRC identity-service-sqlite.cpp gateway-service-sqlite.cpp sqlite-helper.cpp)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			find_package(unofficial-sqlite3 CONFIG REQUIRED)
 			set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
@@ -158,32 +158,32 @@ else()
 	endif()
 
 	#
-	# lorawan-gateway-service
+	# lorawan-service
 	#
-	set(LORAWAN_GATEWAY_SERVICE_SRC
+	set(LORAWAN_SERVICE_SRC
 		cli-main.cpp ${LSNR_SRC}
 		${GATEWAY_SRC} gateway-serialization.cpp identity-serialization.cpp
 		third-party/daemonize.cpp
 		file-helper.cpp
 		${ARGTABLE}
 	)
-	add_executable(lorawan-gateway-service ${LORAWAN_GATEWAY_SERVICE_SRC})
-	target_link_libraries(lorawan-gateway-service PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan ${BACKEND_DB_LIB})
-	target_compile_definitions(lorawan-gateway-service PRIVATE ${GATEWAY_DEF})
-	target_include_directories(lorawan-gateway-service PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS} ${BACKEND_DB_INC})
+	add_executable(lorawan-service ${LORAWAN_SERVICE_SRC})
+	target_link_libraries(lorawan-service PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan ${BACKEND_DB_LIB})
+	target_compile_definitions(lorawan-service PRIVATE ${GATEWAY_DEF})
+	target_include_directories(lorawan-service PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS} ${BACKEND_DB_INC})
 
 	#
-	# lorawan-gateway-query
+	# lorawan-query
 	#
-	set(LORAWAN_GATEWAY_QUERY_SRC
+	set(LORAWAN_QUERY_SRC
 		cli-query-main.cpp ${CLI_SRC}
 		gateway-serialization.cpp
 		${ARGTABLE}
 	)
-	add_executable(lorawan-gateway-query ${LORAWAN_GATEWAY_QUERY_SRC})
-	target_link_libraries(lorawan-gateway-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
-	target_compile_definitions(lorawan-gateway-query PRIVATE ${GATEWAY_DEF})
-	target_include_directories(lorawan-gateway-query PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+	add_executable(lorawan-query ${LORAWAN_QUERY_SRC})
+	target_link_libraries(lorawan-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
+	target_compile_definitions(lorawan-query PRIVATE ${GATEWAY_DEF})
+	target_include_directories(lorawan-query PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'

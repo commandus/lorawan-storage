@@ -108,8 +108,8 @@ public:
 	bool operator!=(const DEVADDR &rhs) const;
 
 	DEVADDR(const DEVADDR &value);
-    explicit DEVADDR(uint32_t value);
-    explicit DEVADDR(const std::string &value);
+    DEVADDR(uint32_t value);
+    DEVADDR(const std::string &value);
     DEVADDR(const NETID &netid, uint32_t nwkAddr);
     DEVADDR(uint8_t netTypeId, uint32_t nwkId, uint32_t nwkAddr);
     // min/max addr

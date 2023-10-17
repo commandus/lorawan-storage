@@ -53,9 +53,10 @@
  * @see https://github.com/Mityuha/grpc_async/blob/master/grpc_async_server.cc
  */
 UDPListener::UDPListener(
+    IdentitySerialization *aIdentitySerialization,
     GatewaySerialization *aSerializationWrapper
 )
-    : GatewayListener(aSerializationWrapper), destAddr({}), status(CODE_OK), verbose(0), log(nullptr)
+    : StorageListener(aIdentitySerialization, aSerializationWrapper), destAddr({}), status(CODE_OK), verbose(0), log(nullptr)
 {
 }
 
@@ -197,7 +198,7 @@ int UDPListener::run()
                 }
                 size_t sz;
                 if (len > 0)
-                    sz = serializationWrapper->query(rBuf, sizeof(rBuf), rxBuf, len);
+                    sz = gatewaySerialization->query(rBuf, sizeof(rBuf), rxBuf, len);
                 else
                     sz = 0;
                 if (sz > 0) {

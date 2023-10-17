@@ -22,9 +22,11 @@
 #endif
 
 #ifdef ENABLE_SQLITE
+#include "identity-service-sqlite.h"
 #include "gateway-service-sqlite.h"
 #define DEF_DB  "gw.db"
 #else
+#include "identity-service-mem.h"
 #include "gateway-service-mem.h"
 #endif
 
@@ -60,7 +62,7 @@ static std::string IP_PROTO2string(
 class CliGatewayServiceDescriptorNParams : public Log
 {
 public:
-    GatewayListener *server = nullptr;
+    StorageListener *server = nullptr;
 
     enum IP_PROTO proto;
     std::string intf;
@@ -139,20 +141,29 @@ void setSignalHandler()
 }
 
 void run() {
+    auto identityService =
+#ifdef ENABLE_SQLITE
+        new SqliteIdentityService;
+    identityService->init(svc.db, nullptr);
+#else
+        new MemoryIdentityService;
+    identityService->init("", nullptr);
+#endif
     auto gatewayService =
 #ifdef ENABLE_SQLITE
-        new SqliteGatewayService;
+            new SqliteGatewayService;
     gatewayService->init(svc.db, nullptr);
 #else
-        new MemoryGatewayService;
+    new MemoryGatewayService;
     gatewayService->init("", nullptr);
 #endif
 
-    auto serializationWrapper = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
+    auto identitySerialization = new IdentitySerialization(identityService, svc.code, svc.accessCode);
+    auto gatewaySerialization = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
-    svc.server = new UVListener(serializationWrapper);
+    svc.server = new UVListener(gatewaySerialization);
 #else
-    svc.server = new UDPListener(serializationWrapper);
+    svc.server = new UDPListener(identitySerialization, gatewaySerialization);
 #endif
     svc.server->setAddress(svc.intf, svc.port);
     svc.server->setLog(svc.verbose, &svc);
