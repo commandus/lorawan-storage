@@ -566,3 +566,74 @@ uint64_t string2gatewayId(
 {
     return strtoull(value.c_str(), nullptr, 16);
 }
+
+static void setIdentity(
+    NETWORKIDENTITY &retVal,
+    int fieldNo,
+    char *start,
+    char *finish
+) {
+    std::string s(start, finish - start);
+    switch (fieldNo) {
+        case 0:
+            string2DEVADDR(retVal.devaddr, s);
+            break;
+        case 1:
+            retVal.devid.activation = string2activation(s);
+            break;
+        case 2:
+            retVal.devid.deviceclass = string2deviceclass(s);
+            break;
+        case 3:
+            string2DEVEUI(retVal.devid.devEUI, s);
+            break;
+        case 4:
+            string2KEY(retVal.devid.nwkSKey, s);
+            break;
+        case 5:
+            string2KEY(retVal.devid.appSKey, s);
+            break;
+        case 6:
+            retVal.devid.version = string2LORAWAN_VERSION(s);
+            break;
+        case 7:
+            string2DEVEUI(retVal.devid.appEUI, s);
+            break;
+        case 8:
+            string2KEY(retVal.devid.appKey, s);
+            break;
+        case 9:
+            string2KEY(retVal.devid.nwkKey, s);
+            break;
+        case 10:
+            retVal.devid.devNonce = string2DEVNONCE(s);
+            break;
+        case 11:
+            string2JOINNONCE(retVal.devid.joinNonce, s);
+            break;
+        case 12:
+            string2DEVICENAME(retVal.devid.name, s.c_str());
+            break;
+        default:
+            break;
+    }
+}
+
+bool string2NETWORKIDENTITY(
+    NETWORKIDENTITY &retVal,
+    const char *identityString
+)
+{
+    int c = 0;
+    char *start = (char *) identityString;
+    char *p = start;
+    for (; *p != 0; p++) {
+        if (*p == ',') {
+            setIdentity(retVal, c, start, p);
+            c++;
+            start = p + 1;
+        }
+    }
+    setIdentity(retVal, c, start, p);
+    return true;
+}

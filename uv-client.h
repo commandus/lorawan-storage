@@ -9,7 +9,7 @@ typedef SSIZE_T ssize_t;
 #include <string>
 #include <uv.h>
 #include "gateway-serialization.h"
-#include "gateway-client.h"
+#include "query-client.h"
 
 class UvClient : public GatewayClient {
 private:

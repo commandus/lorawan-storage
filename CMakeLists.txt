@@ -177,7 +177,7 @@ else()
 	#
 	set(LORAWAN_QUERY_SRC
 		cli-query-main.cpp ${CLI_SRC}
-		gateway-serialization.cpp
+		identity-serialization.cpp gateway-serialization.cpp
 		${ARGTABLE}
 	)
 	add_executable(lorawan-query ${LORAWAN_QUERY_SRC})

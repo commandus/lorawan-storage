@@ -12,9 +12,9 @@ typedef int SOCKET;
 
 #include <string>
 #include "gateway-serialization.h"
-#include "gateway-client.h"
+#include "query-client.h"
 
-class UDPClient : public GatewayClient {
+class UDPClient : public QueryClient {
 private:
     SOCKET sock;
     struct sockaddr addr;

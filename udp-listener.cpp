@@ -61,8 +61,8 @@ UDPListener::UDPListener(
 }
 
 void UDPListener::setLog(
-        int aVerbose,
-        Log *aLog
+    int aVerbose,
+    Log *aLog
 )
 {
     verbose = aVerbose;
@@ -197,9 +197,12 @@ int UDPListener::run()
                     log->flush();
                 }
                 size_t sz;
-                if (len > 0)
-                    sz = gatewaySerialization->query(rBuf, sizeof(rBuf), rxBuf, len);
-                else
+                if (len > 0) {
+                    sz = identitySerialization->query(rBuf, sizeof(rBuf), rxBuf, len);
+                    if (sz == 0) {
+                        sz = gatewaySerialization->query(rBuf, sizeof(rBuf), rxBuf, len);
+                    }
+                } else
                     sz = 0;
                 if (sz > 0) {
                     if (sendto(sock, rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {

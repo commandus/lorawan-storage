@@ -5,6 +5,8 @@
 #include "lorawan-conv.h"
 #include "lorawan-error.h"
 
+const char *LIST_SEPARATOR = ",";
+
 LORAWAN_VERSION::LORAWAN_VERSION()
     : c(1)
 {
@@ -1585,17 +1587,17 @@ std::string DEVICEID::toString() const
 	std::stringstream ss;
 	ss
 		<< activation2string(activation)
-		<< " " << deviceclass2string(deviceclass)
-		<< " " << DEVEUI2string(devEUI)
-		<< " " << KEY2string(nwkSKey)
-		<< " " << KEY2string(appSKey)
-		<< " " << LORAWAN_VERSION2string(version)
-        << " " << DEVEUI2string(appEUI)
-        << " " << KEY2string(appKey)
-        << " " << KEY2string(nwkKey)
-        << " " << DEVNONCE2string(devNonce)
-        << " " << JOINNONCE2string(joinNonce)
-		<< " " << DEVICENAME2string(name);
+		<< LIST_SEPARATOR << deviceclass2string(deviceclass)
+		<< LIST_SEPARATOR << DEVEUI2string(devEUI)
+		<< LIST_SEPARATOR << KEY2string(nwkSKey)
+		<< LIST_SEPARATOR << KEY2string(appSKey)
+		<< LIST_SEPARATOR << LORAWAN_VERSION2string(version)
+        << LIST_SEPARATOR << DEVEUI2string(appEUI)
+        << LIST_SEPARATOR << KEY2string(appKey)
+        << LIST_SEPARATOR << KEY2string(nwkKey)
+        << LIST_SEPARATOR << DEVNONCE2string(devNonce)
+        << LIST_SEPARATOR << JOINNONCE2string(joinNonce)
+		<< LIST_SEPARATOR << DEVICENAME2string(name);
 	return ss.str();
 }
 
@@ -1684,7 +1686,7 @@ void NETWORKIDENTITY::set(
 std::string NETWORKIDENTITY::toString() const 
 {
 	std::stringstream ss;
-	ss << DEVADDR2string(devaddr) << " " << devid.toString();
+	ss << DEVADDR2string(devaddr) << LIST_SEPARATOR << devid.toString();
 	return ss.str();
 }
 

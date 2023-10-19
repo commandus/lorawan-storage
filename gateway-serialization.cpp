@@ -819,22 +819,56 @@ const char* gatewayTag2string(
 {
     switch (value) {
         case QUERY_GATEWAY_ADDR:
-            return "address";
+            return "gw-address";
         case QUERY_GATEWAY_ID:
-            return "identifier";
+            return "gw-identifier";
         case QUERY_GATEWAY_LIST:
-            return "list";
+            return "gw-list";
         case QUERY_GATEWAY_COUNT:
-            return "count";
+            return "gw-count";
         case QUERY_GATEWAY_ASSIGN:
-            return "assign";
+            return "gw-assign";
         case QUERY_GATEWAY_RM:
-            return "remove";
+            return "gw-remove";
         case QUERY_GATEWAY_FORCE_SAVE:
-            return "save";
+            return "gw-save";
         case QUERY_GATEWAY_CLOSE_RESOURCES:
-            return "close";
+            return "gw-close";
         default:
             return "";
+    }
+}
+
+static std::string GWCS("AILCPRSE");
+
+const std::string &gatewayCommandSet() {
+    return GWCS;
+}
+
+/**
+ * Check does it gateway tag in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return true
+ */
+bool isGatewayTag(
+    const unsigned char *buffer,
+    size_t size
+)
+{
+    if (size == 0)
+        return false;
+    switch (buffer[0]) {
+        case QUERY_GATEWAY_ADDR:
+        case QUERY_GATEWAY_ID:
+        case QUERY_GATEWAY_LIST:
+        case QUERY_GATEWAY_COUNT:
+        case QUERY_GATEWAY_ASSIGN:
+        case QUERY_GATEWAY_RM:
+        case QUERY_GATEWAY_FORCE_SAVE:
+        case QUERY_GATEWAY_CLOSE_RESOURCES:
+            return true;
+        default:
+            return false;
     }
 }

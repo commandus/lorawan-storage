@@ -808,3 +808,37 @@ const char* identityTag2string(
             return "";
     }
 }
+
+static std::string IDCS("ailcprse");
+
+const std::string &identityCommandSet() {
+    return IDCS;
+}
+
+/**
+ * Check does it identity tag in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return true
+ */
+bool isIdentityTag(
+    const unsigned char *buffer,
+    size_t size
+)
+{
+    if (size == 0)
+        return false;
+    switch (buffer[0]) {
+        case QUERY_IDENTITY_ADDR:
+        case QUERY_IDENTITY_EUI:
+        case QUERY_IDENTITY_LIST:
+        case QUERY_IDENTITY_COUNT:
+        case QUERY_IDENTITY_ASSIGN:
+        case QUERY_IDENTITY_RM:
+        case QUERY_IDENTITY_FORCE_SAVE:
+        case QUERY_IDENTITY_CLOSE_RESOURCES:
+            return true;
+        default:
+            return false;
+    }
+}

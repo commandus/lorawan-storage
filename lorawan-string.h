@@ -63,3 +63,5 @@ void string2FREQUENCY(FREQUENCY &retVal, const char *value);
 void string2JOINNONCE(JOINNONCE &retval, const char *value);
 void string2APPNONCE(APPNONCE& retval, const std::string& value);
 uint64_t string2gatewayId(const std::string& value);
+bool string2NETWORKIDENTITY(NETWORKIDENTITY &retVal, const char *identityString);
+

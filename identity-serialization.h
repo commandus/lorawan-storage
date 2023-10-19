@@ -146,6 +146,17 @@ ServiceMessage* deserializeIdentity(
 );
 
 /**
+ * Check does it identity tag in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return true
+ */
+bool isIdentityTag(
+    const unsigned char *buffer,
+    size_t size
+);
+
+/**
  * Check does it serialized query in the buffer
  * @param buffer buffer to check
  * @param size buffer size
@@ -170,5 +181,7 @@ size_t responseSizeForIdentityRequest(
 const char* identityTag2string(
     enum IdentityQueryTag value
 );
+
+const std::string &identityCommandSet();
 
 #endif

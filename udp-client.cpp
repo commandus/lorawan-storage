@@ -41,7 +41,7 @@ UDPClient::UDPClient(
     uint16_t aPort,
     ResponseIntf *aOnResponse
 )
-    : sock(0), addr{}, GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
+    : sock(0), addr{}, QueryClient(aOnResponse), query(nullptr), status(CODE_OK)
 {
     auto *a = (struct sockaddr_in *) &addr;
     a->sin_addr.s_addr = ipv4;
@@ -55,7 +55,7 @@ UDPClient::UDPClient(
     uint16_t aPort,
     ResponseIntf *aOnResponse
 )
-    :  sock(0), addr{}, GatewayClient(aOnResponse), query(nullptr), status(CODE_OK)
+    : sock(0), addr{}, QueryClient(aOnResponse), query(nullptr), status(CODE_OK)
 {
     memset(&addr, 0, sizeof(addr));
     int r;
@@ -119,8 +119,10 @@ void UDPClient::start() {
 
         unsigned char sendBuffer[40];
         while (status != ERR_CODE_STOPPED) {
-            if (!query)
+            if (!query) {
+                status = ERR_CODE_STOPPED;
                 break;
+            }
             query->ntoh();
             size_t ssz = query->serialize(sendBuffer);
             ssize_t sz = sendto(sock, (const char*) sendBuffer, (int) ssz, 0, &addr, sizeof(addr));
@@ -134,9 +136,14 @@ void UDPClient::start() {
             << hexString(sendBuffer, ssz)
             << std::endl;
 #endif
+            size_t rxSize;
+            if (isIdentityTag(sendBuffer, ssz)) {
+                rxSize = responseSizeForIdentityRequest(sendBuffer, ssz);
+            } else {
+                rxSize = responseSizeForGatewayRequest(sendBuffer, ssz);
+            }
             struct sockaddr_storage srcAddress{}; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(srcAddress);
-            size_t rxSize = responseSizeForGatewayRequest(sendBuffer, ssz);
             auto *rxBuf = (unsigned char *) malloc(rxSize);
 
             ssize_t len = recvfrom(sock, (char *) rxBuf, rxSize, 0, (struct sockaddr *)&srcAddress, &socklen);
@@ -151,31 +158,59 @@ void UDPClient::start() {
                 << MSG_COLON_N_SPACE << hexString(rxBuf, len)
                 << std::endl;
 #endif
-                enum GatewayQueryTag tag = validateGatewayQuery(rxBuf, len);
-                switch (tag) {
-                    case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
-                    case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
-                    {
-                        GatewayGetResponse gr(rxBuf, len);
-                        gr.ntoh();
-                        onResponse->onGet(this, &gr);
+                if (isIdentityTag(rxBuf, len)) {
+                    enum IdentityQueryTag tag = validateIdentityQuery(rxBuf, len);
+                    switch (tag) {
+                        case QUERY_IDENTITY_EUI:   // request gateway identifier(with address) by network address.
+                        case QUERY_IDENTITY_ADDR:   // request gateway address (with identifier) by identifier.
+                        {
+                            IdentityGetResponse gr(rxBuf, len);
+                            gr.ntoh();
+                            onResponse->onIdentityGet(this, &gr);
+                        }
+                            break;
+                        case QUERY_IDENTITY_LIST:   // List entries
+                        {
+                            IdentityListResponse gr(rxBuf, len);
+                            gr.response = NTOH4(gr.response);
+                            gr.ntoh();
+                            onResponse->onIdentityList(this, &gr);
+                        }
+                            break;
+                        default: {
+                            IdentityOperationResponse gr(rxBuf, len);
+                            gr.ntoh();
+                            onResponse->onIdentityOperation(this, &gr);
+                        }
+                            break;
                     }
-                        break;
-                    case QUERY_GATEWAY_LIST:   // List entries
-                    {
-                        GatewayListResponse gr(rxBuf, len);
-                        gr.response = NTOH4(gr.response);
-                        gr.ntoh();
-                        onResponse->onList(this, &gr);
+
+                } else {
+                    enum GatewayQueryTag tag = validateGatewayQuery(rxBuf, len);
+                    switch (tag) {
+                        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
+                        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
+                        {
+                            GatewayGetResponse gr(rxBuf, len);
+                            gr.ntoh();
+                            onResponse->onGatewayGet(this, &gr);
+                        }
+                            break;
+                        case QUERY_GATEWAY_LIST:   // List entries
+                        {
+                            GatewayListResponse gr(rxBuf, len);
+                            gr.response = NTOH4(gr.response);
+                            gr.ntoh();
+                            onResponse->onGatewayList(this, &gr);
+                        }
+                            break;
+                        default: {
+                            GatewayOperationResponse gr(rxBuf, len);
+                            gr.ntoh();
+                            onResponse->onGatewayOperation(this, &gr);
+                        }
+                            break;
                     }
-                        break;
-                    default:
-                    {
-                        GatewayOperationResponse gr(rxBuf, len);
-                        gr.ntoh();
-                        onResponse->onStatus(this, &gr);
-                    }
-                        break;
                 }
                 free(rxBuf);
             }

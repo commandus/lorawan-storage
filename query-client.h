@@ -1,38 +1,54 @@
 #ifndef GATEWAY_CLIENT_H
 #define GATEWAY_CLIENT_H
 
-class GatewayClient;
+#include "identity-serialization.h"
+#include "gateway-serialization.h"
+
+class QueryClient;
 
 class ResponseIntf {
 public:
-    virtual void onGet(
-        GatewayClient* client,
+    virtual void onIdentityGet(
+        QueryClient* client,
+        const IdentityGetResponse *response
+    ) = 0;
+    virtual void onIdentityOperation(
+        QueryClient* client,
+        const IdentityOperationResponse *response
+    ) = 0;
+    virtual void onIdentityList(
+        QueryClient* client,
+        const IdentityListResponse *response
+    ) = 0;
+
+    virtual void onGatewayGet(
+        QueryClient* client,
         const GatewayGetResponse *response
     ) = 0;
-    virtual void onStatus(
-        GatewayClient* client,
+    virtual void onGatewayOperation(
+        QueryClient* client,
         const GatewayOperationResponse *response
     ) = 0;
-    virtual void onList(
-        GatewayClient* client,
+    virtual void onGatewayList(
+        QueryClient* client,
         const GatewayListResponse *response
     ) = 0;
     virtual void onError(
-        GatewayClient* client,
+        QueryClient* client,
         int32_t code,  // 0- success, != 0- failure (error code)
         int errorCode
     ) = 0;
     // TCP connection lost
     virtual void onDisconnected(
-        GatewayClient* client
+        QueryClient* client
     ) = 0;
 };
 
-class GatewayClient {
+class QueryClient {
 public:
     ResponseIntf* onResponse;
 
-    GatewayClient(
+    QueryClient(
         ResponseIntf *aOnResponse
     )
     : onResponse(aOnResponse)
@@ -40,7 +56,7 @@ public:
 
     };
 
-    virtual ~GatewayClient() = default;
+    virtual ~QueryClient() = default;
 
     /**
      * Prepare to send request

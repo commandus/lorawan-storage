@@ -52,7 +52,7 @@ SRC_AES = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
 nobase_dist_include_HEADERS = \
-	gateway-client.h log-intf.h \
+	query-client.h log-intf.h \
 	identity-service.h identity-service-mem.h identity-service-sqlite.h \
 	gateway-service.h gateway-service-mem.h gateway-service-sqlite.h log.h \
 	lorawan-error.h lorawan-types.h udp-client.h uv-listener.h \

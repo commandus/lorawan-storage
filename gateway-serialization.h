@@ -151,6 +151,17 @@ ServiceMessage* deserializeGateway(
 );
 
 /**
+ * Check does it gateway tag in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return true
+ */
+bool isGatewayTag(
+    const unsigned char *buffer,
+    size_t size
+);
+
+/**
  * Check does it serialized query in the buffer
  * @param buffer buffer to check
  * @param size buffer size
@@ -173,5 +184,7 @@ size_t responseSizeForGatewayRequest(
 );
 
 const char* gatewayTag2string(enum GatewayQueryTag value);
+
+const std::string &gatewayCommandSet();
 
 #endif

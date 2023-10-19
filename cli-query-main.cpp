@@ -16,79 +16,107 @@
 #include "lorawan-msg.h"
 #include "log.h"
 #include "gateway-identity.h"
+#include "identity-serialization.h"
 #include "ip-address.h"
 #include "ip-helper.h"
+#include "lorawan-string.h"
 
-const char *programName = "lorawan-gateway-query";
+const char *programName = "lorawan-query";
 #define DEF_PORT 4244
-
-class CommandName {
-public:
-    enum GatewayQueryTag s;
-    const char* l;
-    bool isCommand(
-        const char* cmd
-    ) const
-    {
-        if (!cmd)
-            return false;
-        auto len = strlen(cmd);
-        if (len == 1 && s == *cmd)
-            return true;
-        return (strncmp(cmd, l, len) == 0);
-    };
-};
-
-static const CommandName commands[9] = {
-    { QUERY_GATEWAY_NONE, "none" },             // '0'
-    { QUERY_GATEWAY_ADDR, "addr" },             // 'a'
-    { QUERY_GATEWAY_ID, "id" },                 // 'A'
-    { QUERY_GATEWAY_LIST, "list" },             // 'L'
-    { QUERY_GATEWAY_COUNT, "count" },           // 'c'
-    { QUERY_GATEWAY_ASSIGN, "assign" },         // 'p'
-    { QUERY_GATEWAY_RM, "remove" },             // 'r',
-    { QUERY_GATEWAY_FORCE_SAVE, "save" },       // 'f',
-    { QUERY_GATEWAY_CLOSE_RESOURCES, "close" }  // 'd'
-};
-
-#define COMMANDS_COUNT 9
-
-static const char *commandLongName(
-    enum GatewayQueryTag tag
-)
-{
-    for (auto command : commands) {
-        if (command.isCommand((char *) &tag))
-            return command.l;
-    }
-    return commands[0].l;
-}
 
 static std::string listCommands() {
     std::stringstream ss;
-    for (int i = 1; i < COMMANDS_COUNT; i++) {
-        ss << "  " << (char ) commands[i].s << "\t" << commands[i].l;
-        if (i == 1)
+    const std::string &cs = identityCommandSet();
+    for (auto i = 0; i < cs.size(); i++) {
+        auto c = cs[i];
+        ss << "  " << c << "\t" << identityTag2string((enum IdentityQueryTag) c);
+        if (c == QUERY_IDENTITY_ADDR)
             ss << " (default)";
+        ss << "\n";
+    }
+    for (auto i = 0; i < cs.size(); i++) {
+        auto c = gatewayCommandSet()[i];
+        ss << "  " << c << "\t" << gatewayTag2string((enum GatewayQueryTag) c);
         ss << "\n";
     }
     return ss.str();
 }
 
-static GatewayQueryTag isTag(const char *tag) {
-    for (auto command : commands) {
-        if (command.isCommand(tag)) {
-            return command.s;
+static std::string shortCommandList(char delimiter) {
+    std::stringstream ss;
+    ss << "command: ";
+    const std::string &cs = identityCommandSet();
+    for (auto i = 0; i < cs.size(); i++) {
+        ss << cs[i] << delimiter;
+    }
+    for (auto i = 0; i < cs.size(); i++) {
+        ss << cs[i] << delimiter;
+    }
+    ss << cs[cs.size() - 1];
+    ss << ", gateway id: 16 hex digits";
+    return ss.str();
+}
+
+static std::string commandLongName(int tag)
+{
+    std::string r = identityTag2string((enum IdentityQueryTag) tag);
+    if (r.empty())
+        r = gatewayTag2string((enum GatewayQueryTag) tag);
+    return r;
+}
+
+static GatewayQueryTag isGatewayTag(const char *tag) {
+    if (!tag)
+        return QUERY_GATEWAY_NONE;
+    const std::string &cs = gatewayCommandSet();
+    auto len = strlen(tag);
+    if (len == 1) {
+        if (cs.find(*tag) != std::string::npos) {
+            return (GatewayQueryTag) *tag;
+        }
+    } else {
+        for (auto it : cs) {
+            if (strcmp(gatewayTag2string((GatewayQueryTag) it), tag) == 0)
+                return (GatewayQueryTag) it;
         }
     }
     return QUERY_GATEWAY_NONE;
 }
 
+static IdentityQueryTag isIdentityTag(const char *tag) {
+    if (!tag)
+        return QUERY_IDENTITY_NONE;
+    const std::string &cs = identityCommandSet();
+    auto len = strlen(tag);
+    if (len == 1) {
+        if (cs.find(*tag) != std::string::npos) {
+            return (IdentityQueryTag) *tag;
+        }
+    } else {
+        for (auto it : cs) {
+            if (strcmp(identityTag2string((IdentityQueryTag) it), tag) == 0)
+                return (IdentityQueryTag) it;
+        }
+    }
+    return QUERY_IDENTITY_NONE;
+}
+
+class DeviceOrGatewayIdentity {
+public:
+    bool hasDevice;
+    bool hasGateway;
+    GatewayIdentity gid;
+    NETWORKIDENTITY nid;
+    DeviceOrGatewayIdentity()
+        : hasDevice(false), hasGateway(false)
+    {};
+};
+
 // global parameters
 class CliGatewayQueryParams {
 public:
-    GatewayQueryTag tag;
-    std::vector<GatewayIdentity> query;
+    char tag;
+    std::vector<DeviceOrGatewayIdentity> query;
     size_t queryPos;
     bool useTcp;
     int verbose;
@@ -115,9 +143,16 @@ public:
             << "command: " << commandLongName(tag) << ", code: " << std::hex << code << ", access code: "  << accessCode << " "
             << "offset: " << std::dec << offset << ", size: "  << size << "\n";
         for (auto & it : query) {
-            if (it.gatewayId)
-                ss << std::hex << it.gatewayId;
-            ss << "\t" << sockaddr2string(&it.sockaddr) << "\n";
+            if (it.hasDevice) {
+                if (!it.nid.devaddr.empty())
+                    ss << DEVADDR2string(it.nid.devaddr);
+                ss << "\t" << it.nid.devid.toString() << "\n";
+            }
+            if (it.hasGateway) {
+                if (it.gid.gatewayId)
+                    ss << std::hex << it.gid.gatewayId;
+                ss << "\t" << sockaddr2string(&it.gid.sockaddr) << "\n";
+            }
         }
         return ss.str();
     }
@@ -127,10 +162,10 @@ static CliGatewayQueryParams params;
 
 class OnResp : public ResponseIntf {
 public:
-    const std::vector<GatewayIdentity> &query;
+    const std::vector<DeviceOrGatewayIdentity> &query;
     int verbose;
     explicit OnResp(
-        const std::vector<GatewayIdentity> &aQuery,
+        const std::vector<DeviceOrGatewayIdentity> &aQuery,
         int aVerbose
     )
         : query(aQuery), verbose(aVerbose)
@@ -138,7 +173,7 @@ public:
     }
 
     void onError(
-        GatewayClient* client,
+        QueryClient* client,
         const int32_t code,
         const int errorCode
     ) override {
@@ -147,8 +182,71 @@ public:
         params.retCode = code;
     }
 
-    void onStatus(
-        GatewayClient* client,
+    void onIdentityGet(
+        QueryClient* client,
+        const IdentityGetResponse *response
+    ) override {
+        if (response) {
+            if (params.verbose)
+                std::cout << response->toJsonString() << std::endl;
+            else
+                std::cout << response->response.toString() << std::endl;
+            if (!next(client)) {
+                client->stop();
+            }
+        } else {
+            client->stop();
+        }
+    }
+
+    void onIdentityOperation(
+        QueryClient* client,
+        const IdentityOperationResponse *response
+    ) override {
+        if (response) {
+            if (params.verbose) {
+                if (response->response != 0)
+                    std::cout << response->toJsonString() << std::endl;
+                else {
+                    std::cerr << identityTag2string((IdentityQueryTag) response->tag)
+                      // << " " << (int) response->size
+                      << " completed\n";
+                }
+            } else {
+                if (response->response != 0) {
+                    std::cerr << ERR_MESSAGE << response->response << std::endl;
+                }
+            }
+            if (!next(client)) {
+                client->stop();
+            }
+        } else {
+            client->stop();
+        }
+    }
+
+    void onIdentityList(
+        QueryClient* client,
+        const IdentityListResponse *response
+    ) override {
+        if (response) {
+            if (params.verbose) {
+                std::cout << response->toJsonString() << std::endl;
+            } else {
+                for (int i = 0; i < response->response; i++) {
+                    std::cout << response->identities[i].toString() << std::endl;
+                }
+            }
+            if (!next(client)) {
+                client->stop();
+            }
+        } else {
+            client->stop();
+        }
+    }
+
+    void onGatewayOperation(
+        QueryClient* client,
         const GatewayOperationResponse *response
     ) override {
         if (response) {
@@ -173,8 +271,8 @@ public:
         }
     }
 
-    void onGet(
-        GatewayClient* client,
+    void onGatewayGet(
+        QueryClient* client,
         const GatewayGetResponse *response
     ) override {
         if (response) {
@@ -183,8 +281,8 @@ public:
             else
                 if (isIP(&response->response.sockaddr) && response->response.gatewayId) {
                     std::cout
-                            << std::hex << response->response.gatewayId << "\t"
-                            << sockaddr2string(&response->response.sockaddr) << std::endl;
+                        << std::hex << response->response.gatewayId << "\t"
+                        << sockaddr2string(&response->response.sockaddr) << std::endl;
                 }
             if (!next(client)) {
                 client->stop();
@@ -194,8 +292,8 @@ public:
         }
 	}
 
-    void onList(
-        GatewayClient* client,
+    void onGatewayList(
+        QueryClient* client,
         const GatewayListResponse *response
     ) override {
         if (response) {
@@ -217,7 +315,7 @@ public:
     }
 
     void onDisconnected(
-        GatewayClient* client
+            QueryClient* client
     ) override {
         if (verbose) {
             std::cerr << "disconnected \n";
@@ -225,38 +323,61 @@ public:
     }
 
     bool next(
-        GatewayClient *client
+            QueryClient *client
     ) {
         bool hasNext = params.queryPos < query.size();
         ServiceMessage *req = nullptr;
         if (hasNext) {
-            GatewayIdentity gi = params.query[params.queryPos];
+            DeviceOrGatewayIdentity id = params.query[params.queryPos];
             switch (params.tag) {
-                case QUERY_GATEWAY_ID:
+                case QUERY_IDENTITY_LIST:
+                    req = new IdentityOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
+                case QUERY_IDENTITY_COUNT:
+                    req = new IdentityOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
+                    break;
+                case QUERY_IDENTITY_ASSIGN:
+                    req = new IdentityEUIAddrRequest(params.tag, id.nid, params.code, params.accessCode);
+                    break;
+                case QUERY_IDENTITY_RM:
+                    req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);
+                    break;
+                case QUERY_IDENTITY_FORCE_SAVE:
+                    break;
+                case QUERY_IDENTITY_CLOSE_RESOURCES:
+                    break;
+                case QUERY_IDENTITY_EUI:
+                    req = new IdentityAddrRequest(id.nid.devaddr, params.code, params.accessCode);
+                    break;
+                case QUERY_IDENTITY_ADDR:
+                    req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);
+                    break;
+
+                // gateway
                 case QUERY_GATEWAY_LIST:
-                    req = new GatewayOperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
+                    req = new GatewayOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_COUNT:
-                    req = new GatewayOperationRequest((char) params.tag, params.offset, params.size, params.code, params.accessCode);
+                    req = new GatewayOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_ASSIGN:
-                    req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
+                    req = new GatewayIdAddrRequest(params.tag, id.gid, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_RM:
-                    // req = new GatewayIdRequest((char) params.tag, gi.gatewayId, params.code, params.accessCode);
-                    req = new GatewayIdAddrRequest((char) params.tag, gi, params.code, params.accessCode);
+                    req = new GatewayIdAddrRequest(params.tag, id.gid, params.code, params.accessCode);
                     break;
                 case QUERY_GATEWAY_FORCE_SAVE:
                     break;
                 case QUERY_GATEWAY_CLOSE_RESOURCES:
                     break;
                 case QUERY_GATEWAY_NONE:
+                    break;
+                case QUERY_GATEWAY_ID:
                 case QUERY_GATEWAY_ADDR:
-                    if (gi.gatewayId == 0)
-                        req = new GatewayAddrRequest(gi.sockaddr, params.code, params.accessCode);
+                    if (id.gid.gatewayId == 0)
+                        req = new GatewayAddrRequest(id.gid.sockaddr, params.code, params.accessCode);
                     else
-                        req = new GatewayIdRequest((char) params.tag, gi.gatewayId, params.code, params.accessCode);
+                        req = new GatewayIdRequest((char) params.tag, id.gid.gatewayId, params.code, params.accessCode);
                     break;
             }
         }
@@ -276,17 +397,17 @@ public:
  * @return true if success
  */
 static bool mergeIdAddress(
-    std::vector<GatewayIdentity> &query
+    std::vector<DeviceOrGatewayIdentity> &query
 )
 {
     auto pairSize = query.size() / 2;
     for (int i = 0; i < pairSize; i++) {
-        if (query[i * 2].gatewayId) {
-            query[i].gatewayId = query[i * 2].gatewayId;
-            memmove(&query[i].sockaddr, &query[(i * 2) + 1].sockaddr, sizeof(struct sockaddr));
+        if (query[i * 2].gid.gatewayId) {
+            query[i].gid.gatewayId = query[i * 2].gid.gatewayId;
+            memmove(&query[i].gid.sockaddr, &query[(i * 2) + 1].gid.sockaddr, sizeof(struct sockaddr));
         } else {
-            memmove(&query[i].sockaddr, &query[(i * 2)].sockaddr, sizeof(struct sockaddr));
-            query[i].gatewayId = query[(i * 2) + 1].gatewayId;
+            memmove(&query[i].gid.sockaddr, &query[(i * 2)].gid.sockaddr, sizeof(struct sockaddr));
+            query[i].gid.gatewayId = query[(i * 2) + 1].gid.gatewayId;
         }
     }
     query.resize(pairSize);
@@ -296,7 +417,7 @@ static bool mergeIdAddress(
 static void run()
 {
 	OnResp onResp(params.query, params.verbose);
-    GatewayClient *client;
+    QueryClient *client;
 #ifdef ENABLE_LIBUV
     client = new UvClient(params.useTcp, params.intf, params.port, &onResp);
 #else
@@ -312,7 +433,9 @@ static void run()
 }
 
 int main(int argc, char **argv) {
-    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | gateway-id | address:port>", 1, 100, "command: a|A|L|c|p|r|f|d, gateway id: 16 hex digits");
+    std::string shortCL = shortCommandList('|');
+    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | gateway-id | address:port>", 1, 100,
+        shortCL.c_str());
     struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
@@ -353,28 +476,51 @@ int main(int argc, char **argv) {
     params.tag = QUERY_GATEWAY_ADDR;
 
     params.query.reserve(a_query->count);
+    bool queryHasIdentity = false;
+    bool queryHasGateway = false;
     for (int i = 0; i < a_query->count; i++) {
-        enum GatewayQueryTag tag = isTag(a_query->sval[i]);
-        if (tag != QUERY_GATEWAY_NONE) {
-            params.tag = tag;
+        enum IdentityQueryTag identityQueryTag = isIdentityTag(a_query->sval[i]);
+        if (identityQueryTag != QUERY_IDENTITY_NONE) {
+            params.tag = identityQueryTag;
+            queryHasIdentity = true;
             continue;
         }
-        std::string a;
-        uint16_t p;
-        if (splitAddress(a, p, a_query->sval[i])) {
-            params.query.emplace_back(0, a, p);
-        } else {
-            char *last;
-            uint64_t id = strtoull(a_query->sval[i], &last, 16);
-            if (*last)
-                return ERR_CODE_COMMAND_LINE;
-            params.query.emplace_back(id);
+        enum GatewayQueryTag gatewayTag = isGatewayTag(a_query->sval[i]);
+        if (gatewayTag != QUERY_GATEWAY_NONE) {
+            params.tag = gatewayTag;
+            queryHasGateway = true;
+            continue;
+        }
+        if (queryHasIdentity) {
+            DeviceOrGatewayIdentity id;
+            id.hasDevice = true;
+            if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {
+                 return ERR_CODE_COMMAND_LINE;
+            }
+            params.query.push_back(id);
+        }
+        if (queryHasGateway) {
+            std::string a;
+            uint16_t p;
+            DeviceOrGatewayIdentity id;
+            id.hasGateway = true;
+            if (splitAddress(a, p, a_query->sval[i])) {
+                // IP address
+                string2sockaddr(&id.gid.sockaddr, a, p);
+            } else {
+                char *last;
+                id.gid.gatewayId = strtoull(a_query->sval[i], &last, 16);
+                if (*last)
+                    return ERR_CODE_COMMAND_LINE;
+            }
+            params.query.push_back(id);
         }
     }
 
-    if (params.tag == QUERY_GATEWAY_LIST) {
+    if (params.tag == QUERY_IDENTITY_LIST || params.tag == QUERY_GATEWAY_LIST) {
+        DeviceOrGatewayIdentity id;
         if (params.query.empty()) {
-            params.query.emplace_back(0);
+            params.query.push_back(id);
         }
         if (a_offset->count) {
             params.offset = (size_t) *a_offset->ival;
