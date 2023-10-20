@@ -1654,6 +1654,13 @@ NETWORKIDENTITY::NETWORKIDENTITY(
 }
 
 NETWORKIDENTITY::NETWORKIDENTITY(
+    const NETWORKIDENTITY &id
+)
+    : devaddr(id.devaddr), devid(id.devid)
+{
+}
+
+NETWORKIDENTITY::NETWORKIDENTITY(
     const DEVICEID &id
 )
 {

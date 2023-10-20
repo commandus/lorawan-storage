@@ -44,13 +44,13 @@ public:
     std::string toJsonString() const override;
 };
 
-class IdentityEUIAddrRequest : public ServiceMessage {
+class IdentityAssignRequest : public ServiceMessage {
 public:
     NETWORKIDENTITY identity;
-    IdentityEUIAddrRequest();
-    // explicit IdentityEUIAddrRequest(const DeviceIdentity &identity);
-    IdentityEUIAddrRequest(char aTag, const NETWORKIDENTITY &identity, int32_t code, uint64_t accessCode);
-    IdentityEUIAddrRequest(const unsigned char *buf, size_t sz);
+    IdentityAssignRequest();
+    // explicit IdentityAssignRequest(const DeviceIdentity &identity);
+    IdentityAssignRequest(char aTag, const NETWORKIDENTITY &identity, int32_t code, uint64_t accessCode);
+    IdentityAssignRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -87,7 +87,7 @@ public:
     IdentityOperationResponse();
     IdentityOperationResponse(const IdentityOperationResponse& resp);
     IdentityOperationResponse(const unsigned char *buf, size_t sz);
-    explicit IdentityOperationResponse(const IdentityEUIAddrRequest &request);
+    explicit IdentityOperationResponse(const IdentityAssignRequest &request);
     explicit IdentityOperationResponse(const IdentityOperationRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;

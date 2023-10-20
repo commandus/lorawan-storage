@@ -117,7 +117,7 @@ void UDPClient::start() {
 #endif
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char *) &timeout, sizeof timeout);
 
-        unsigned char sendBuffer[40];
+        unsigned char sendBuffer[110];
         while (status != ERR_CODE_STOPPED) {
             if (!query) {
                 status = ERR_CODE_STOPPED;

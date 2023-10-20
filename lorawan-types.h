@@ -564,6 +564,7 @@ public:
 
 	NETWORKIDENTITY();
 	NETWORKIDENTITY(const DEVADDR &a, const DEVICEID &id);
+    NETWORKIDENTITY(const NETWORKIDENTITY &id);
     explicit NETWORKIDENTITY(const DEVICEID &id);
     explicit NETWORKIDENTITY(const DEVADDR &addr);
 	void set(const NETWORKIDENTITY &id);

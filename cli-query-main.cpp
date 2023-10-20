@@ -160,11 +160,11 @@ public:
 
 static CliGatewayQueryParams params;
 
-class OnResp : public ResponseIntf {
+class ResponsePrinter : public ResponseIntf {
 public:
     const std::vector<DeviceOrGatewayIdentity> &query;
     int verbose;
-    explicit OnResp(
+    explicit ResponsePrinter(
         const std::vector<DeviceOrGatewayIdentity> &aQuery,
         int aVerbose
     )
@@ -337,7 +337,7 @@ public:
                     req = new IdentityOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_ASSIGN:
-                    req = new IdentityEUIAddrRequest(params.tag, id.nid, params.code, params.accessCode);
+                    req = new IdentityAssignRequest(params.tag, id.nid, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_RM:
                     req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);
@@ -416,7 +416,7 @@ static bool mergeIdAddress(
 
 static void run()
 {
-	OnResp onResp(params.query, params.verbose);
+	ResponsePrinter onResp(params.query, params.verbose);
     QueryClient *client;
 #ifdef ENABLE_LIBUV
     client = new UvClient(params.useTcp, params.intf, params.port, &onResp);
@@ -473,7 +473,7 @@ int main(int argc, char **argv) {
         params.port = DEF_PORT;
     }
 
-    params.tag = QUERY_GATEWAY_ADDR;
+    params.tag = QUERY_IDENTITY_ADDR;
 
     params.query.reserve(a_query->count);
     bool queryHasIdentity = false;

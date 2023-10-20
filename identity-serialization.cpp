@@ -20,6 +20,7 @@
 #define SIZE_DEVICE_ADDR_REQUEST 17
 #define SIZE_DEVICE_EUI_ADDR_REQUEST 25
 #define SIZE_NETWORK_IDENTITY 95
+#define SIZE_ASSIGN_REQUEST 108
 #define SIZE_GET_RESPONSE 108
 
 #ifdef ENABLE_DEBUG
@@ -27,6 +28,71 @@
 #include "lorawan-string.h"
 #include "lorawan-msg.h"
 #endif
+
+static void serializeNETWORKIDENTITY(
+    unsigned char* retBuf,
+    const NETWORKIDENTITY &response
+)
+{
+    unsigned char *p = retBuf;
+    memmove(p, &response.devaddr.u, sizeof(uint32_t)); // 4
+    p += sizeof(uint32_t);
+    *(ACTIVATION *) p = response.devid.activation;	    // 1 activation type: ABP or OTAA
+    p++;
+    *(DEVICECLASS *) p = response.devid.deviceclass;	// 1 activation type: ABP or OTAA
+    p++;
+    ((DEVEUI *) p)->u = response.devid.devEUI.u;	    // 8 device identifier (ABP device may not store EUI) (14)
+    p += 8;
+    memmove(p, &response.devid.nwkSKey, 16);	        // 16 shared session key
+    p += 16;
+    memmove(p, &response.devid.appSKey, 16);	        // 16 private key
+    p += 16;
+    *(LORAWAN_VERSION *) p = response.devid.version;	// 1 (47)
+    p++;
+    // OTAA
+    ((DEVEUI *) p)->u = response.devid.appEUI.u;	    // 8 OTAA application identifier
+    p += 8;
+    memmove(p, &response.devid.appKey, 16);	            // 16 OTAA application private key
+    p += 16;
+    memmove(p, &response.devid.nwkKey, 16);	            // 16 OTAA OTAA network key
+    p += 16;
+    ((DEVNONCE *) p)->u = response.devid.devNonce.u;	// 2 last device nonce (87)
+    p += 2;
+    // added for searching
+    memmove(p, &response.devid.name, 8);	            // 8 (95)
+}
+
+static void deserializeNETWORKIDENTITY(
+    NETWORKIDENTITY &retVal,
+    const unsigned char* buf
+)
+{
+    memmove(&retVal.devaddr.u, buf, sizeof(uint32_t)); // 4
+    unsigned char *p = (unsigned char *) buf + sizeof(uint32_t);
+    retVal.devid.activation = *(ACTIVATION *) p;	    // 1 activation type: ABP or OTAA
+    p++;
+    retVal.devid.deviceclass = *(DEVICECLASS *) p;	// 1 activation type: ABP or OTAA
+    p++;
+    retVal.devid.devEUI.u = ((DEVEUI *) p)->u;	    // 8 device identifier (ABP device may not store EUI)
+    p += 8;
+    memmove(&retVal.devid.nwkSKey, p, 16);	        // 16 shared session key
+    p += 16;
+    memmove(&retVal.devid.appSKey, p, 16);	        // 16 private key
+    p += 16;
+    retVal.devid.version = *(LORAWAN_VERSION *) p;	// 1
+    p++;
+    // OTAA
+    retVal.devid.appEUI.u = ((DEVEUI *) p)->u;	    // 8 OTAA application identifier
+    p += 8;
+    memmove(&retVal.devid.appKey, p, 16);	            // 16 OTAA application private key
+    p += 16;
+    memmove(&retVal.devid.nwkKey, p, 16);	            // 16 OTAA OTAA network key
+    p += 16;
+    retVal.devid.devNonce.u = ((DEVNONCE *) p)->u;	// 2 last device nonce
+    p += 2;
+    // added for searching
+    memmove(&retVal.devid.name, p, 8);	            // 8
+}
 
 IdentityEUIRequest::IdentityEUIRequest()
     : ServiceMessage(QUERY_IDENTITY_ADDR, 0, 0), eui(0)
@@ -125,24 +191,24 @@ std::string IdentityAddrRequest::toJsonString() const
     return ss.str();
 }
 
-IdentityEUIAddrRequest::IdentityEUIAddrRequest()
+IdentityAssignRequest::IdentityAssignRequest()
     : ServiceMessage(QUERY_IDENTITY_ASSIGN, 0, 0), identity()
 {
 }
 
-IdentityEUIAddrRequest::IdentityEUIAddrRequest(
+IdentityAssignRequest::IdentityAssignRequest(
     const unsigned char *buf,
     size_t sz
 )
     : ServiceMessage(buf, sz)   // 13
 {
-    if (sz >= SIZE_DEVICE_EUI_ADDR_REQUEST) {
-        memmove(&identity.devid.devEUI.u, buf + SIZE_SERVICE_MESSAGE, sizeof(identity.devid.devEUI.u));   // 8
-        memmove(&identity.devaddr.u, buf + SIZE_SERVICE_MESSAGE + sizeof(identity.devid.devEUI.u), sizeof(identity.devaddr.u));   // 4
-    }   // 25
+    if (sz >= SIZE_ASSIGN_REQUEST) {
+        memmove(&identity.devaddr.u, buf + SIZE_SERVICE_MESSAGE, sizeof(identity.devaddr.u));   // 4
+        deserializeNETWORKIDENTITY(identity, buf + SIZE_SERVICE_MESSAGE);
+    }   // 108
 }
 
-IdentityEUIAddrRequest::IdentityEUIAddrRequest(
+IdentityAssignRequest::IdentityAssignRequest(
     char aTag,
     const NETWORKIDENTITY &aIdentity,
     int32_t code,
@@ -152,24 +218,23 @@ IdentityEUIAddrRequest::IdentityEUIAddrRequest(
 {
 }
 
-void IdentityEUIAddrRequest::ntoh()
+void IdentityAssignRequest::ntoh()
 {
     ServiceMessage::ntoh();
-    identity.devid.devEUI.u = NTOH8(identity.devid.devEUI.u);
     identity.devaddr.u = NTOH4(identity.devaddr.u);
+    identity.devid.devEUI.u = NTOH8(identity.devid.devEUI.u);
 }
 
-size_t IdentityEUIAddrRequest::serialize(
+size_t IdentityAssignRequest::serialize(
     unsigned char *retBuf
 ) const
 {
     ServiceMessage::serialize(retBuf);      // 13
-    memmove(retBuf + SIZE_SERVICE_MESSAGE, &identity.devid.devEUI.u, sizeof(identity.devid.devEUI.u)); // 8
-    memmove(retBuf + SIZE_SERVICE_MESSAGE + sizeof(identity.devid.devEUI.u), &identity.devaddr.u, sizeof(identity.devaddr.u)); // 4
-    return SIZE_DEVICE_EUI_ADDR_REQUEST;    // 25
+    serializeNETWORKIDENTITY(retBuf + SIZE_SERVICE_MESSAGE, identity);  // 95
+    return SIZE_ASSIGN_REQUEST;                           // 13 + 95 = 108
 }
 
-std::string IdentityEUIAddrRequest::toJsonString() const
+std::string IdentityAssignRequest::toJsonString() const
 {
     std::stringstream ss;
     ss << R"({"identity": ")" << identity.toJsonString() << "\"}";
@@ -258,72 +323,6 @@ static void ntohNETWORKIDENTITY(
     value.devid.devNonce.u = NTOH2(value.devid.devNonce.u);
 }
 
-static void serializeNETWORKIDENTITY(
-    unsigned char* retBuf,
-    const NETWORKIDENTITY &response
-)
-{
-    unsigned char *p = retBuf + SIZE_SERVICE_MESSAGE;
-
-    memmove(p, &response.devaddr.u, sizeof(uint32_t)); // 4
-    p += sizeof(uint32_t);
-    *(ACTIVATION *) p = response.devid.activation;	    // 1 activation type: ABP or OTAA
-    p++;
-    *(DEVICECLASS *) p = response.devid.deviceclass;	// 1 activation type: ABP or OTAA
-    p++;
-    ((DEVEUI *) p)->u = response.devid.devEUI.u;	    // 8 device identifier (ABP device may not store EUI) (14)
-    p += 8;
-    memmove(p, &response.devid.nwkSKey, 16);	        // 16 shared session key
-    p += 16;
-    memmove(p, &response.devid.appSKey, 16);	        // 16 private key
-    p += 16;
-    *(LORAWAN_VERSION *) p = response.devid.version;	// 1 (47)
-    p++;
-    // OTAA
-    ((DEVEUI *) p)->u = response.devid.appEUI.u;	    // 8 OTAA application identifier
-    p += 8;
-    memmove(p, &response.devid.appKey, 16);	            // 16 OTAA application private key
-    p += 16;
-    memmove(p, &response.devid.nwkKey, 16);	            // 16 OTAA OTAA network key
-    p += 16;
-    ((DEVNONCE *) p)->u = response.devid.devNonce.u;	// 2 last device nonce (87)
-    p += 2;
-    // added for searching
-    memmove(p, &response.devid.name, 8);	            // 8 (95)
-}
-
-static void deserializeNETWORKIDENTITY(
-    NETWORKIDENTITY &retVal,
-    const unsigned char* buf
-)
-{
-    memmove(&retVal.devaddr.u, buf, sizeof(uint32_t)); // 4
-    unsigned char *p = (unsigned char *) buf + sizeof(uint32_t);
-    retVal.devid.activation = *(ACTIVATION *) p;	    // 1 activation type: ABP or OTAA
-    p++;
-    retVal.devid.deviceclass = *(DEVICECLASS *) p;	// 1 activation type: ABP or OTAA
-    p++;
-    retVal.devid.devEUI.u = ((DEVEUI *) p)->u;	    // 8 device identifier (ABP device may not store EUI)
-    p += 8;
-    memmove(&retVal.devid.nwkSKey, p, 16);	        // 16 shared session key
-    p += 16;
-    memmove(&retVal.devid.appSKey, p, 16);	        // 16 private key
-    p += 16;
-    retVal.devid.version = *(LORAWAN_VERSION *) p;	// 1
-    p++;
-    // OTAA
-    retVal.devid.appEUI.u = ((DEVEUI *) p)->u;	    // 8 OTAA application identifier
-    p += 8;
-    memmove(&retVal.devid.appKey, p, 16);	            // 16 OTAA application private key
-    p += 16;
-    memmove(&retVal.devid.nwkKey, p, 16);	            // 16 OTAA OTAA network key
-    p += 16;
-    retVal.devid.devNonce.u = ((DEVNONCE *) p)->u;	// 2 last device nonce
-    p += 2;
-    // added for searching
-    memmove(&retVal.devid.name, p, 8);	            // 8
-}
-
 IdentityGetResponse::IdentityGetResponse(
     const unsigned char* buf,
     size_t sz
@@ -380,7 +379,7 @@ IdentityOperationResponse::IdentityOperationResponse(
 }
 
 IdentityOperationResponse::IdentityOperationResponse(
-    const IdentityEUIAddrRequest &request
+    const IdentityAssignRequest &request
 )
     : IdentityOperationRequest(request.tag, 0, 0, request.code, request.accessCode)
 {
@@ -582,7 +581,7 @@ size_t IdentitySerialization::query(
             }
         case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
             {
-                auto gr = (IdentityEUIAddrRequest *) pMsg;
+                auto gr = (IdentityAssignRequest *) pMsg;
                 r = new IdentityOperationResponse(*gr);
                 int errCode = svc->put(gr->identity.devaddr, gr->identity.devid);
                 ((IdentityOperationResponse *) r)->response = errCode;
@@ -592,7 +591,7 @@ size_t IdentitySerialization::query(
             }
         case QUERY_IDENTITY_RM:   // Remove entry
             {
-                auto gr = (IdentityEUIAddrRequest *) pMsg;
+                auto gr = (IdentityAssignRequest *) pMsg;
                 r = new IdentityOperationResponse(*gr);
                 int errCode = svc->rm(gr->identity.devaddr);
                 ((IdentityOperationResponse *) r)->response = errCode;
@@ -654,6 +653,8 @@ enum IdentityQueryTag validateIdentityQuery(
     size_t size
 )
 {
+    if (size == 0)
+        return QUERY_IDENTITY_NONE;
     switch (buffer[0]) {
         case QUERY_IDENTITY_ADDR:   // request gateway identifier(with address) by network address.
             if (size < SIZE_DEVICE_EUI_REQUEST)
@@ -746,14 +747,14 @@ ServiceMessage* deserializeIdentity(
             r = new IdentityAddrRequest(buf, sz);
             break;
         case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
-            if (sz < SIZE_DEVICE_EUI_ADDR_REQUEST)
+            if (sz < SIZE_ASSIGN_REQUEST)
                 return nullptr;
-            r = new IdentityEUIAddrRequest(buf, sz);
+            r = new IdentityAssignRequest(buf, sz);
             break;
         case QUERY_IDENTITY_RM:   // Remove entry
             if (sz < SIZE_DEVICE_EUI_REQUEST)   // it can contain id only(no address)
                 return nullptr;
-            r = new IdentityEUIAddrRequest(buf, sz);
+            r = new IdentityAssignRequest(buf, sz);
             break;
         case QUERY_IDENTITY_LIST:   // List entries
             if (sz < SIZE_OPERATION_REQUEST)
