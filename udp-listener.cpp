@@ -178,7 +178,7 @@ int UDPListener::run()
         unsigned char rBuf[307];
 
         while (status != ERR_CODE_STOPPED) {
-            ssize_t len = recvfrom(sock, rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr *) &source_addr, &socklen);
+            ssize_t len = recvfrom(sock, (char*) rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr*)&source_addr, & socklen);
             // Error occurred during receiving
             if (len < 0) {
                 if (SOCKET_ERRNO == SOCKET_ERROR_TIMEOUT) {    // timeout occurs
@@ -205,7 +205,7 @@ int UDPListener::run()
                 } else
                     sz = 0;
                 if (sz > 0) {
-                    if (sendto(sock, rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
+                    if (sendto(sock, (const char *) rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
                         if (log) {
                             log->strm(LOG_ERR) << ERR_SOCKET_WRITE
                                 << " " << ERR_MESSAGE << SOCKET_ERRNO;

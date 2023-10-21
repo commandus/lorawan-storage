@@ -233,7 +233,7 @@ GatewayOperationRequest::GatewayOperationRequest(
     int32_t code,
     uint64_t accessCode
 )
-    : ServiceMessage(tag, code, accessCode), offset(aOffset), size(aSize)
+    : ServiceMessage(tag, code, accessCode), offset((uint32_t) aOffset), size((uint8_t) aSize)
 {
 }
 
@@ -311,8 +311,8 @@ GatewayGetResponse::GatewayGetResponse(
 {
     if (sz >= SIZE_SERVICE_MESSAGE + sizeof(uint64_t)) {
         memmove(&response.gatewayId, buf + SIZE_SERVICE_MESSAGE, sizeof(uint64_t)); // 8
-        deserializeSocketAddress(&response.sockaddr, buf + SIZE_SERVICE_MESSAGE + sizeof(uint64_t), sz - SIZE_SERVICE_MESSAGE - sizeof(uint64_t))
-               + SIZE_SERVICE_MESSAGE + sizeof(uint64_t); // IPv4 28 IPv6 40
+        deserializeSocketAddress(&response.sockaddr, buf + SIZE_SERVICE_MESSAGE + sizeof(uint64_t), 
+            sz - SIZE_SERVICE_MESSAGE - sizeof(uint64_t)); // IPv4 28 IPv6 40
     }
 }
 
@@ -586,7 +586,7 @@ size_t GatewaySerialization::query(
         auto r = new GatewayOperationResponse;
         r->code = ERR_CODE_ACCESS_DENIED;
         r->ntoh();
-        *retBuf = r->serialize(retBuf);
+        r->serialize(retBuf);
         delete pMsg;
         return sizeof(GatewayOperationResponse);
     }
@@ -653,7 +653,7 @@ size_t GatewaySerialization::query(
             r->tag = gr->tag;
             r->code = CODE_OK;
             r->accessCode = gr->accessCode;
-            ((GatewayOperationResponse *) r)->response = svc->size();
+            ((GatewayOperationResponse *) r)->response = (uint32_t) svc->size();
             break;
         }
         case QUERY_GATEWAY_FORCE_SAVE:   // force save

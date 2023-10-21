@@ -254,7 +254,7 @@ IdentityOperationRequest::IdentityOperationRequest(
     int32_t code,
     uint64_t accessCode
 )
-    : ServiceMessage(tag, code, accessCode), offset(aOffset), size(aSize)
+    : ServiceMessage(tag, code, accessCode), offset((uint32_t) aOffset), size((uint8_t) aSize)
 {
 }
 
@@ -363,7 +363,7 @@ IdentityOperationResponse::IdentityOperationResponse()
 IdentityOperationResponse::IdentityOperationResponse(
     const IdentityOperationResponse& resp
 )
-    : IdentityOperationRequest(resp)
+    : IdentityOperationRequest(resp), response(resp.response)
 {
 }
 
@@ -381,14 +381,14 @@ IdentityOperationResponse::IdentityOperationResponse(
 IdentityOperationResponse::IdentityOperationResponse(
     const IdentityAssignRequest &request
 )
-    : IdentityOperationRequest(request.tag, 0, 0, request.code, request.accessCode)
+    : IdentityOperationRequest(request.tag, 0, 0, request.code, request.accessCode), response(0)
 {
 }
 
 IdentityOperationResponse::IdentityOperationResponse(
     const IdentityOperationRequest &request
 )
-    : IdentityOperationRequest(request)
+    : IdentityOperationRequest(request), response(0)
 {
 
 }
@@ -556,9 +556,9 @@ size_t IdentitySerialization::query(
         auto r = new IdentityOperationResponse;
         r->code = ERR_CODE_ACCESS_DENIED;
         r->ntoh();
-        *retBuf = r->serialize(retBuf);
+        size_t sz = r->serialize(retBuf);
         delete pMsg;
-        return sizeof(IdentityOperationResponse);
+        return sz;
     }
 
     ServiceMessage *r = nullptr;
@@ -622,7 +622,7 @@ size_t IdentitySerialization::query(
             r->tag = gr->tag;
             r->code = CODE_OK;
             r->accessCode = gr->accessCode;
-            ((IdentityOperationResponse *) r)->response = svc->size();
+            ((IdentityOperationResponse *) r)->response = (uint8_t) svc->size();
             break;
         }
         case QUERY_IDENTITY_FORCE_SAVE:   // force save

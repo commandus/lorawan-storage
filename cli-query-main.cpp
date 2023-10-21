@@ -233,7 +233,7 @@ public:
             if (params.verbose) {
                 std::cout << response->toJsonString() << std::endl;
             } else {
-                for (int i = 0; i < response->response; i++) {
+                for (auto i = 0; i < response->response; i++) {
                     std::cout << response->identities[i].toString() << std::endl;
                 }
             }
@@ -300,7 +300,7 @@ public:
             if (params.verbose) {
                 std::cout << response->toJsonString() << std::endl;
             } else {
-                for (int i = 0; i < response->response; i++) {
+                for (auto i = 0; i < response->response; i++) {
                     std::cout << std::hex << response->identities[i].gatewayId
                               << "\t" << sockaddr2string(&response->identities[i].sockaddr)
                               << std::endl;
