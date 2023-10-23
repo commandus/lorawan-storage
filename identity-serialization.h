@@ -37,7 +37,7 @@ class IdentityAddrRequest : public ServiceMessage {
 public:
     DEVADDR addr;   // 4 bytes
     IdentityAddrRequest();
-    IdentityAddrRequest(const DEVADDR &addr, int32_t code, uint64_t accessCode);
+    IdentityAddrRequest(char aTag, const DEVADDR &addr, int32_t code, uint64_t accessCode);
     IdentityAddrRequest(const unsigned char *buf, size_t sz);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
@@ -83,11 +83,12 @@ public:
 
 class IdentityOperationResponse : public IdentityOperationRequest {
 public:
-    uint32_t response;
+    int32_t response;   // <0 - error
     IdentityOperationResponse();
     IdentityOperationResponse(const IdentityOperationResponse& resp);
     IdentityOperationResponse(const unsigned char *buf, size_t sz);
     explicit IdentityOperationResponse(const IdentityAssignRequest &request);
+    explicit IdentityOperationResponse(const IdentityAddrRequest &request);
     explicit IdentityOperationResponse(const IdentityOperationRequest &request);
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;

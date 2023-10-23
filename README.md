@@ -117,6 +117,58 @@ sudo apt install libuv1-dev gettext
 
 ### lorawan-query
 
+Manipulate device records by commands:
+
+- address <identifier>
+- identifier <address>
+- assign {<record>}
+- list
+- remove <address> | <identifier>
+
+record is a comma-separated string consists of
+- address
+- activation type: ABP or OTAA
+- device class;: A, B or C
+- device EUI identifier (up to 16 hexadecimal digits, 8 bytes)
+- nwkSKey- shared session key, 16 bytes
+- appSKey- private key, 16 bytes
+- LoRaWAN version, e.g. 1.0.0
+- appEUI OTAA application identifier
+- appKey OTAA application private key
+- nwkKey OTAA network key
+- devNonce last device nonce, 2 bytes
+- joinNonce last Join nonce, 3 bytes
+- device name (up to 8 ASCII characters)
+
+e.g.
+```
+aabbccdd,OTAA,A,2233445566778899,112233445566778899aabbccddeeff00,55000000000000000000000000000066,1.0.0,ff000000000000ff,cc0000000000000000000000000000dd,77000000000000000000000000000088,1a2b,112233,DeviceNam
+```
+is a record of device with assigned address 'aabbccdd'. 
+
+Create an empty record with reserved address 11aa22bb: 
+
+```
+./lorawan-query assign 11aa22bb
+```
+
+In the example above all properties except address skipped.  
+
+Query device record by address:
+```
+./lorawan-query identifier aabbccdd
+```
+
+Remove record by address: 
+```
+./lorawan-query remove aabbccdd
+```
+
+List records
+```
+./lorawan-query list
+```
+
 Manipulate gateway records by commands:
 
 - gw-address <identifier>

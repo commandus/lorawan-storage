@@ -177,7 +177,7 @@ public:
         const int32_t code,
         const int errorCode
     ) override {
-        std::cerr << "error " << code << ", errno: " << errno << "\n";
+        std::cerr << ERR_MESSAGE << code << ", errno: " << errorCode << "\n";
         client->stop();
         params.retCode = code;
     }
@@ -340,14 +340,14 @@ public:
                     req = new IdentityAssignRequest(params.tag, id.nid, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_RM:
-                    req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);
+                    req = new IdentityAddrRequest(params.tag, id.nid.devaddr, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_FORCE_SAVE:
                     break;
                 case QUERY_IDENTITY_CLOSE_RESOURCES:
                     break;
                 case QUERY_IDENTITY_EUI:
-                    req = new IdentityAddrRequest(id.nid.devaddr, params.code, params.accessCode);
+                    req = new IdentityAddrRequest(QUERY_IDENTITY_EUI, id.nid.devaddr, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_ADDR:
                     req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);

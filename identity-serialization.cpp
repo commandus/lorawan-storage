@@ -165,11 +165,12 @@ IdentityAddrRequest::IdentityAddrRequest(
 }
 
 IdentityAddrRequest::IdentityAddrRequest(
+    char aTag,
     const DEVADDR &aAddr,
     int32_t code,
     uint64_t accessCode
 )
-    : ServiceMessage(QUERY_IDENTITY_EUI, code, accessCode)
+    : ServiceMessage(aTag, code, accessCode)
 {
     addr.u = aAddr.u;
 }
@@ -384,6 +385,14 @@ IdentityOperationResponse::IdentityOperationResponse(
 }
 
 IdentityOperationResponse::IdentityOperationResponse(
+    const IdentityAddrRequest &request
+)
+    : IdentityOperationRequest(request.tag, 0, 0, request.code, request.accessCode), response(0)
+{
+}
+
+
+IdentityOperationResponse::IdentityOperationResponse(
     const IdentityAssignRequest &request
 )
     : IdentityOperationRequest(request.tag, 0, 0, request.code, request.accessCode), response(0)
@@ -409,9 +418,8 @@ size_t IdentityOperationResponse::serialize(
 {
     IdentityOperationRequest::serialize(retBuf);                                // 18
     if (retBuf)
-        memmove(retBuf + SIZE_OPERATION_REQUEST, &response,
-                sizeof(response));                                      // 4
-    return SIZE_OPERATION_RESPONSE;                                     // 22
+        memmove(retBuf + SIZE_OPERATION_REQUEST, &response, sizeof(response));  // 4
+    return SIZE_OPERATION_RESPONSE;                                             // 22
 }
 
 std::string IdentityOperationResponse::toJsonString() const {
@@ -596,9 +604,9 @@ size_t IdentitySerialization::query(
             }
         case QUERY_IDENTITY_RM:   // Remove entry
             {
-                auto gr = (IdentityAssignRequest *) pMsg;
+                auto gr = (IdentityAddrRequest *) pMsg;
                 r = new IdentityOperationResponse(*gr);
-                int errCode = svc->rm(gr->identity.devaddr);
+                int errCode = svc->rm(gr->addr);
                 ((IdentityOperationResponse *) r)->response = errCode;
                 if (errCode == 0)
                     ((IdentityOperationResponse *) r)->size = 1;    // count of deleted entries
@@ -757,9 +765,9 @@ ServiceMessage* deserializeIdentity(
             r = new IdentityAssignRequest(buf, sz);
             break;
         case QUERY_IDENTITY_RM:   // Remove entry
-            if (sz < SIZE_DEVICE_EUI_REQUEST)   // it can contain id only(no address)
+            if (sz < SIZE_DEVICE_ADDR_REQUEST)   // it can contain id only(no address)
                 return nullptr;
-            r = new IdentityAssignRequest(buf, sz);
+            r = new IdentityAddrRequest(buf, sz);
             break;
         case QUERY_IDENTITY_LIST:   // List entries
             if (sz < SIZE_OPERATION_REQUEST)
