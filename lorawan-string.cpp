@@ -106,7 +106,7 @@ std::string DEVICENAME2string(
 	const DEVICENAME &value
 )
 {
-	size_t sz = strnlen(value.c, sizeof(DEVICENAME));
+	size_t sz = strnlen(value.c, sizeof(DEVICENAME::c));
 	return std::string(value.c, sz);
 }
 
@@ -184,7 +184,10 @@ DEVNONCE string2DEVNONCE(
     const std::string &value
 )
 {
-    return (DEVNONCE) strtol(value.c_str(), nullptr, 16);
+    DEVNONCE r;
+    r.u = strtoul(value.c_str(), nullptr, 16);
+    r.u = NTOH2(r.u);
+    return r;
 }
 
 std::string JOIN_ACCEPT_FRAME_HEADER2string(
@@ -236,8 +239,6 @@ std::string JOIN_REQUEST_FRAME2string(
        + R"("devNonce": ")" + DEVNONCE2string(value.devNonce) + "\"}";
 }
 
-
-
 std::string JOIN_ACCEPT_FRAME_CFLIST2string(
     const JOIN_ACCEPT_FRAME_CFLIST &value
 ) {
@@ -268,7 +269,7 @@ std::string activation2string(
     ACTIVATION value
 )
 {
-    if ((uint8_t) value > OTAA)
+    if ((unsigned int) value > OTAA)
         value = ABP;
     return ACTIVATION_NAMES[value];
 }
@@ -509,7 +510,7 @@ void string2DEVICENAME(
 	const char *str
 )
 {
-	strncpy(retval.c, str, sizeof(DEVICENAME));
+	strncpy(retval.c, str, sizeof(DEVICENAME::c));
 }
 
 void string2JOINNONCE(
@@ -517,10 +518,10 @@ void string2JOINNONCE(
     const std::string &value
 )
 {
-    uint32_t r = NTOH4(strtol(value.c_str(), nullptr, 16));
-    retval.c[0] = r & 0xff;
+    uint32_t r = strtol(value.c_str(), nullptr, 16);
+    retval.c[2] = r & 0xff;
     retval.c[1] = (r >> 8) & 0xff;
-    retval.c[2] = (r >> 16) & 0xff;
+    retval.c[0] = (r >> 16) & 0xff;
 }
 
 void string2APPNONCE(
@@ -528,10 +529,10 @@ void string2APPNONCE(
 	const std::string& value
 )
 {
-	uint32_t r = NTOH4(strtol(value.c_str(), nullptr, 16));
-	retval.c[0] = r & 0xff;
+	uint32_t r = strtol(value.c_str(), nullptr, 16);
+	retval.c[2] = r & 0xff;
 	retval.c[1] = (r >> 8) & 0xff;
-	retval.c[2] = (r >> 16) & 0xff;
+	retval.c[0] = (r >> 16) & 0xff;
 }
 
 void string2NETID(

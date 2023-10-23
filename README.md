@@ -113,34 +113,52 @@ sudo apt install libuv1-dev gettext
 - lorawan-gateway-service
 - lorawan-gateway-query
 
-### lorawan-gateway-service
+### lorawan-service
 
-### lorawan-gateway-query
+### lorawan-query
 
-Options
+Manipulate gateway records by commands:
+
+- gw-address <identifier>
+- gw-identifier <address> 
+- gw-assign {<address> <identifier>}
+- gw-list
+- gw-remove <address> | <identifier> 
+
+gw-remove remove record by address or identifier
+
+Options:
 
 - -c code (account#)
 - -a access code hexadecimal 64-bit number e.g. 2A0000002A
-- -s service address:port e.g. 10.2.104.51:4242 
+- -s service address:port e.g. 10.2.104.51:4242
+- -o offset default 0. Applicable for gw-list only
+- -z size default 10. Applicable for gw-list only
 
 Examples:
+
 ```
-./lorawan-gateway-query 00550116 01450330 34313235 01450340 -c 42 -a 2A0000002A -s 10.2.104.51:4242 
-ABP A 323934344a386d0c 3338470c32393434170026004a386d0c 17002600323934343338470c65717b40 1.0.0 0000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 0000 000000 sh-2-1
-ABP C 3434383566378112 313747123434383535003a0066378888 35003a003434383531374712656b7f47 1.0.0 0000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 0000 000000 SI-13-23
-ABP A 3231323549304c0a 34313235343132353431323534313235 34313235343132353431323534313235 1.0.0 0000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 0000 000000 pak811-1
-ABP A 1234567890102030 2b7e151628aed2a6abf7158809cf4f3c 2b7e151628aed2a6abf7158809cf4f3c 1.0.0 0000000000000000 00000000000000000000000000000000 00000000000000000000000000000000 0000 000000 oled
+./lorawan-query gw-assign 11 1.2.3.4:5 12 1.2.3.4:5 13 1.2.3.4:5 14 1.2.3.4:5 15 1.2.3.4:5 16 1.2.3.4:5 17 1.2.3.4:5 18 1.2.3.4:5 19 1.2.3.4:5 20 1.2.3.4:5 21 1.2.3.4:5 22 1.2.3.4:5 23 1.2.3.4:5 24 1.2.3.4:5 25 1.2.3.4:5 26 1.2.3.4:5 27 1.2.3.4:5 28 1.2.3.4:5 29 1.2.3.4:5 30 1.2.3.4:5 -v
+./lorawan-query gw-list
+./lorawan-query gw-list -o 9
+./lorawan-query gw-remove 12
+./lorawan-query gw-list
+./lorawan-query gw-address 11
+./lorawan-query gw-address 1.2.3.4:5
+./lorawan-query gw-identifier 1.2.3.4:5
 ```
 
-## Test
+## Tests
+
+### Test gateway storage
 
 UDP
 ```
-echo '4c0000002a000000000000002a0000000004' | xxd -r -p | nc -u 127.0.0.1 4244 -w 1 | xxd -p
+echo '4c0000002a000000000000002a000000000a' | xxd -r -p | nc -u 127.0.0.1 4244 -w 1 | xxd -p
 ```
 
 TCP 
 ```
-echo '4c0000002a000000000000002a0000000004' | xxd -r -p | nc 127.0.0.1 4244 -w 1 | xxd -p
+echo '4c0000002a000000000000002a000000000a' | xxd -r -p | nc 127.0.0.1 4244 -w 1 | xxd -p
 ```
 

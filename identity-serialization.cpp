@@ -19,9 +19,9 @@
 #define SIZE_DEVICE_EUI_REQUEST   21
 #define SIZE_DEVICE_ADDR_REQUEST 17
 #define SIZE_DEVICE_EUI_ADDR_REQUEST 25
-#define SIZE_NETWORK_IDENTITY 95
-#define SIZE_ASSIGN_REQUEST 108
-#define SIZE_GET_RESPONSE 108
+#define SIZE_NETWORK_IDENTITY 141
+#define SIZE_ASSIGN_REQUEST 154
+#define SIZE_GET_RESPONSE 154
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -35,31 +35,34 @@ static void serializeNETWORKIDENTITY(
 )
 {
     unsigned char *p = retBuf;
-    memmove(p, &response.devaddr.u, sizeof(uint32_t)); // 4
+    memmove(p, &response.devaddr.u, sizeof(uint32_t));      // 4
     p += sizeof(uint32_t);
-    *(ACTIVATION *) p = response.devid.activation;	    // 1 activation type: ABP or OTAA
+    *(uint8_t *) p = (uint8_t) response.devid.activation;	// 1 activation type: ABP or OTAA
     p++;
-    *(DEVICECLASS *) p = response.devid.deviceclass;	// 1 activation type: ABP or OTAA
+    *(uint8_t *) p = (uint8_t) response.devid.deviceclass;	// 1 DEVICECLASS: A, B. C
     p++;
-    ((DEVEUI *) p)->u = response.devid.devEUI.u;	    // 8 device identifier (ABP device may not store EUI) (14)
+    ((DEVEUI *) p)->u = response.devid.devEUI.u;	        // 8 device identifier (ABP device may not store EUI) (14)
     p += 8;
-    memmove(p, &response.devid.nwkSKey, 16);	        // 16 shared session key
+    memmove(p, &response.devid.nwkSKey, 16);	            // 16 shared session key
     p += 16;
-    memmove(p, &response.devid.appSKey, 16);	        // 16 private key
+    memmove(p, &response.devid.appSKey, 16);	            // 16 private key
     p += 16;
-    *(LORAWAN_VERSION *) p = response.devid.version;	// 1 (47)
+    *(uint8_t *) p = response.devid.version.c;	            // 1 LORAWAN_VERSION 1
     p++;
     // OTAA
-    ((DEVEUI *) p)->u = response.devid.appEUI.u;	    // 8 OTAA application identifier
+    ((DEVEUI *) p)->u = response.devid.appEUI.u;	        // 8 OTAA application identifier
     p += 8;
-    memmove(p, &response.devid.appKey, 16);	            // 16 OTAA application private key
+    memmove(p, &response.devid.appKey, 16);	                // 16 OTAA application private key
     p += 16;
-    memmove(p, &response.devid.nwkKey, 16);	            // 16 OTAA OTAA network key
+    memmove(p, &response.devid.nwkKey, 16);	                // 16 OTAA OTAA network key
     p += 16;
-    ((DEVNONCE *) p)->u = response.devid.devNonce.u;	// 2 last device nonce (87)
+    ((DEVNONCE *) p)->u = response.devid.devNonce.u;	    // 2 last device nonce (87)
     p += 2;
+    memmove(p, &response.devid.joinNonce.c, 3);	// 3 Join nonce
+    p += 3;
+
     // added for searching
-    memmove(p, &response.devid.name, 8);	            // 8 (95)
+    memmove(p, &response.devid.name, 8);	                // 8 total 141
 }
 
 static void deserializeNETWORKIDENTITY(
@@ -69,9 +72,9 @@ static void deserializeNETWORKIDENTITY(
 {
     memmove(&retVal.devaddr.u, buf, sizeof(uint32_t)); // 4
     unsigned char *p = (unsigned char *) buf + sizeof(uint32_t);
-    retVal.devid.activation = *(ACTIVATION *) p;	    // 1 activation type: ABP or OTAA
+    retVal.devid.activation = (ACTIVATION) *(uint8_t *) p;	    // 1 activation type: ABP or OTAA
     p++;
-    retVal.devid.deviceclass = *(DEVICECLASS *) p;	// 1 activation type: ABP or OTAA
+    retVal.devid.deviceclass = (DEVICECLASS) *(uint8_t *) p;	// 1 Device class: A, B, C
     p++;
     retVal.devid.devEUI.u = ((DEVEUI *) p)->u;	    // 8 device identifier (ABP device may not store EUI)
     p += 8;
@@ -79,17 +82,19 @@ static void deserializeNETWORKIDENTITY(
     p += 16;
     memmove(&retVal.devid.appSKey, p, 16);	        // 16 private key
     p += 16;
-    retVal.devid.version = *(LORAWAN_VERSION *) p;	// 1
+    retVal.devid.version = (LORAWAN_VERSION) *(uint8_t *) p;	// 1
     p++;
     // OTAA
     retVal.devid.appEUI.u = ((DEVEUI *) p)->u;	    // 8 OTAA application identifier
     p += 8;
-    memmove(&retVal.devid.appKey, p, 16);	            // 16 OTAA application private key
+    memmove(&retVal.devid.appKey, p, 16);	        // 16 OTAA application private key
     p += 16;
-    memmove(&retVal.devid.nwkKey, p, 16);	            // 16 OTAA OTAA network key
+    memmove(&retVal.devid.nwkKey, p, 16);	        // 16 OTAA OTAA network key
     p += 16;
     retVal.devid.devNonce.u = ((DEVNONCE *) p)->u;	// 2 last device nonce
     p += 2;
+    memmove(&retVal.devid.joinNonce.c, &(((JOINNONCE *) p)->c), 3);	// 3 Join nonce
+    p += 3;
     // added for searching
     memmove(&retVal.devid.name, p, 8);	            // 8
 }
@@ -230,8 +235,8 @@ size_t IdentityAssignRequest::serialize(
 ) const
 {
     ServiceMessage::serialize(retBuf);      // 13
-    serializeNETWORKIDENTITY(retBuf + SIZE_SERVICE_MESSAGE, identity);  // 95
-    return SIZE_ASSIGN_REQUEST;                           // 13 + 95 = 108
+    serializeNETWORKIDENTITY(retBuf + SIZE_SERVICE_MESSAGE, identity);  // 141
+    return SIZE_ASSIGN_REQUEST;                           // 13 + 141 = 154
 }
 
 std::string IdentityAssignRequest::toJsonString() const
