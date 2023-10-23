@@ -554,6 +554,7 @@ public:
 	std::string toJsonString() const;
 	void setProperties(std::map<std::string, std::string> &retval);
 
+    bool empty() const;
 };					// 44 bytes + 8 + 18 = 70
 
 class NETWORKIDENTITY {

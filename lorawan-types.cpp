@@ -1640,6 +1640,11 @@ void DEVICEID::setProperties
 	retval["version"] = LORAWAN_VERSION2string(version);
 }
 
+bool DEVICEID::empty() const
+{
+    return devEUI.u == 0;
+}
+
 NETWORKIDENTITY::NETWORKIDENTITY()
 {
 }

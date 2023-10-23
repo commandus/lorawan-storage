@@ -187,10 +187,12 @@ public:
         const IdentityGetResponse *response
     ) override {
         if (response) {
-            if (params.verbose)
-                std::cout << response->toJsonString() << std::endl;
-            else
-                std::cout << response->response.toString() << std::endl;
+            if (!response->response.devid.empty()) {
+                if (params.verbose)
+                    std::cout << response->toJsonString() << std::endl;
+                else
+                    std::cout << response->response.toString() << std::endl;
+            }
             if (!next(client)) {
                 client->stop();
             }
@@ -352,7 +354,6 @@ public:
                 case QUERY_IDENTITY_ADDR:
                     req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);
                     break;
-
                 // gateway
                 case QUERY_GATEWAY_LIST:
                     req = new GatewayOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
@@ -494,8 +495,12 @@ int main(int argc, char **argv) {
         if (queryHasIdentity) {
             DeviceOrGatewayIdentity id;
             id.hasDevice = true;
-            if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {
-                 return ERR_CODE_COMMAND_LINE;
+            if (params.tag == QUERY_IDENTITY_ADDR) {
+                if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {
+                    return ERR_CODE_COMMAND_LINE;
+                }
+            } else {
+                string2DEVADDR(id.nid.devaddr, a_query->sval[i]);
             }
             params.query.push_back(id);
         }

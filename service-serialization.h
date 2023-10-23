@@ -27,8 +27,8 @@ public:
  * @return 0 (unknown family), 7 (IPv4, 19(IPv6)
  */
 size_t serializeSocketAddress(
-        unsigned char *retBuf,
-        const struct sockaddr *addr
+    unsigned char *retBuf,
+    const struct sockaddr *addr
 );
 
 size_t deserializeSocketAddress(

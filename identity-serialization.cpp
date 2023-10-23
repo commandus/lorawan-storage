@@ -581,7 +581,7 @@ size_t IdentitySerialization::query(
                 auto gr = (IdentityEUIRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
                 memmove(&((IdentityGetResponse*) r)->response.devid, &gr->eui, sizeof(gr->eui));
-                svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
+                int errCode = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
                 break;
             }
         case QUERY_IDENTITY_EUI:   // request gateway address (with identifier) by identifier. Return 0 if success
@@ -589,16 +589,15 @@ size_t IdentitySerialization::query(
                 auto gr = (IdentityAddrRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
                 memmove(&((IdentityGetResponse*) r)->response.devaddr, &gr->addr, sizeof(uint32_t));
-                r->code = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
+                int errCode = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
                 break;
             }
         case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
             {
                 auto gr = (IdentityAssignRequest *) pMsg;
                 r = new IdentityOperationResponse(*gr);
-                int errCode = svc->put(gr->identity.devaddr, gr->identity.devid);
-                ((IdentityOperationResponse *) r)->response = errCode;
-                if (errCode == 0)
+                ((IdentityOperationResponse*) r)->response = svc->put(gr->identity.devaddr, gr->identity.devid);
+                if (((IdentityOperationResponse*) r)->response == 0)
                     ((IdentityOperationResponse *) r)->size = 1;    // count of placed entries
                 break;
             }
@@ -606,9 +605,8 @@ size_t IdentitySerialization::query(
             {
                 auto gr = (IdentityAddrRequest *) pMsg;
                 r = new IdentityOperationResponse(*gr);
-                int errCode = svc->rm(gr->addr);
-                ((IdentityOperationResponse *) r)->response = errCode;
-                if (errCode == 0)
+                ((IdentityOperationResponse*) r)->response = svc->rm(gr->addr);
+                if (((IdentityOperationResponse*) r)->response == 0)
                     ((IdentityOperationResponse *) r)->size = 1;    // count of deleted entries
                 break;
             }
@@ -616,7 +614,7 @@ size_t IdentitySerialization::query(
         {
             auto gr = (IdentityOperationRequest *) pMsg;
             r = new IdentityListResponse(*gr);
-            svc->list(((IdentityListResponse *) r)->identities, gr->offset, gr->size);
+            ((IdentityOperationResponse*) r)->response = svc->list(((IdentityListResponse *) r)->identities, gr->offset, gr->size);
             size_t idSize = ((IdentityListResponse *) r)->identities.size();
             size_t serSize = SIZE_OPERATION_RESPONSE + (idSize * SIZE_NETWORK_IDENTITY);
             if (serSize > retSize) {
