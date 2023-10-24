@@ -68,11 +68,18 @@ size_t MemoryIdentityService::size()
 * @return CODE_OK- success
 */
 int MemoryIdentityService::getNetworkIdentity(
-    NETWORKIDENTITY &retval,
+    NETWORKIDENTITY &retVal,
     const DEVEUI &eui
 )
 {
-    return CODE_OK;
+    for(auto it(storage.begin()); it != storage.end(); it++) {
+        if (it->second.devEUI.u == eui.u) {
+            retVal.devaddr = it->first;
+            retVal.devid = it->second;
+            return CODE_OK;
+        }
+    }
+    return ERR_CODE_GATEWAY_NOT_FOUND;
 }
 
 /**

@@ -581,7 +581,17 @@ size_t IdentitySerialization::query(
                 auto gr = (IdentityEUIRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
                 memmove(&((IdentityGetResponse*) r)->response.devid, &gr->eui, sizeof(gr->eui));
-                int errCode = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
+                int errCode;
+                if (((IdentityGetResponse*) r)->response.devaddr.empty())
+                    errCode = svc->getNetworkIdentity(((IdentityGetResponse*) r)->response,
+                        ((IdentityGetResponse*) r)->response.devid.devEUI);
+                else
+                    errCode = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
+
+                if (errCode) {
+                    // indicate nothing there
+                    ((IdentityGetResponse*) r)->response.devid.devEUI.u = 0;
+                }
                 break;
             }
         case QUERY_IDENTITY_EUI:   // request gateway address (with identifier) by identifier. Return 0 if success

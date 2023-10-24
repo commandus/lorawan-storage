@@ -304,8 +304,8 @@ public:
             } else {
                 for (auto i = 0; i < response->response; i++) {
                     std::cout << std::hex << response->identities[i].gatewayId
-                              << "\t" << sockaddr2string(&response->identities[i].sockaddr)
-                              << std::endl;
+                        << "\t" << sockaddr2string(&response->identities[i].sockaddr)
+                        << std::endl;
                 }
             }
             if (!next(client)) {
@@ -495,12 +495,17 @@ int main(int argc, char **argv) {
         if (queryHasIdentity) {
             DeviceOrGatewayIdentity id;
             id.hasDevice = true;
-            if (params.tag == QUERY_IDENTITY_ADDR) {
-                if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {
-                    return ERR_CODE_COMMAND_LINE;
-                }
-            } else {
-                string2DEVADDR(id.nid.devaddr, a_query->sval[i]);
+            switch (params.tag) {
+                case QUERY_IDENTITY_ADDR:
+                    string2DEVEUI(id.nid.devid.devEUI, a_query->sval[i]);
+                    break;
+                case QUERY_IDENTITY_EUI:
+                    string2DEVADDR(id.nid.devaddr, a_query->sval[i]);
+                    break;
+                default:
+                    if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {
+                        return ERR_CODE_PARAM_INVALID;
+                    }
             }
             params.query.push_back(id);
         }
