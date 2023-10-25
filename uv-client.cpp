@@ -13,6 +13,8 @@
 #else
 #include <netinet/in.h>
 #include <unistd.h>
+#include <iostream>
+
 #define SOCKET int
 #endif
 
@@ -35,31 +37,59 @@ static void parseResponse(
 ) {
     if (!client)
         return;
-    enum CliGatewayQueryTag tag = validateQuery(buf, nRead);
-    switch (tag) {
-        case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
-        case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
-        {
-            GetResponse gr(buf, nRead);
-            gr.ntoh();
-            client->onResponse->onGet(client, &gr);
+    if (isIdentityTag(buf, nRead)) {
+        enum IdentityQueryTag tag = validateIdentityQuery(buf, nRead);
+        switch (tag) {
+            case QUERY_IDENTITY_EUI:   // request gateway identifier(with address) by network address.
+            case QUERY_IDENTITY_ADDR:   // request gateway address (with identifier) by identifier.
+            {
+                IdentityGetResponse gr(buf, nRead);
+                gr.ntoh();
+                client->onResponse->onIdentityGet(client, &gr);
+            }
+                break;
+            case QUERY_IDENTITY_LIST:   // List entries
+            {
+                IdentityListResponse gr(buf, nRead);
+                gr.response = NTOH4(gr.response);
+                gr.ntoh();
+                client->onResponse->onIdentityList(client, &gr);
+            }
+                break;
+            default: {
+                IdentityOperationResponse gr(buf, nRead);
+                gr.ntoh();
+                client->onResponse->onIdentityOperation(client, &gr);
+            }
+                break;
         }
-            break;
-        case QUERY_GATEWAY_LIST:   // List entries
-        {
-            ListResponse gr(buf, nRead);
-            gr.response = NTOH4(gr.response);
-            gr.ntoh();
-            client->onResponse->onList(client, &gr);
+
+    } else {
+        enum GatewayQueryTag tag = validateGatewayQuery(buf, nRead);
+        switch (tag) {
+            case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
+            case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
+            {
+                GatewayGetResponse gr(buf, nRead);
+                gr.ntoh();
+                client->onResponse->onGatewayGet(client, &gr);
+            }
+                break;
+            case QUERY_GATEWAY_LIST:   // List entries
+            {
+                GatewayListResponse gr(buf, nRead);
+                gr.response = NTOH4(gr.response);
+                gr.ntoh();
+                client->onResponse->onGatewayList(client, &gr);
+            }
+                break;
+            default: {
+                GatewayOperationResponse gr(buf, nRead);
+                gr.ntoh();
+                client->onResponse->onGatewayOperation(client, &gr);
+            }
+                break;
         }
-            break;
-        default:
-        {
-            OperationResponse gr(buf, nRead);
-            gr.ntoh();
-            client->onResponse->onStatus(client, &gr);
-        }
-            break;
     }
 }
 
@@ -222,13 +252,20 @@ void UvClient::stop()
     if (!loop)
         return;
     uv_stop(loop);
+}
+
+void UvClient::finish()
+{
     int result = uv_loop_close(loop);
-    if (result == UV_EBUSY) {
+    if (result == UV_EBUSY && uv_loop_alive(loop)) {
         uv_walk(loop, [](uv_handle_t* handle, void* arg) {
-            if (!uv_is_closing(handle))
+            if (handle->loop && !uv_is_closing(handle))
                 uv_close(handle, nullptr);
-            }, nullptr);
-        uv_run(loop, UV_RUN_DEFAULT);
+        }, nullptr);
+        int r;
+        do {
+            r = uv_run(loop, UV_RUN_ONCE);
+        } while (r != 0);
         uv_loop_close(loop);
     }
 }
@@ -241,7 +278,7 @@ UvClient::UvClient(
     uint16_t aPort,
 	ResponseIntf *aOnResponse
 )
-	: GatewayClient(aOnResponse), useTcp(aUseTcp), status(0), tcpConnected(false), query(nullptr)
+	: QueryClient(aOnResponse), useTcp(aUseTcp), status(0), tcpConnected(false), query(nullptr)
 {
     int r;
     if (isAddrStringIPv6(aHost.c_str()))
@@ -309,4 +346,5 @@ ServiceMessage* UvClient::request(
 
 void UvClient::start() {
     uv_run(loop, UV_RUN_DEFAULT);
+    finish();
 }

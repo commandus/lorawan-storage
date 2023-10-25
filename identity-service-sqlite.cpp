@@ -97,7 +97,7 @@ int SqliteIdentityService::list(
             continue;
         NETWORKIDENTITY ni;
         row2DEVICEID(ni.devid, row);
-        ni.devaddr = row[13];
+        ni.devaddr = row[12];
         retVal.push_back(ni);
     }
     return CODE_OK;
@@ -152,21 +152,26 @@ int SqliteIdentityService::put(
         return ERR_CODE_DB_DATABASE_NOT_FOUND;
     char *zErrMsg = nullptr;
     std::stringstream statement;
-    statement << "INSERT INTO gateway (" FIELD_LIST ", addr) VALUES ('"
-        << "'" << activation2string(id.activation) << "', "
-        << "'" << deviceclass2string(id.deviceclass) << "', "
-        << "'" << DEVEUI2string(id.devEUI) << "', "
-        << "'" << KEY2string(id.nwkSKey) << "', "
-        << "'" << KEY2string(id.appSKey) << "', "
-        << "'" << LORAWAN_VERSION2string(id.version) << "', "
-        << "'" << DEVEUI2string(id.appEUI) << "', "
-        << "'" << KEY2string(id.appKey) << "', "
-        << "'" << KEY2string(id.nwkKey) << "', "
-        << "'" << DEVNONCE2string(id.devNonce) << "', "
-        << "'" << JOINNONCE2string(id.joinNonce) << "', "
-        << "'" << DEVICENAME2string(id.name) << "', "
-        << "'" << DEVADDR2string(devAddr)
-        << "') ON CONFLICT(addr) DO UPDATE SET addr=excluded.addr";
+
+    statement << "INSERT INTO device(" FIELD_LIST ") VALUES ('"
+              << activation2string(id.activation) << "', "
+              << "'" << deviceclass2string(id.deviceclass) << "', "
+              << "'" << DEVEUI2string(id.devEUI) << "', "
+              << "'" << KEY2string(id.nwkSKey) << "', "
+              << "'" << KEY2string(id.appSKey) << "', "
+              << "'" << LORAWAN_VERSION2string(id.version) << "', "
+              << "'" << DEVEUI2string(id.appEUI) << "', "
+              << "'" << KEY2string(id.appKey) << "', "
+              << "'" << KEY2string(id.nwkKey) << "', "
+              << "'" << DEVNONCE2string(id.devNonce) << "', "
+              << "'" << JOINNONCE2string(id.joinNonce) << "', "
+              << "'" << DEVICENAME2string(id.name) << "', "
+              << "'" << DEVADDR2string(devAddr)
+              << "') ON CONFLICT(addr) DO UPDATE SET "
+                 "activation=excluded.activation, deviceclass=excluded.deviceclass, deveui=excluded.deveui, "
+                 "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
+                 "appeui=excluded.appeui, appkey=excluded.appkey, nwkkey=excluded.nwkkey, "
+                 "devnonce=excluded.devnonce, joinnonce=excluded.joinnonce, name=excluded.name";
     int r = sqlite3_exec(db, statement.str().c_str(), nullptr, nullptr, &zErrMsg);
     if (r != SQLITE_OK) {
         if (zErrMsg) {
@@ -247,6 +252,13 @@ int SqliteIdentityService::init(
     if (r) {
         db = nullptr;
         return ERR_CODE_DB_DATABASE_OPEN;
+    }
+    // validate objects
+    r = sqlite3_exec(db, "SELECT * FROM device WHERE addr = ''", nullptr, nullptr, nullptr);
+    if (r != SQLITE_OK) {
+        int r = createDatabaseFile(dbName);
+        if (r)
+            return r;
     }
     return CODE_OK;
 }

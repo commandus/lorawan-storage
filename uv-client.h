@@ -11,9 +11,11 @@ typedef SSIZE_T ssize_t;
 #include "gateway-serialization.h"
 #include "query-client.h"
 
-class UvClient : public GatewayClient {
+#define SEND_BUFFER_SIZE 155
+
+class UvClient : public QueryClient {
 private:
-    char sendBuffer[40];    // max request size is 40 bytes
+    char sendBuffer[SEND_BUFFER_SIZE];    // max request size is 40 bytes
     bool useTcp;
     struct sockaddr serverAddress;
     uv_udp_t udpSocket;
@@ -52,6 +54,7 @@ public:
     ) override;
     void start() override;
     void stop() override;
+    void finish();
 };
 
 #endif

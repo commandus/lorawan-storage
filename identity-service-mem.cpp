@@ -50,7 +50,7 @@ int MemoryIdentityService::list(
         sz++;
         if (sz > size)
             break;
-        retVal.push_back(NETWORKIDENTITY(it.first, it.second));
+        retVal.emplace_back(it.first, it.second);
     }
     return CODE_OK;
 }
@@ -72,10 +72,10 @@ int MemoryIdentityService::getNetworkIdentity(
     const DEVEUI &eui
 )
 {
-    for(auto it(storage.begin()); it != storage.end(); it++) {
-        if (it->second.devEUI.u == eui.u) {
-            retVal.devaddr = it->first;
-            retVal.devid = it->second;
+    for(auto & it : storage) {
+        if (it.second.devEUI.u == eui.u) {
+            retVal.devaddr = it.first;
+            retVal.devid = it.second;
             return CODE_OK;
         }
     }

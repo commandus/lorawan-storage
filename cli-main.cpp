@@ -24,9 +24,13 @@
 #ifdef ENABLE_SQLITE
 #include "identity-service-sqlite.h"
 #include "gateway-service-sqlite.h"
-#define DEF_DB  "gw.db"
+#define DEF_DB  "lorawan.db"
+#else
+#ifdef ENABLE_GEN
+#include "identity-service-gen.h"
 #else
 #include "identity-service-mem.h"
+#endif
 #include "gateway-service-mem.h"
 #endif
 
@@ -36,7 +40,7 @@
 #include "ip-address.h"
 #include "lorawan-msg.h"
 
-const char *programName = "lorawan-gateway-storage";
+const char *programName = "lorawan-storage";
 
 enum IP_PROTO {
     PROTO_UDP,
@@ -59,7 +63,7 @@ static std::string IP_PROTO2string(
 }
 
 // global parameters and descriptors
-class CliGatewayServiceDescriptorNParams : public Log
+class CliServiceDescriptorNParams : public Log
 {
 public:
     StorageListener *server = nullptr;
@@ -76,9 +80,18 @@ public:
 #endif
     int32_t retCode;
 
-    CliGatewayServiceDescriptorNParams()
+#ifdef ENABLE_GEN
+    std::string passPhrase;
+    NETID netid;
+#endif
+
+    CliServiceDescriptorNParams()
         : server(nullptr), proto(PROTO_UDP), port(4244), code(0), accessCode(0), verbose(0), retCode(0),
         runAsDaemon(false)
+#ifdef ENABLE_GEN
+        , netid(0, 0)
+#endif
+
     {
 
     }
@@ -103,7 +116,7 @@ public:
 
 };
 
-CliGatewayServiceDescriptorNParams svc;
+CliServiceDescriptorNParams svc;
 
 static void done() {
     if (svc.server) {
@@ -146,12 +159,17 @@ void run() {
         new SqliteIdentityService;
     identityService->init(svc.db, nullptr);
 #else
+#ifdef ENABLE_GEN
+            new GenIdentityService;
+    identityService->init(svc.passPhrase, &svc.netid);
+#else
         new MemoryIdentityService;
-    identityService->init("", nullptr);
+        identityService->init("", nullptr);
+#endif
 #endif
     auto gatewayService =
 #ifdef ENABLE_SQLITE
-            new SqliteGatewayService;
+        new SqliteGatewayService;
     gatewayService->init(svc.db, nullptr);
 #else
     new MemoryGatewayService;
@@ -161,7 +179,7 @@ void run() {
     auto identitySerialization = new IdentitySerialization(identityService, svc.code, svc.accessCode);
     auto gatewaySerialization = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
-    svc.server = new UVListener(gatewaySerialization);
+    svc.server = new UVListener(identitySerialization, gatewaySerialization);
 #else
     svc.server = new UDPListener(identitySerialization, gatewaySerialization);
 #endif
@@ -178,6 +196,12 @@ int main(int argc, char **argv) {
     struct arg_str *a_db = arg_str0("d", "db", "<file>", "database file name. Default " DEF_DB);
 #endif
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
+
+#ifdef ENABLE_GEN
+    struct arg_str *a_pass_phrase = arg_str1("m", "master-key", "<pass-phrase>", "");
+    struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
+#endif
+
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
 	struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v - verbose, -vv - debug");
@@ -186,6 +210,9 @@ int main(int argc, char **argv) {
 
 	void* argtable[] = { 
 		a_interface_n_port,
+#ifdef ENABLE_GEN
+        a_pass_phrase, a_net_id,
+#endif
 #ifdef ENABLE_SQLITE
         a_db,
 #endif
@@ -210,6 +237,22 @@ int main(int argc, char **argv) {
         svc.intf = "*";
         svc.port = 4244;
     }
+
+#ifdef ENABLE_GEN
+    if (a_pass_phrase->count)
+        svc.passPhrase = *a_pass_phrase->sval;
+    if (a_net_id) {
+        std::string v = *a_net_id->sval;
+        auto p = v.find(':');
+        if (p != std::string::npos) {
+            svc.netid.set(
+                strtoul(v.substr(0, p - 1).c_str(), nullptr, 16),
+                strtoul(v.substr(p + 1).c_str(), nullptr, 16)
+            );
+        } else
+            svc.netid.set(strtoul(v.c_str(), nullptr, 16));
+    }
+#endif
 
 #ifdef ENABLE_SQLITE
     if (a_db->count)

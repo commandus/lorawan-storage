@@ -20,11 +20,11 @@ static int tableCallback(
 {
     if (!env)
         return 0;
-    std::vector<std::vector<std::string>> *table = (std::vector<std::vector<std::string>> *) env;
+    auto *table = (std::vector<std::vector<std::string>> *) env;
 
     std::vector<std::string> line;
     for (int i = 0; i < columns; i++) {
-        line.push_back(value[i] ? value[i] : "");
+        line.emplace_back(value[i] ? value[i] : "");
     }
     table->push_back(line);
     return 0;
@@ -39,11 +39,11 @@ static int rowCallback(
 {
     if (!env)
         return 0;
-    std::vector<std::string> *row = (std::vector<std::string> *) env;
+    auto *row = (std::vector<std::string> *) env;
     if (!row->empty())
         return 0;   // just first row
     for (int i = 0; i < columns; i++) {
-        row->push_back(value[i] ? value[i] : "");
+        row->emplace_back(value[i] ? value[i] : "");
     }
     return 0;
 }
@@ -198,8 +198,8 @@ int SqliteGatewayService::rm(
  * "CREATE DATABASE IF NOT EXISTS \"gateway\" USE \"db_name\"",
  */
 static std::string SCHEMA_STATEMENT[] {
-        "CREATE TABLE \"gateway\" (\"id\" TEXT NOT NULL PRIMARY KEY, \"addr\" TEXT NOT NULL)",
-        "CREATE INDEX \"gateway_key_addr\" ON \"gateway\" (\"addr\")"
+        R"(CREATE TABLE "gateway" ("id" TEXT NOT NULL PRIMARY KEY, "addr" TEXT NOT NULL))",
+        R"(CREATE INDEX "gateway_key_addr" ON "gateway" ("addr"))"
 };
 
 static int createDatabaseFile(
@@ -211,7 +211,7 @@ static int createDatabaseFile(
     if (r)
         return r;
     char *zErrMsg = nullptr;
-    for (auto s : SCHEMA_STATEMENT) {
+    for (const auto& s : SCHEMA_STATEMENT) {
         r = sqlite3_exec(db, s.c_str(), nullptr, nullptr, &zErrMsg);
         if (r != SQLITE_OK) {
             if (zErrMsg) {
@@ -245,6 +245,14 @@ int SqliteGatewayService::init(
         db = nullptr;
         return ERR_CODE_DB_DATABASE_OPEN;
     }
+    // validate objects
+    r = sqlite3_exec(db, "SELECT id FROM gateway WHERE id = ''", nullptr, nullptr, nullptr);
+    if (r != SQLITE_OK) {
+        int r = createDatabaseFile(dbName);
+        if (r)
+            return r;
+    }
+
     return CODE_OK;
 }
 
@@ -259,6 +267,6 @@ void SqliteGatewayService::flush()
 
 void SqliteGatewayService::done()
 {
-    int r = sqlite3_close(db);
+    sqlite3_close(db);
     db = nullptr;
 }

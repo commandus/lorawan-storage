@@ -15,19 +15,20 @@ typedef SSIZE_T ssize_t;
 
 #include "storage-listener.h"
 
-class UVListener : public GatewayListener{
+class UVListener : public StorageListener{
 private:
     // libuv handler
     void *uv;
     struct sockaddr servaddr;
-    LogIntf *log;
+    Log *log;
     int verbose;
 public:
     int status;
     explicit UVListener(
-        GatewaySerialization *aSerializationWrapper
+            IdentitySerialization *aIdentitySerialization,
+            GatewaySerialization *aSerializationWrapper
     );
-    virtual ~UVListener();
+    ~UVListener() override;
     void setAddress(
         const std::string &host,
         uint16_t port
@@ -38,7 +39,7 @@ public:
     ) override;
     int run() override;
     void stop() override;
-    void setLog(int verbose, LogIntf *log) override;
+    void setLog(int verbose, Log *log) override;
 };
 
 #endif

@@ -570,12 +570,8 @@ size_t GatewaySerialization::query(
     if (sz < SIZE_SERVICE_MESSAGE)
         return 0;
     ServiceMessage *pMsg = deserializeGateway((const unsigned char *) request, sz);
-    if (!pMsg) {
-#ifdef ENABLE_DEBUG
-        std::cerr << "Wrong message" << std::endl;
-#endif
+    if (!pMsg)
         return 0;   // unknown request
-    }
     if ((pMsg->code != code) || (pMsg->accessCode != accessCode)) {
 #ifdef ENABLE_DEBUG
         std::cerr << ERR_ACCESS_DENIED

@@ -512,7 +512,7 @@ size_t IdentityListResponse::shortenList2Fit(
     size_t serializedSize
 ) {
     size_t r = this->serialize(nullptr);
-    while(!identities.empty() && r > serializedSize) {
+    while((!identities.empty()) && (r > serializedSize)) {
         identities.erase(identities.end() - 1);
         r = this->serialize(nullptr);
     }
@@ -553,12 +553,8 @@ size_t IdentitySerialization::query(
     if (sz < SIZE_SERVICE_MESSAGE)
         return 0;
     ServiceMessage *pMsg = deserializeIdentity((const unsigned char *) request, sz);
-    if (!pMsg) {
-#ifdef ENABLE_DEBUG
-        std::cerr << "Wrong message" << std::endl;
-#endif
+    if (!pMsg)
         return 0;   // unknown request
-    }
     if ((pMsg->code != code) || (pMsg->accessCode != accessCode)) {
 #ifdef ENABLE_DEBUG
         std::cerr << ERR_ACCESS_DENIED
@@ -628,7 +624,7 @@ size_t IdentitySerialization::query(
             size_t idSize = ((IdentityListResponse *) r)->identities.size();
             size_t serSize = SIZE_OPERATION_RESPONSE + (idSize * SIZE_NETWORK_IDENTITY);
             if (serSize > retSize) {
-                serSize = ((IdentityListResponse *) r)->shortenList2Fit(serSize);
+                serSize = ((IdentityListResponse *) r)->shortenList2Fit(retSize);
                 if (serSize > retSize) {
                     delete r;
                     r = nullptr;

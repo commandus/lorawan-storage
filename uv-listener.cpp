@@ -26,6 +26,9 @@
 
 #define DEF_KEEPALIVE_SECS 60
 
+// 307 bytes for IPv4 up to 18, IPv6 up to 10
+#define WRITE_BUFFER_SIZE 1432
+
 static void getAddrNPort(
 	uv_tcp_t *stream,
 	std::string &retName,
@@ -103,10 +106,13 @@ static void onUDPRead(
                   << MSG_SPACE << bytesRead << MSG_SPACE << MSG_BYTES << MSG_CPAREN << std::endl;
 #endif
             // 307 bytes for IPv4 up to 18, IPv6 up to 10
-            unsigned char writeBuffer[307];
-            size_t sz = makeResponse(((UVListener*) handle->loop->data)->serializationWrapper,
-                writeBuffer, sizeof(writeBuffer), (const unsigned char *) buf->base, bytesRead);
-
+            unsigned char writeBuffer[WRITE_BUFFER_SIZE];
+            size_t sz = ((UVListener*) handle->loop->data)->identitySerialization->query(writeBuffer,
+                sizeof(writeBuffer), (const unsigned char *) buf->base, bytesRead);
+            if (sz == 0) {
+                sz = ((UVListener*) handle->loop->data)->gatewaySerialization->query(writeBuffer,
+                    sizeof(writeBuffer), (const unsigned char *) buf->base, bytesRead);
+            }
             if (sz > 0) {
                 uv_buf_t wrBuf = uv_buf_init((char *) writeBuffer, sz);
                 auto req = (uv_udp_send_t *) malloc(sizeof(uv_udp_send_t));
@@ -147,10 +153,13 @@ static void onReadTCP(
             << MSG_SPACE << MSG_OPAREN << "TCP " << addr << ":" << port << MSG_SPACE << readCount
             << MSG_SPACE << MSG_BYTES << MSG_CPAREN << std::endl;
 #endif
-        unsigned char writeBuffer[307];
-        size_t sz = makeResponse(((UVListener*) client->loop->data)->serializationWrapper,
-            writeBuffer, sizeof(writeBuffer),
-            (const unsigned char *) buf->base, readCount);
+        unsigned char writeBuffer[WRITE_BUFFER_SIZE];
+        size_t sz = ((UVListener*) client->loop->data)->identitySerialization->query(writeBuffer,
+            sizeof(writeBuffer), (const unsigned char *) buf->base, readCount);
+        if (sz == 0) {
+            sz = ((UVListener*) client->loop->data)->gatewaySerialization->query(writeBuffer,
+                sizeof(writeBuffer), (const unsigned char *) buf->base, readCount);
+        }
         if (sz > 0) {
 			uv_write_t *req = allocReq();
 			uv_buf_t writeBuf = uv_buf_init((char *) writeBuffer, sz);
@@ -197,9 +206,10 @@ static void onConnect(
  * @see https://habr.com/ru/post/340758/
  */
 UVListener::UVListener(
+    IdentitySerialization *aIdentitySerialization,
     GatewaySerialization *aSerializationWrapper
 )
-	: GatewayListener(aSerializationWrapper), status(CODE_OK), log(nullptr), verbose(0)
+	: StorageListener(aIdentitySerialization, aSerializationWrapper), status(CODE_OK), log(nullptr), verbose(0)
 {
 	uv_loop_t *loop = uv_default_loop();
     loop->data = this;
@@ -218,7 +228,7 @@ void UVListener::stop()
 
 	if (result == UV_EBUSY && uv_loop_alive(uvLoop)) {
 		uv_walk(uvLoop, [](uv_handle_t* handle, void* arg) {
-			if (!uv_is_closing(handle))
+			if (handle->loop && !uv_is_closing(handle))
 				uv_close(handle, nullptr);
 			}, nullptr);
 		int r;
@@ -302,7 +312,7 @@ UVListener::~UVListener()
 
 void UVListener::setLog(
     int aVerbose,
-    LogIntf *aLog
+    Log *aLog
 )
 {
     verbose = aVerbose;
