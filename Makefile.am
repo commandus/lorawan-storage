@@ -10,12 +10,9 @@ AM_CPPFLAGS=$(common_flags)
 AM_CXXFLAGS=$(common_flags) -std=c++11
 COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
-ARGTABLE_SRC = \
-	third-party/argtable3/argtable3.c
-AES_SRC = \
-	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
-CLI_SRC = \
-	cli-query-main.cpp service-serialization.cpp gateway-serialization.cpp
+ARGTABLE_SRC = third-party/argtable3/argtable3.c
+AES_SRC = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
+CLI_SRC = cli-query-main.cpp service-serialization.cpp identity-serialization.cpp gateway-serialization.cpp
 
 LSNR_SRC =
 GATEWAY_DEF = $(COMMON_CPP_FLAGS)
@@ -35,7 +32,12 @@ GATEWAY_DEF += -DENABLE_SQLITE
 GATEWAY_SRC = identity-service-sqlite.cpp gateway-service-sqlite.cpp sqlite-helper.cpp
 EXTRA_LIB_SVC = -lsqlite3
 else
+if ENABLE_GEN
+GATEWAY_DEF += -DENABLE_GEN
+GATEWAY_SRC = identity-service-gen.cpp gateway-service-mem.cpp key128gen.cpp $(AES_SRC)
+else
 GATEWAY_SRC = identity-service-mem.cpp gateway-service-mem.cpp
+endif
 endif
 
 # Static library used for build binaries, so build library first.
@@ -55,6 +57,7 @@ nobase_dist_include_HEADERS = \
 	query-client.h log-intf.h \
 	identity-service.h identity-service-mem.h identity-service-sqlite.h \
 	gateway-service.h gateway-service-mem.h gateway-service-sqlite.h log.h \
+	identity-service-gen.h key128gen.h \
 	lorawan-error.h lorawan-types.h udp-client.h uv-listener.h \
 	storage-listener.h ip-helper.h sqlite-helper.h lorawan-const.h \
 	lorawan-msg.h network-identity.h udp-listener.h uv-mem.h \
@@ -75,8 +78,8 @@ SRC_LIBLORAWAN = \
 	third-party/strptime.cpp
 
 LORAWAN_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) \
-    identity-serialization.cpp service-serialization.cpp gateway-serialization.cpp \
-	file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
+    identity-serialization.cpp service-serialization.cpp \
+    gateway-serialization.cpp file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)
 liblorawan_a_CPPFLAGS = -fPIC

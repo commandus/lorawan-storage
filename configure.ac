@@ -2,6 +2,7 @@
 # Options:
 # --enable-libuv=no   	enable libuv UDP/TCP. Default UDP only
 # --enable-debug=no   	enable debugging output
+# --enable-gen=no       enable gen backend
 # --enable-sqlite=no    enable SQLite backend
 # --enable-ipv6=no    	enable IPv6(reserved)
 # --enable-tests=no     enable tests
@@ -64,6 +65,15 @@ AC_ARG_ENABLE([libuv],
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-libuv]) ;;
 esac],[libuv=false])
 AM_CONDITIONAL([ENABLE_LIBUV], [test x$libuv = xtrue])
+
+AC_ARG_ENABLE([gen],
+[  --enable-gen    Turn on gen backend],
+[case "${enableval}" in
+  yes) gen=true ;;
+  no)  gen=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-gen]) ;;
+esac],[gen=false])
+AM_CONDITIONAL([ENABLE_GEN], [test x$gen = xtrue])
 
 AC_ARG_ENABLE([sqlite],
 [  --enable-sqlite    Turn on SQLite backend],
