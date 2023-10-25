@@ -9,6 +9,16 @@ This is a simple example of a gateway database service for a tlns project.
 - CMake or Autotools/Automake
 - C++ compiler and development tools bundle
 
+### Windows
+
+- CMake
+- Visual Studio
+- vcpkg
+
+### ESP32
+
+- SDK idf tools
+
 #### Tools
 
 Make sure you have automake or CMake installed:
@@ -30,7 +40,7 @@ apt install cmake build-essential
 First install dependencies (see below) and then configure and make project using Autotools:
 
 ```
-cd lorawan-gateway-storage
+cd lorawan-storage
 ./autogen.sh
 ./configure
 make
@@ -40,14 +50,26 @@ Set ./configure command line options
 - --enable-libuv use libuv
 - --enable-debug debug print on
 - --enable-gen enable key generator
+- --enable-sqlite enable SSQLite backend
 - --enable-ipv6 enable IPv6 (reserved for future use)
 - --enable-tests enable tests
+
+For instance
+
+```
+cd lorawan-storage
+./autogen.sh
+./configure --enable-sqlite=yes --enable-gen=no 
+make
+```
+
+enables SQLite backend
 
 ### CMake
 
 Configure by default: 
 ```
-cd lorawan-gateway-storage
+cd lorawan-storage
 mkdir build
 cd build
 cmake ..
@@ -56,10 +78,10 @@ make
 
 Enable/disable options:
 ```
-cd lorawan-gateway-storage
+cd lorawan-storage
 mkdir build
 cd build
-cmake -DENABLE_LIBUV=off -DENABLE_DEBUG=off -DENABLE_GEN=on -DENABLE_IPV6=off ..
+cmake -DENABLE_LIBUV=off -DENABLE_DEBUG=off -DENABLE_GEN=on -DENABLE_SQLITE=off -DENABLE_IPV6=off ..
 make
 ```
 
@@ -67,6 +89,7 @@ Options are:
 
 - -DENABLE_LIBUV use libuv
 - -DENABLE_DEBUG debug print on
+- -DENABLE_SQLITE enable SQLite backend
 - -DENABLE_GEN enable key generator
 - -DENABLE_IPV6 enable IPv6 (reserved for future use)
 
@@ -93,7 +116,7 @@ make
 ### ESP32
 
 ```
-cd lorawan-gateway-storage
+cd lorawan-storage
 idf_get
 idf.py menuconfig
 idf.py build
@@ -110,8 +133,8 @@ sudo apt install libuv1-dev gettext
 
 ## Usage
 
-- lorawan-gateway-service
-- lorawan-gateway-query
+- lorawan-service
+- lorawan-query
 
 ### lorawan-service
 
