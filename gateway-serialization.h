@@ -29,6 +29,7 @@ public:
     GatewayIdRequest();
     GatewayIdRequest(char aTag, uint64_t id, int32_t code, uint64_t accessCode);
     GatewayIdRequest(const unsigned char *buf, size_t sz);
+    ~GatewayIdRequest() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -40,6 +41,7 @@ public:
     GatewayAddrRequest();
     GatewayAddrRequest(const struct sockaddr &addr, int32_t code, uint64_t accessCode);
     GatewayAddrRequest(const unsigned char *buf, size_t sz);
+    ~GatewayAddrRequest() override = default;
     void ntoh() override;
     size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
@@ -53,6 +55,7 @@ public:
     // explicit GatewayIdAddrRequest(const GatewayIdentity &identity);
     GatewayIdAddrRequest(char aTag, const GatewayIdentity &identity, int32_t code, uint64_t accessCode);
     GatewayIdAddrRequest(const unsigned char *buf, size_t sz);
+    ~GatewayIdAddrRequest() override = default;
     void ntoh() override;
     size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;
@@ -66,6 +69,7 @@ public:
     GatewayOperationRequest();
     GatewayOperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
     GatewayOperationRequest(const unsigned char *buf, size_t sz);
+    ~GatewayOperationRequest() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -79,6 +83,7 @@ public:
     explicit GatewayGetResponse(const GatewayAddrRequest& request);
     explicit GatewayGetResponse(const GatewayIdRequest &request);
     GatewayGetResponse(const unsigned char *buf, size_t sz);
+    ~GatewayGetResponse() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     size_t serializedSize() const;
@@ -91,6 +96,7 @@ public:
     GatewayOperationResponse();
     GatewayOperationResponse(const GatewayOperationResponse& resp);
     GatewayOperationResponse(const unsigned char *buf, size_t sz);
+    ~GatewayOperationResponse() override = default;
     explicit GatewayOperationResponse(const GatewayIdAddrRequest &request);
     explicit GatewayOperationResponse(const GatewayOperationRequest &request);
     void ntoh() override;
@@ -105,6 +111,7 @@ public:
     GatewayListResponse(const GatewayListResponse& resp);
     GatewayListResponse(const unsigned char *buf, size_t sz);
     explicit GatewayListResponse(const GatewayOperationRequest &request);
+    ~GatewayListResponse() override = default;
     void ntoh() override;
     size_t serializedSize() const;
     size_t serialize(unsigned char *retBuf) const override;

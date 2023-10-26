@@ -15,6 +15,7 @@ public:
     ServiceMessage();
     ServiceMessage(char tag, int32_t code, uint64_t accessCode);
     ServiceMessage(const unsigned char *buf, size_t sz);
+    virtual ~ServiceMessage();
     virtual void ntoh();
     virtual size_t serialize(unsigned char *retBuf) const;
     virtual std::string toJsonString() const;

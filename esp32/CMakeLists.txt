@@ -8,11 +8,17 @@ set(IDENTITY_SRC
         ../lorawan-string.cpp
         ../lorawan-conv.cpp
         ../network-identity.cpp
+        ../gateway-identity.cpp
         ../identity-service.cpp
+        ../gateway-service.cpp
+        ../gateway-service-mem.cpp
         ../udp-listener.cpp
         ../identity-serialization.cpp
+        ../gateway-serialization.cpp
         ../udp-listener.cpp
+        ../service-serialization.cpp
         ../ip-helper.cpp
+        ../ip-address.cpp
 )
 
 if(CONFIG_ESP_KEY_GEN)
@@ -23,7 +29,7 @@ endif()
 
 idf_component_register(
 SRCS
-        esp32-main.cpp
+        esp32-storage.cpp
         wifi-station.c
         ${IDENTITY_SRC}
 INCLUDE_DIRS

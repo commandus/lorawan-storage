@@ -139,6 +139,7 @@ public:
     int decrement();
     DEVADDR& operator++();  // prefix increment operator
     DEVADDR& operator--();  // prefix decrement operator
+    DEVADDR& operator=(const DEVADDR&);
 
     static uint8_t getTypePrefixBitsCount(uint8_t netTypeId);
     static uint8_t getNwkIdBitsCount(uint8_t typ);

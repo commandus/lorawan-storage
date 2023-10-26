@@ -1088,6 +1088,14 @@ DEVADDR& DEVADDR::operator--()
     return *this;
 }
 
+DEVADDR& DEVADDR::operator=(
+    const DEVADDR& value
+)
+{
+    u = value.u;
+    return *this;
+}
+
 int DEVADDR::increment()
 {
     return setAddr(getNwkAddr() + 1);

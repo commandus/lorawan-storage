@@ -78,18 +78,18 @@ static void deserializeNETWORKIDENTITY(
     p++;
     retVal.devid.devEUI.u = ((DEVEUI *) p)->u;	    // 8 device identifier (ABP device may not store EUI)
     p += 8;
-    memmove(&retVal.devid.nwkSKey, p, 16);	        // 16 shared session key
+    memmove(&retVal.devid.nwkSKey.c, p, 16);	        // 16 shared session key
     p += 16;
-    memmove(&retVal.devid.appSKey, p, 16);	        // 16 private key
+    memmove(&retVal.devid.appSKey.c, p, 16);	        // 16 private key
     p += 16;
     retVal.devid.version = (LORAWAN_VERSION) *(uint8_t *) p;	// 1
     p++;
     // OTAA
     retVal.devid.appEUI.u = ((DEVEUI *) p)->u;	    // 8 OTAA application identifier
     p += 8;
-    memmove(&retVal.devid.appKey, p, 16);	        // 16 OTAA application private key
+    memmove(&retVal.devid.appKey.c, p, 16);	        // 16 OTAA application private key
     p += 16;
-    memmove(&retVal.devid.nwkKey, p, 16);	        // 16 OTAA OTAA network key
+    memmove(&retVal.devid.nwkKey.c, p, 16);	        // 16 OTAA OTAA network key
     p += 16;
     retVal.devid.devNonce.u = ((DEVNONCE *) p)->u;	// 2 last device nonce
     p += 2;
@@ -576,7 +576,7 @@ size_t IdentitySerialization::query(
             {
                 auto gr = (IdentityEUIRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
-                memmove(&((IdentityGetResponse*) r)->response.devid, &gr->eui, sizeof(gr->eui));
+                ((IdentityGetResponse*) r)->response.devid.devEUI.u = gr->eui.u;
                 int errCode;
                 if (((IdentityGetResponse*) r)->response.devaddr.empty())
                     errCode = svc->getNetworkIdentity(((IdentityGetResponse*) r)->response,
@@ -594,8 +594,8 @@ size_t IdentitySerialization::query(
             {
                 auto gr = (IdentityAddrRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
-                memmove(&((IdentityGetResponse*) r)->response.devaddr, &gr->addr, sizeof(uint32_t));
-                int errCode = svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
+                ((IdentityGetResponse*) r)->response.devaddr.u = gr->addr.u;
+                svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
                 break;
             }
         case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier

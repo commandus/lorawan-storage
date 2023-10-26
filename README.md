@@ -17,7 +17,8 @@ This is a simple example of a gateway database service for a tlns project.
 
 ### ESP32
 
-- SDK idf tools
+- SDK idf tools or
+- Visual Studio Code with Espressif IDF plugin
 
 #### Tools
 
@@ -37,7 +38,9 @@ apt install cmake build-essential
 
 ### Autotools
 
+
 First install dependencies (see below) and then configure and make project using Autotools:
+
 
 ```
 cd lorawan-storage
@@ -46,7 +49,8 @@ cd lorawan-storage
 make
 ```
 
-Set ./configure command line options 
+Set ./configure command line options:
+
 - --enable-libuv use libuv
 - --enable-debug debug print on
 - --enable-gen enable key generator
@@ -115,12 +119,20 @@ make
 
 ### ESP32
 
+SDK
+
 ```
 cd lorawan-storage
 idf_get
 idf.py menuconfig
 idf.py build
 ```
+
+Visual Studio Code
+
+- Press F1; select ESP-IDF: Set Espressif device target; select lorawan-storage; select ESP32; select ESP32 chip (via ESP USB bridge)
+- Press F1; select ESP-IDF: Build your project
+- Press F1; select ESP-IDF: Flush your project
 
 ### Dependencies
 

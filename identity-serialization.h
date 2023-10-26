@@ -28,6 +28,7 @@ public:
     IdentityEUIRequest();
     IdentityEUIRequest(char aTag, const DEVEUI &aEUI, int32_t code, uint64_t accessCode);
     IdentityEUIRequest(const unsigned char *buf, size_t sz);
+    ~IdentityEUIRequest() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -39,6 +40,7 @@ public:
     IdentityAddrRequest();
     IdentityAddrRequest(char aTag, const DEVADDR &addr, int32_t code, uint64_t accessCode);
     IdentityAddrRequest(const unsigned char *buf, size_t sz);
+    ~IdentityAddrRequest() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -51,6 +53,7 @@ public:
     // explicit IdentityAssignRequest(const DeviceIdentity &identity);
     IdentityAssignRequest(char aTag, const NETWORKIDENTITY &identity, int32_t code, uint64_t accessCode);
     IdentityAssignRequest(const unsigned char *buf, size_t sz);
+    ~IdentityAssignRequest() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -63,6 +66,7 @@ public:
     IdentityOperationRequest();
     IdentityOperationRequest(char tag, size_t aOffset, size_t aSize, int32_t code, uint64_t accessCode);
     IdentityOperationRequest(const unsigned char *buf, size_t sz);
+    ~IdentityOperationRequest() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -76,6 +80,7 @@ public:
     explicit IdentityGetResponse(const IdentityAddrRequest& request);
     explicit IdentityGetResponse(const IdentityEUIRequest &request);
     IdentityGetResponse(const unsigned char *buf, size_t sz);
+    ~IdentityGetResponse() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;
@@ -87,6 +92,7 @@ public:
     IdentityOperationResponse();
     IdentityOperationResponse(const IdentityOperationResponse& resp);
     IdentityOperationResponse(const unsigned char *buf, size_t sz);
+    ~IdentityOperationResponse() override = default;
     explicit IdentityOperationResponse(const IdentityAssignRequest &request);
     explicit IdentityOperationResponse(const IdentityAddrRequest &request);
     explicit IdentityOperationResponse(const IdentityOperationRequest &request);
@@ -102,6 +108,7 @@ public:
     IdentityListResponse(const IdentityListResponse& resp);
     IdentityListResponse(const unsigned char *buf, size_t sz);
     explicit IdentityListResponse(const IdentityOperationRequest &request);
+    ~IdentityListResponse() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;

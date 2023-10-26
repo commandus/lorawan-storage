@@ -98,9 +98,8 @@ GatewayAddrRequest::GatewayAddrRequest(
     : ServiceMessage(buf, sz)
 {
     if (sz >= SIZE_SERVICE_MESSAGE) {
-        size_t r = deserializeSocketAddress(&addr, &buf[SIZE_SERVICE_MESSAGE], sz - SIZE_SERVICE_MESSAGE); // 0, 7, 19
-        // SIZE_SERVICE_MESSAGE + r;        // IPv4: 20 IPv6: 32
-    }
+        deserializeSocketAddress(&addr, &buf[SIZE_SERVICE_MESSAGE], sz - SIZE_SERVICE_MESSAGE); // 0, 7, 19
+    }   // IPv4: 20 IPv6: 32
 }
 
 size_t GatewayAddrRequest::serializedSize() const
@@ -630,7 +629,6 @@ size_t GatewaySerialization::query(
             auto gr = (GatewayOperationRequest *) pMsg;
             r = new GatewayListResponse(*gr);
             svc->list(((GatewayListResponse *) r)->identities, gr->offset, gr->size);
-            size_t idSize = ((GatewayListResponse *) r)->identities.size();
             size_t serSize = getListResponseSize(((GatewayListResponse *) r)->identities);
             if (serSize > retSize) {
                 serSize = ((GatewayListResponse *) r)->shortenList2Fit(serSize);

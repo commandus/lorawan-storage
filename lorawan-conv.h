@@ -13,9 +13,9 @@
     #define SWAP_BYTES_8(x) htonll(x)
 #else
     #ifdef ESP_PLATFORM
-        #define SWAP_BYTES_2(x) htons(x)
-        #define SWAP_BYTES_4(x) htonl(x)
-        #define SWAP_BYTES_8(x) ((((uint64_t) htonl(x)) << 32) + htonl((uint64_t)(x) >> 32))
+        #define SWAP_BYTES_2(x) lwip_htons(x)
+        #define SWAP_BYTES_4(x) lwip_htonl(x)
+        #define SWAP_BYTES_8(x) ((((uint64_t) lwip_htonl(x)) << 32) + lwip_htonl((uint64_t)(x) >> 32))
     #else
         #define SWAP_BYTES_2(x) be16toh(x)
         #define SWAP_BYTES_4(x) be32toh(x)
@@ -32,12 +32,12 @@
     #define HTON8(x) (x)
 #else
     #ifdef ESP_PLATFORM
-        #define NTOH2(x) htons(x)
-        #define NTOH4(x) htonl(x)
-        #define NTOH8(x) ((((uint64_t)htonl(x)) << 32) + htonl((uint64_t)(x) >> 32))
-        #define HTON2(x) htons(x)
-        #define HTON4(x) htonl(x)
-        #define HTON8(x) ((((uint64_t)htonl(x)) << 32) + htonl((uint64_t)(x) >> 32))
+        #define NTOH2(x) lwip_htons(x)
+        #define NTOH4(x) lwip_htonl(x)
+        #define NTOH8(x) ((((uint64_t)lwip_htonl(x)) << 32) + lwip_htonl((uint64_t)(x) >> 32))
+        #define HTON2(x) lwip_htons(x)
+        #define HTON4(x) lwip_htonl(x)
+        #define HTON8(x) ((((uint64_t)lwip_htonl(x)) << 32) + lwip_htonl((uint64_t)(x) >> 32))
     #else
         #define NTOH2(x) be16toh(x)
         #define NTOH4(x) be32toh(x)

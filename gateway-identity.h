@@ -9,6 +9,7 @@
 #include <ws2tcpip.h>
 #else
 #define SOCKET int
+#include <sys/socket.h>
 #include <netinet/in.h>
 #endif
 
@@ -32,6 +33,7 @@ public:
     GatewayIdentity(uint64_t gatewayId, const std::string &addressNport);
     GatewayIdentity(uint64_t gatewayId, const std::string &address, uint16_t port);
 	bool operator==(GatewayIdentity &rhs) const;
+    GatewayIdentity& operator=(const GatewayIdentity &value);
 	std::string toString() const;
     std::string toJsonString() const;
 };

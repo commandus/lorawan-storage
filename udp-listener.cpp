@@ -4,6 +4,7 @@
 
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"
+#include "esp_log.h"
 #endif
 
 #ifdef ENABLE_DEBUG
@@ -56,7 +57,7 @@ UDPListener::UDPListener(
     IdentitySerialization *aIdentitySerialization,
     GatewaySerialization *aSerializationWrapper
 )
-    : StorageListener(aIdentitySerialization, aSerializationWrapper), destAddr({}), status(CODE_OK), verbose(0), log(nullptr)
+    : StorageListener(aIdentitySerialization, aSerializationWrapper), destAddr({}), log(nullptr), verbose(0), status(CODE_OK)
 {
 }
 

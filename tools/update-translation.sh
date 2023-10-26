@@ -1,5 +1,5 @@
 #!/bin/bash
-TEMPLATE=po/lorawan-identity-service.pot
+TEMPLATE=po/lorawan-storage.pot
 for f in $(ls po/*.po) ; do
   regex="\/(.*)\.([a-z][a-z])_..\.UTF-8\.po"
   if [[ $f =~ $regex ]]; then
@@ -7,7 +7,8 @@ for f in $(ls po/*.po) ; do
     code="${BASH_REMATCH[2]}"
 
     case $fn in
-      'lorawan-identity-service') FM='cli-main.cpp';;
+      'lorawan-service') FM='cli-main.cpp';;
+      'lorawan-query') FM='cli-query-main.cpp';;
       *) FM='*';;
     esac
 

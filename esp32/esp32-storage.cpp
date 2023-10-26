@@ -16,9 +16,14 @@
 #include "identity-service-mem.h"
 #endif
 #include "udp-listener.h"
+#include "gateway-serialization.h"
+#include "gateway-service-mem.h"
 
-#define TAG "lorawan-identity-storage"
+#define TAG "lorawan-storage"
 
+/**
+ * Run identity(with GEN or in memory) & gateway storage
+ */
 extern "C" int app_main()
 {
     // Initialize NVS
@@ -50,10 +55,14 @@ extern "C" int app_main()
     identityService->init("", nullptr);
 #endif
 
-    IdentitySerialization serializationWrapper(identityService, CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
+    auto gatewayService = new MemoryGatewayService;
+    gatewayService->init("", nullptr);
+
+    IdentitySerialization identitySerializatiom(identityService, CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
+    GatewaySerialization gatewaySerializatiom(gatewayService, CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
     ESP_LOGI(TAG, "code: %u, access code: %llu", CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
 
-    UDPListener lsnr(&serializationWrapper);
+    UDPListener lsnr(&identitySerializatiom, &gatewaySerializatiom);
     lsnr.setAddress(ip.addr, CONFIG_ESP_UDP_SOCK_PORT);
     lsnr.run();
     return 0;

@@ -21,9 +21,9 @@ GatewayIdentity::GatewayIdentity()
 GatewayIdentity::GatewayIdentity(
 	const GatewayIdentity &value
 )
-    : gatewayId(value.gatewayId)
+    : gatewayId(value.gatewayId), sockaddr{}
 {
-	memmove(&sockaddr, &value.sockaddr, sockaddr.sa_family ==  AF_INET6 ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
+	memmove(&sockaddr, &value.sockaddr, sockaddr.sa_family == AF_INET6 ? sizeof(struct sockaddr_in6) : sizeof(struct sockaddr_in));
 }
 
 GatewayIdentity::GatewayIdentity(
@@ -69,6 +69,15 @@ bool GatewayIdentity::operator==(
 	GatewayIdentity &rhs
 ) const {
 	return gatewayId == rhs.gatewayId;
+}
+
+GatewayIdentity& GatewayIdentity::operator=(
+    const GatewayIdentity &value
+)
+{
+    gatewayId = value.gatewayId;
+    memmove(&sockaddr, &value.sockaddr, sizeof (struct sockaddr));
+    return *this;
 }
 
 /**
@@ -162,6 +171,7 @@ bool GatewayStatistic::operator==(
     return gatewayId == rhs.gatewayId;
 }
 
+
 /**
  * debug string
  */
@@ -169,19 +179,19 @@ std::string GatewayStatistic::toString() const
 {
     std::stringstream ss;
     ss << "{"
-        << R"("gwid":")" << std::hex << gatewayId << std::dec
-        << R"(", "addr":")" << sockaddr2string(&sockaddr)
-        << R"(", "name":")" << name
-        << R"(", "time":")" << time2string(t)
-        << R"(", "lati":)" << std::fixed << std::setprecision(5) << lat
-        << ", \"long\":" << std::fixed << std::setprecision(5) << lon
-        << ", \"alti\":" << alt
-        << ", \"rxnb\":" << rxnb
-        << ", \"rxok\":" << rxok
-        << ", \"rxfw\":" << rxfw
-        << ", \"ackr\":" << std::fixed << std::setprecision(1) << ackr
-        << ", \"dwnb\":" << dwnb
-        << ", \"txnb\":" << txnb
+        << "\"" << STAT_NAMES[0] << "\": " << std::hex << gatewayId << std::dec
+        << ", \"" << STAT_NAMES[1] << "\": " << sockaddr2string(&sockaddr)
+        << ", \"" << STAT_NAMES[2] << "\": " << name
+        << ", \"" << STAT_NAMES[3] << "\": " << time2string(t)
+        << ", \"" << STAT_NAMES[4] << "\": " << std::fixed << std::setprecision(5) << lat
+        << ", \"" << STAT_NAMES[5] << "\": " << std::fixed << std::setprecision(5) << lon
+        << ", \"" << STAT_NAMES[6] << "\": " << alt
+        << ", \"" << STAT_NAMES[7] << "\": " << rxnb
+        << ", \"" << STAT_NAMES[8] << "\": " << rxok
+        << ", \"" << STAT_NAMES[9] << "\": " << rxfw
+        << ", \"" << STAT_NAMES[10] << "\": " << std::fixed << std::setprecision(1) << ackr
+        << ", \"" << STAT_NAMES[11] << "\": " << dwnb
+        << ", \"" << STAT_NAMES[12] << "\": " << txnb
         << "}";
     return ss.str();
 }
