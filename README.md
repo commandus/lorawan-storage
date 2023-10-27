@@ -121,11 +121,51 @@ make
 
 SDK
 
+Install:
 ```
-cd lorawan-storage
+cd ~/esp/esp-idf
+./install.sh
+```
+
+Set up environment
+```
+cd ~/esp/esp-idf
+. ./export.sh
+```
+
+Build
+
+In "idf.py menuconfig" step go to 
+
+- Compiler options, Optimization Level, select "Optimize for size (-Os)"
+- Component config, Log output, Default log verbosity, Select "No output"
+- Component config, MQTT disable all
+- LoRaWAN storage, set settings
+
+Save sdkconfig file and quit.
+
+```
+cd ~/src/lorawan-storage
 idf_get
+idf.py fullclean
 idf.py menuconfig
 idf.py build
+...
+Total sizes:
+Used static DRAM:   35532 bytes ( 145204 remain, 19.7% used)
+      .data size:   13188 bytes
+      .bss  size:   22344 bytes
+Used static IRAM:   80562 bytes (  50510 remain, 61.5% used)
+      .text size:   79535 bytes
+   .vectors size:    1027 bytes
+Used Flash size :  857611 bytes
+           .text:  679975 bytes
+         .rodata:  177380 bytes
+Total image size:  951361 bytes (.bin may be padded larger)```
+
+Flash
+```
+idf.py flash -p /dev/ttyUSB0
 ```
 
 Visual Studio Code
@@ -161,6 +201,7 @@ Manipulate device records by commands:
 - remove <address> | <identifier>
 
 record is a comma-separated string consists of
+
 - address
 - activation type: ABP or OTAA
 - device class;: A, B or C
@@ -236,6 +277,23 @@ Examples:
 ```
 
 ## Tests
+
+### ESP32 
+
+Connect ESP32 to your PC, open Visual Studio Code, Press F1, Select "ESP-IDF: Monitor your device"
+
+Wait for message:
+
+```
+I (4488) lorawan-storage: 10.2.104.109:4242 master key: masterkey, net: 0, code: 42, access code: 42
+```
+
+Open comsole in PC. Run:
+
+```
+./lorawan-query list -s 10.2.104.109:4242
+```
+
 
 ### Test gateway storage
 

@@ -57,17 +57,17 @@
 #endif
 
 #ifndef CONFIG_ESP_ACCESS_CODE_HI
+#define CONFIG_ESP_ACCESS_CODE_HI     0
+#endif
+
+#ifndef CONFIG_ESP_ACCESS_CODE_LO
 #define CONFIG_ESP_ACCESS_CODE_LO     42
 #endif
-
-#ifndef CONFIG_ESP_ACCESS_CODE_HI
-#define CONFIG_ESP_ACCESS_CODE_LO     42
-#endif
-
-
-#ifndef CONFIG_ESP_ENABLE_DEBUG
-#define ENABLE_DEBUG     y
-#endif
-#define ENABLE_DEBUG     y
 
 #define CONFIG_ESP_ACCESS_CODE (((uint64_t) CONFIG_ESP_ACCESS_CODE_HI << 32) | (uint64_t) CONFIG_ESP_ACCESS_CODE_LO)
+
+#ifndef CONFIG_ESP_ENABLE_DEBUG
+#define ENABLE_DEBUG     n
+#endif
+#define ENABLE_DEBUG     n
+

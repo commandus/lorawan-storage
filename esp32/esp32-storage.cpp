@@ -38,9 +38,6 @@ extern "C" int app_main()
     if (ip.addr == 0)
       ret = ERR_CODE_ADDR_OUT_OF_RANGE;
     ESP_ERROR_CHECK(ret);
-
-    ESP_LOGI(TAG, "Address " IPSTR ":%u", IP2STR(&ip), CONFIG_ESP_UDP_SOCK_PORT);
-
     auto identityService =
 #ifdef CONFIG_ESP_KEY_GEN
         new GenIdentityService;
@@ -50,7 +47,6 @@ extern "C" int app_main()
 #ifdef CONFIG_ESP_KEY_GEN
     NETID netid(CONFIG_ESP_NWK_TYPE_ID, CONFIG_ESP_NWK_ID);
     identityService->init(CONFIG_ESP_PASSPHRASE, &netid);
-    ESP_LOGI(TAG, "passphrase: %s, network: %s", CONFIG_ESP_PASSPHRASE, netid.toString().c_str());
 #else
     identityService->init("", nullptr);
 #endif
@@ -60,7 +56,9 @@ extern "C" int app_main()
 
     IdentitySerialization identitySerializatiom(identityService, CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
     GatewaySerialization gatewaySerializatiom(gatewayService, CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
-    ESP_LOGI(TAG, "code: %u, access code: %llu", CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
+
+    ESP_LOGI(TAG, IPSTR ":%u master key: %s, net: %s, code: %u, access code: %llu", 
+      IP2STR(&ip), CONFIG_ESP_UDP_SOCK_PORT, CONFIG_ESP_PASSPHRASE, netid.toString().c_str(), CONFIG_ESP_CODE, CONFIG_ESP_ACCESS_CODE);
 
     UDPListener lsnr(&identitySerializatiom, &gatewaySerializatiom);
     lsnr.setAddress(ip.addr, CONFIG_ESP_UDP_SOCK_PORT);

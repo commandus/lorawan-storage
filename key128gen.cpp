@@ -17,11 +17,6 @@
 #include "lorawan-string.h"
 #endif
 
-#ifdef ENABLE_DEBUG
-#include <iostream>
-#include "lorawan-string.h"
-#endif
-
 // N_MAX_ROUNDS = 14  N_BLOCK = 4 * 4 = 15
 // KSCH_SIZE = 240
 #define KSCH_SIZE	((N_MAX_ROUNDS + 1) * N_BLOCK)
@@ -78,12 +73,6 @@ uint8_t* keyGen(
 	AES_CMAC_SetKey(&aesCmacCtx, key);
 	AES_CMAC_Update(&aesCmacCtx, blockB, sizeof(blockB));
 	AES_CMAC_Final(retVal, &aesCmacCtx);
-#ifdef ENABLE_DEBUG
-    std::cerr << "keyGen " << DEVADDR2string(DEVADDR(devAddr))
-		<< " key: " << hexString(key, 16)
-		<< ": " << hexString(retVal, 16)
-        << std::endl;
-#endif
 	return retVal;
 }
 
@@ -162,14 +151,6 @@ uint8_t* phrase2key(
 	AES_CMAC_Update(&aesCmacCtx, blockB, sizeof(blockB));
 	AES_CMAC_Update(&aesCmacCtx, (uint8_t *) phrase, (uint32_t) size);
 	AES_CMAC_Final(retVal, &aesCmacCtx);
-#ifdef ENABLE_DEBUG
-    std::cerr << "phrase2key "
-		<< " phrase: " << phrase
-		<< " key: " << hexString(key, 16)
-		<< ": " << hexString(retVal, 16)
-        << std::endl;
-#endif
-
 	return retVal;
 }
 

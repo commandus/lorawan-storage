@@ -67,35 +67,23 @@ extern "C" {
 
 void AES_CMAC_Init(AES_CMAC_CTX *ctx)
 {
-#ifdef ENABLE_DEBUG
-        printf("AES_CMAC_Init\n");
-    // std::cerr << "AES_CMAC_Init " << hexString(ctx, AES_CMAC_CTX) << std::endl;
-#endif
-            memset1(ctx->X, 0, sizeof ctx->X);
-            ctx->M_n = 0;
+        memset1(ctx->X, 0, sizeof ctx->X);
+        ctx->M_n = 0;
         memset1(ctx->rijndael.ksch, '\0', 240);
 }
     
 void AES_CMAC_SetKey(AES_CMAC_CTX *ctx, const uint8_t key[AES_CMAC_KEY_LENGTH])
 {
-#ifdef ENABLE_DEBUG
-        printf("AES_CMAC_SetKey\n");
-    // std::cerr << "AES_CMAC_SetKey " << hexString(ctx, AES_CMAC_CTX) << " " << hexString(key, AES_CMAC_KEY_LENGTH) << std::endl;
-#endif
-           //rijndael_set_key_enc_only(&ctx->rijndael, key, 128);
+        //rijndael_set_key_enc_only(&ctx->rijndael, key, 128);
        aes_set_key( key, AES_CMAC_KEY_LENGTH, &ctx->rijndael);
 }
     
 void AES_CMAC_Update(AES_CMAC_CTX *ctx, const uint8_t *data, uint32_t len)
 {
-#ifdef ENABLE_DEBUG
-        printf("AES_CMAC_SetKey\n");
-    // std::cerr << "AES_CMAC_Update " << hexString(ctx, AES_CMAC_CTX) << " " << hexString(data, len) << std::endl;
-#endif
-            uint32_t mlen;
+        uint32_t mlen;
         uint8_t in[16];
     
-            if (ctx->M_n > 0) {
+        if (ctx->M_n > 0) {
                    if (16 - ctx->M_n < len)
                       mlen = 16 - ctx->M_n;
                    else
@@ -129,11 +117,7 @@ void AES_CMAC_Update(AES_CMAC_CTX *ctx, const uint8_t *data, uint32_t len)
    
 void AES_CMAC_Final(uint8_t digest[AES_CMAC_DIGEST_LENGTH], AES_CMAC_CTX *ctx)
 {
-#ifdef ENABLE_DEBUG
-        printf("AES_CMAC_Final\n");
-    // std::cerr << "AES_CMAC_Final " << hexString(ctx, AES_CMAC_CTX) << " " << hexString(digest, AES_CMAC_DIGEST_LENGTH) << std::endl;
-#endif
-            uint8_t K[16];
+        uint8_t K[16];
         uint8_t in[16];
             /* generate subkey K1 */
             memset1(K, '\0', 16);
