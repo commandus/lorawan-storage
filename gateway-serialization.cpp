@@ -502,7 +502,7 @@ std::string GatewayListResponse::toJsonString() const {
     ss << R"({"result": )" << GatewayOperationResponse::toJsonString()
        << ", \"gateways\": [";
     bool isFirst = true;
-    for (auto i = 0; i < response; i++) {
+    for (uint32_t i = 0; i < response; i++) {
         if (isFirst)
             isFirst = false;
         else
