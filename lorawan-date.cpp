@@ -10,7 +10,6 @@
 #include <cstring>
 #include <sstream>
 #include <iomanip>
-#include "platform-specific.h"
 
 #ifdef _MSC_VER
 #include "strptime.h"
@@ -43,11 +42,9 @@ static std::string TM2String(
     strftime(dt, sizeof(dt), format.c_str(), &value);
     if (usec == -1)
         return std::string(dt);
-    else {
-        std::stringstream ss;
-        ss << std::string(dt) << "." << std::setw(6) << std::setfill('0') << usec;
-        return ss.str();
-    }
+    std::stringstream ss;
+    ss << std::string(dt) << "." << std::setw(6) << std::setfill('0') << usec;
+    return ss.str();
 }
 
 /**
