@@ -185,7 +185,7 @@ DEVNONCE string2DEVNONCE(
 )
 {
     DEVNONCE r;
-    r.u = strtoul(value.c_str(), nullptr, 16);
+    r.u = (uint16_t) strtoul(value.c_str(), nullptr, 16);
     r.u = NTOH2(r.u);
     return r;
 }

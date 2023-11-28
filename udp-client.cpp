@@ -146,7 +146,7 @@ void UDPClient::start() {
             socklen_t socklen = sizeof(srcAddress);
             auto *rxBuf = (unsigned char *) malloc(rxSize);
 
-            ssize_t len = recvfrom(sock, (char *) rxBuf, rxSize, 0, (struct sockaddr *)&srcAddress, &socklen);
+            ssize_t len = recvfrom(sock, (char *) rxBuf, (int) rxSize, 0, (struct sockaddr *)&srcAddress, &socklen);
 
             if (len < 0) {  // Error occurred during receiving
                 status = ERR_CODE_SOCKET_READ;

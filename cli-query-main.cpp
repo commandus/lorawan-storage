@@ -302,7 +302,7 @@ public:
             if (params.verbose) {
                 std::cout << response->toJsonString() << std::endl;
             } else {
-                for (auto i = 0; i < response->response; i++) {
+                for (uint32_t i = 0; i < response->response; i++) {
                     std::cout << std::hex << response->identities[i].gatewayId
                         << "\t" << sockaddr2string(&response->identities[i].sockaddr)
                         << std::endl;
