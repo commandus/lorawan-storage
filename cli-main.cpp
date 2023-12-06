@@ -34,11 +34,11 @@
 #include "gateway-service-mem.h"
 #endif
 
-#include "lorawan-error.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-msg.h"
 #include "log.h"
 #include "daemonize.h"
 #include "ip-address.h"
-#include "lorawan-msg.h"
 
 const char *programName = "lorawan-storage";
 

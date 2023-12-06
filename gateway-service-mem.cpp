@@ -1,10 +1,10 @@
 #include <cstring>
 
 #include "gateway-service-mem.h"
-#include "lorawan-types.h"
-#include "lorawan-error.h"
-#include "lorawan-string.h"
 #include "ip-address.h"
+#include "lorawan/lorawan-types.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-string.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>

@@ -20,9 +20,9 @@
 #endif
 
 #include "uv-mem.h"
-#include "lorawan-string.h"
-#include "lorawan-error.h"
 #include "ip-helper.h"
+#include "lorawan/lorawan-string.h"
+#include "lorawan/lorawan-error.h"
 
 #define DEF_KEEPALIVE_SECS 60
 

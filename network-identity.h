@@ -2,7 +2,7 @@
 #define NETWORK_IDENTITY_H_	1
 
 #include <string>
-#include "lorawan-types.h"
+#include "lorawan/lorawan-types.h"
 
 class DeviceId;
 

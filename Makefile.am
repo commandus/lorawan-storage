@@ -58,12 +58,15 @@ nobase_dist_include_HEADERS = \
 	identity-service.h identity-service-mem.h identity-service-sqlite.h \
 	gateway-service.h gateway-service-mem.h gateway-service-sqlite.h log.h \
 	identity-service-gen.h key128gen.h \
-	lorawan-error.h lorawan-types.h udp-client.h uv-listener.h \
-	storage-listener.h ip-helper.h sqlite-helper.h lorawan-const.h \
-	lorawan-msg.h network-identity.h udp-listener.h uv-mem.h \
+	lorawan/lorawan-error.h lorawan/lorawan-types.h lorawan/lorawan-const.h \
+	lorawan/lorawan-msg.h lorawan/lorawan-conv.h lorawan/lorawan-string.h \
+	lorawan/lorawan-date.h \
+	udp-client.h uv-listener.h \
+	storage-listener.h ip-helper.h sqlite-helper.h  \
+	network-identity.h udp-listener.h uv-mem.h \
 	service-serialization.h gateway-serialization.h identity-serialization.h \
-	lorawan-conv.h lorawan-string.h platform-specific.h uv-client.h \
-	lorawan-date.h gateway-identity.h ip-address.h file-helper.h \
+	platform-specific.h uv-client.h \
+	gateway-identity.h ip-address.h file-helper.h \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
 	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c \
 	third-party/argtable3/argtable3.h third-party/strptime.h third-party/daemonize.h
@@ -72,8 +75,9 @@ nobase_dist_include_HEADERS = \
 # liblorawan
 #
 SRC_LIBLORAWAN = \
-	lorawan-types.cpp lorawan-string.cpp lorawan-conv.cpp network-identity.cpp \
-	gateway-identity.cpp lorawan-date.cpp gateway-service.cpp identity-service.cpp \
+	lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp \
+	network-identity.cpp lorawan/lorawan-date.cpp lorawan/lorawan-mac.cpp \
+	gateway-identity.cpp gateway-service.cpp identity-service.cpp \
 	ip-helper.cpp ip-address.cpp \
 	third-party/strptime.cpp
 

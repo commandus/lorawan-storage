@@ -2,7 +2,6 @@
 
 #include <uv.h>
 
-#include "lorawan-string.h"
 #include "ip-helper.h"
 
 #ifdef _MSC_VER
@@ -19,8 +18,9 @@
 #endif
 
 #include "uv-mem.h"
-#include "lorawan-error.h"
-#include "lorawan-conv.h"
+#include "lorawan/lorawan-string.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-conv.h"
 
 #ifdef ENABLE_DEBUG
 #include <iostream>

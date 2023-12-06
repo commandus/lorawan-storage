@@ -1,8 +1,8 @@
 #include <sstream>
 #include <iostream>
 #include "identity-service-mem.h"
-#include "lorawan-error.h"
-#include "lorawan-string.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-string.h"
 #include "file-helper.h"
 
 #ifdef ESP_PLATFORM

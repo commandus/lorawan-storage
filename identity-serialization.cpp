@@ -1,13 +1,11 @@
-#include "identity-serialization.h"
-#include "lorawan-conv.h"
-#include "ip-helper.h"
-
 #include <sstream>
 #include <cstring>
 
-#include "lorawan-error.h"
-#include "ip-address.h"
-#include "lorawan-string.h"
+#include "identity-serialization.h"
+#include "lorawan/lorawan-conv.h"
+
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-string.h"
 
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"

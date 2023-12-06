@@ -1,6 +1,7 @@
 #include <cstddef>
 #include <cinttypes>
-#include "lorawan-types.h"
+
+#include "lorawan/lorawan-types.h"
 
 /*
  * Step 1. Get passphrase (about 10-20 bytes long)

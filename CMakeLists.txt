@@ -108,10 +108,12 @@ else()
 	# liblorawan
 	#
 	set(SRC_LIBLORAWAN
-		lorawan-types.cpp lorawan-string.cpp lorawan-conv.cpp network-identity.cpp
-		gateway-identity.cpp gateway-service.cpp identity-service.cpp
-		ip-helper.cpp lorawan-date.cpp ip-address.cpp third-party/strptime.cpp
-		service-serialization.cpp
+		lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp
+		lorawan/lorawan-mac.cpp
+		network-identity.cpp gateway-identity.cpp 
+		gateway-service.cpp identity-service.cpp service-serialization.cpp
+		ip-helper.cpp ip-address.cpp
+		third-party/strptime.cpp
 	)
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )

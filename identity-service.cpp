@@ -1,6 +1,6 @@
 #include <cstring>
 #include "identity-service.h"
-#include "lorawan-conv.h"
+#include "lorawan/lorawan-conv.h"
 
 int IdentityService::joinAccept(
     JOIN_ACCEPT_FRAME_HEADER &retval,

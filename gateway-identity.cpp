@@ -3,7 +3,7 @@
 #include <iomanip>
 #include <cstring>
 
-#include "lorawan-date.h"
+#include "lorawan/lorawan-date.h"
 #include "ip-address.h"
 
 /**

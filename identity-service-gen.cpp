@@ -1,9 +1,9 @@
 #include <regex>
 
 #include "identity-service-gen.h"
-#include "lorawan-types.h"
-#include "lorawan-error.h"
-#include "lorawan-string.h"
+#include "lorawan/lorawan-types.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-string.h"
 #include "key128gen.h"
 
 #ifdef ESP_PLATFORM

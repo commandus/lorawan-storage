@@ -1,9 +1,9 @@
 #include <cstring>
 #include <sstream>
 
-#include "lorawan-types.h"
-#include "lorawan-string.h"
-#include "lorawan-conv.h"
+#include "lorawan/lorawan-types.h"
+#include "lorawan/lorawan-string.h"
+#include "lorawan/lorawan-conv.h"
 #include "network-identity.h"
 
 NetworkIdentity::NetworkIdentity() = default;

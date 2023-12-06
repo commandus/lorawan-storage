@@ -1,6 +1,5 @@
-#include <cstring>
+#include "lorawan/lorawan-conv.h"
 #include "gateway-service.h"
-#include "lorawan-conv.h"
 
 GatewayService::GatewayService() = default;
 

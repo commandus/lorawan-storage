@@ -3,7 +3,8 @@
 
 #include <map>
 #include <vector>
-#include "lorawan-types.h"
+
+#include "lorawan/lorawan-types.h"
 
 /**
  * Identity service interface

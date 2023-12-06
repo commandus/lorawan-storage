@@ -1,5 +1,6 @@
 #include "ip-helper.h"
-#include "lorawan-conv.h"
+
+#include "lorawan/lorawan-conv.h"
 
 #ifdef _MSC_VER
 #include <WinSock2.h>

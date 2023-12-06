@@ -1,7 +1,7 @@
 #include <cstring>
-#include "service-serialization.h"
-#include "lorawan-conv.h"
 
+#include "lorawan/lorawan-conv.h"
+#include "service-serialization.h"
 #include "ip-address.h"
 
 #ifdef ESP_PLATFORM

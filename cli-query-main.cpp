@@ -12,14 +12,14 @@
 #else
 #include "udp-client.h"
 #endif
-#include "lorawan-error.h"
-#include "lorawan-msg.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-msg.h"
+#include "lorawan/lorawan-string.h"
 #include "log.h"
 #include "gateway-identity.h"
 #include "identity-serialization.h"
 #include "ip-address.h"
 #include "ip-helper.h"
-#include "lorawan-string.h"
 
 const char *programName = "lorawan-query";
 #define DEF_PORT 4244

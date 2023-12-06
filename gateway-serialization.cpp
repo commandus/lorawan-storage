@@ -1,12 +1,11 @@
-#include "gateway-serialization.h"
-#include "lorawan-conv.h"
-#include "ip-helper.h"
-
 #include <sstream>
 #include <cstring>
 
-#include "lorawan-error.h"
+#include "gateway-serialization.h"
+#include "ip-helper.h"
 #include "ip-address.h"
+#include "lorawan/lorawan-conv.h"
+#include "lorawan/lorawan-error.h"
 
 #ifdef ESP_PLATFORM
 #include "platform-defs.h"
