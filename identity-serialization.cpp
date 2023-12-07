@@ -23,8 +23,8 @@
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
-#include "lorawan-string.h"
-#include "lorawan-msg.h"
+#include "lorawan/lorawan-string.h"
+#include "lorawan/lorawan-msg.h"
 #endif
 
 static void serializeNETWORKIDENTITY(

@@ -14,7 +14,7 @@
 #ifdef ESP_PLATFORM
 #include <iostream>
 #include "platform-defs.h"
-#include "lorawan-string.h"
+#include "lorawan/lorawan-string.h"
 #endif
 
 // N_MAX_ROUNDS = 14  N_BLOCK = 4 * 4 = 15

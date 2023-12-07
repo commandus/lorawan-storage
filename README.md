@@ -139,7 +139,7 @@ In "idf.py menuconfig" step go to
 
 - Compiler options, Optimization Level, select "Optimize for size (-Os)"
 - Component config, Log output, Default log verbosity, Select "No output"
-- Component config, MQTT disable all
+- Component config, ESP-MQTT Configurations, disable all
 - LoRaWAN storage, set settings
 
 Save sdkconfig file and quit.

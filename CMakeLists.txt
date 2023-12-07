@@ -12,17 +12,13 @@
 # cmake -DENABLE_LIBUV=on
 #
 cmake_minimum_required(VERSION 3.9)
-
 if(${ESP_PLATFORM})
     include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-    get_filename_component(EXTRA_COMPONENT_DIRS esp32 ABSOLUTE)
-    set(IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
-endif()
-
-project("lorawan-storage" VERSION 1.0)
-
-if(${ESP_PLATFORM})
+	project("lorawan-storage" VERSION 1.0)
+#    get_filename_component(EXTRA_COMPONENT_DIRS esp32 ABSOLUTE)
+#    set(IDF_EXTRA_COMPONENT_DIRS ${EXTRA_COMPONENT_DIRS})
 else()
+	project("lorawan-storage" VERSION 1.0)
     # ------------------------ CHANGE PATH BELOW ON WINDOWS ------------------------
     set(VCPKG_INC "/git/vcpkg/installed/x64-windows/include")
     # ------------------------ CHANGE PATH ABOVE ON WINDOWS ------------------------
