@@ -25,7 +25,7 @@
 #ifdef ENABLE_DEBUG
 #include <iostream>
 #include <cstring>
-#include "lorawan-msg.h"
+#include "lorawan/lorawan-msg.h"
 #endif
 
 #define DEF_KEEPALIVE_SECS 60

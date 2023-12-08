@@ -1,8 +1,8 @@
 #include <sstream>
 #include <iostream>
 #include "gateway-service-sqlite.h"
-#include "lorawan-error.h"
-#include "lorawan-string.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-string.h"
 #include "ip-address.h"
 #include "file-helper.h"
 

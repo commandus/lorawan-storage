@@ -127,7 +127,7 @@ public:
         uint64_t accessCode
     );
     /**
-     * Request IdentityService and return serializred response.
+     * Request IdentityService and return serialized response.
      * @param retBuf buffer to return serialized response
      * @param retSize buffer size
      * @param request serialized request

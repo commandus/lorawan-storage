@@ -136,3 +136,8 @@ int MemoryIdentityService::next(
 {
     return ERR_CODE_ADDR_SPACE_FULL;
 }
+
+extern "C" IdentityService* makeMemoryIdentityService()
+{
+    return new MemoryIdentityService;
+}

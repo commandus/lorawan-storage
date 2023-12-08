@@ -1,9 +1,8 @@
 #include <sstream>
 #include <iostream>
 #include "identity-service-sqlite.h"
-#include "lorawan-error.h"
-#include "lorawan-string.h"
-#include "ip-address.h"
+#include "lorawan/lorawan-error.h"
+#include "lorawan/lorawan-string.h"
 #include "file-helper.h"
 #include "sqlite-helper.h"
 
@@ -287,4 +286,9 @@ int SqliteIdentityService::next(
 )
 {
     return ERR_CODE_ADDR_SPACE_FULL;
+}
+
+extern "C" IdentityService* makeSqliteIdentityService()
+{
+    return new SqliteIdentityService;
 }

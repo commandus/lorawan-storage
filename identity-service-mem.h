@@ -37,4 +37,6 @@ public:
     int next(NETWORKIDENTITY &retVal) override;
 };
 
+extern "C" IdentityService* makeMemoryIdentityService();
+
 #endif

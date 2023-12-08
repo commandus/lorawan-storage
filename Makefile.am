@@ -77,6 +77,7 @@ nobase_dist_include_HEADERS = \
 SRC_LIBLORAWAN = \
 	lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp \
 	network-identity.cpp lorawan/lorawan-date.cpp lorawan/lorawan-mac.cpp \
+	lorawan/lorawan-error.cpp lorawan/lorawan-msg.cpp \
 	gateway-identity.cpp gateway-service.cpp identity-service.cpp \
 	ip-helper.cpp ip-address.cpp \
 	third-party/strptime.cpp
@@ -87,6 +88,17 @@ LORAWAN_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) \
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)
 liblorawan_a_CPPFLAGS = -fPIC
+
+storage_mem_la_SOURCES = identity-service-mem.cpp gateway-service-mem.cpp
+storage_mem_la_LDFLAGS = -version-info $(VERSION_INFO)
+
+storage_gen_la_SOURCES = identity-service-gen.cpp gateway-service-mem.cpp
+storage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
+storage_gen_la_LIBADD =
+
+storage_sqlite_la_SOURCES = identity-service-sqlite.cpp gateway-service-sqlite.cpp
+storage_sqlite_la_LDFLAGS = -version-info $(VERSION_INFO)
+storage_sqlite_la_LIBADD = -lsqlite
 
 lorawan_query_SOURCES = \
 	$(CLI_SRC) $(SRC_LIBLORAWAN) \

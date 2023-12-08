@@ -48,4 +48,6 @@ class GenIdentityService: public IdentityService {
         int next(NETWORKIDENTITY &retVal) override;
 };
 
+extern "C" IdentityService* makeGenIdentityService();
+
 #endif

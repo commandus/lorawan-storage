@@ -229,33 +229,27 @@ size_t file::filesInPath
 	std::vector<std::string> *retval
 )
 {
-	char *pathlist[2];
-	pathlist[1] = NULL;
-	if (flags & 1)
-	{
-		char realtapth[PATH_MAX+1];
-		pathlist[0] = realpath((char *) path.c_str(), realtapth);
+	char *pathList[2];
+    pathList[1] = nullptr;
+	if (flags & 1) {
+		char realPath[PATH_MAX + 1];
+        pathList[0] = realpath((char *) path.c_str(), realPath);
+	} else {
+        pathList[0] = (char *) path.c_str();
 	}
-	else
-	{
-		pathlist[0] = (char *) path.c_str();
-	}
-    if (!pathlist[0])
+    if (!pathList[0])
         return 0;
 
-	int parent_len = strlen(pathlist[0]) + 1;	///< Arggh. Remove '/' path delimiter(I mean it 'always' present). Not sure is it works fine. It's bad, I know.
+	int parent_len = strlen(pathList[0]) + 1;	///< Arggh. Remove '/' path delimiter(I mean it 'always' present). Not sure is it works fine. It's bad, I know.
 
-	FTS* file_system = fts_open(pathlist, FTS_LOGICAL | FTS_NOSTAT, NULL);
+	FTS* file_system = fts_open(pathList, FTS_LOGICAL | FTS_NOSTAT, nullptr);
 
     if (!file_system)
     	return 0;
     size_t count = 0;
-    FTSENT* parent;
-	while((parent = fts_read(file_system)))
-	{
+	while(FTSENT* parent = fts_read(file_system)) {
 		FTSENT* child = fts_children(file_system, 0);
-		if (errno != 0)
-		{
+		if (errno != 0) {
 			// ignore, perhaps permission error
 		}
 		while (child)

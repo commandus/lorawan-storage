@@ -105,8 +105,8 @@ else()
 	#
 	set(SRC_LIBLORAWAN
 		lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp
-		lorawan/lorawan-mac.cpp
-		network-identity.cpp gateway-identity.cpp 
+		lorawan/lorawan-mac.cpp lorawan/lorawan-error.cpp lorawan/lorawan-msg.cpp
+		network-identity.cpp gateway-identity.cpp
 		gateway-service.cpp identity-service.cpp service-serialization.cpp
 		ip-helper.cpp ip-address.cpp
 		third-party/strptime.cpp
@@ -114,6 +114,10 @@ else()
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+
+	add_library(storage-mem SHARED identity-service-mem.cpp gateway-service-mem.cpp)
+	add_library(storage-gen SHARED identity-service-gen.cpp gateway-service-mem.cpp)
+	add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp)
 
 	if (ENABLE_IPV6)
 		set(GATEWAY_DEF ENABLE_IPV6 )
@@ -139,8 +143,9 @@ else()
 		set(CLI_SRC uv-client.cpp uv-mem.cpp)
 	else()
 		set(LSNR_SRC udp-listener.cpp)
-		set(CLI_SRC udp-client.cpp)
+		set(CLI_SRC udp-client.cpp plugin-client.cpp)
 	endif()
+	set(CLI_SRC ${CLI_SRC} plugin-client.cpp)
 
 	if (ENABLE_GEN)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_GEN)
