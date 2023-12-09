@@ -115,10 +115,6 @@ else()
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
-	add_library(storage-mem SHARED identity-service-mem.cpp gateway-service-mem.cpp)
-	add_library(storage-gen SHARED identity-service-gen.cpp gateway-service-mem.cpp)
-	add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp)
-
 	if (ENABLE_IPV6)
 		set(GATEWAY_DEF ENABLE_IPV6 )
 	endif()
@@ -168,6 +164,17 @@ else()
 	endif()
 
 	#
+	# Plugins
+	#
+	add_library(storage-mem SHARED identity-service-mem.cpp gateway-service-mem.cpp)
+	target_link_libraries(storage-mem PRIVATE lorawan)
+	add_library(storage-gen SHARED identity-service-gen.cpp gateway-service-mem.cpp key128gen.cpp ${AES_SRC})
+	target_link_libraries(storage-gen PRIVATE lorawan)
+	target_include_directories(storage-gen PRIVATE "third-party")
+	add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp file-helper.cpp sqlite-helper.cpp)
+	target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
+	
+	#
 	# lorawan-service
 	#
 	set(LORAWAN_SERVICE_SRC
@@ -187,7 +194,7 @@ else()
 	#
 	set(LORAWAN_QUERY_SRC
 		cli-query-main.cpp ${CLI_SRC}
-		identity-serialization.cpp gateway-serialization.cpp
+		identity-serialization.cpp gateway-serialization.cpp lorawan/lorawan-date.cpp
 		${ARGTABLE}
 	)
 	add_executable(lorawan-query ${LORAWAN_QUERY_SRC})
