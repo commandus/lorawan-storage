@@ -112,7 +112,7 @@ time_t parseDate(
  * @param tzp
  * @return
  */
-static int gettimeofday(
+int gettimeofday(
     struct timeval *tp,
     struct timezone *tzp
 )

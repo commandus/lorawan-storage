@@ -137,7 +137,7 @@ int MemoryIdentityService::next(
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
-extern "C" IdentityService* makeMemoryIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService()
 {
     return new MemoryIdentityService;
 }

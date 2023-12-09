@@ -172,7 +172,7 @@ int GenIdentityService::nextBruteForce(
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
-extern "C" IdentityService* makeGenIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeGenIdentityService()
 {
     return new GenIdentityService;
 }

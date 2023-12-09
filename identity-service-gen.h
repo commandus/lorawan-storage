@@ -6,6 +6,8 @@
 #include <map>
 #include "identity-service.h"
 
+#include "platform-specific.h"
+
 class GenIdentityService: public IdentityService {
 	private:
 		NETID netid;
@@ -48,6 +50,6 @@ class GenIdentityService: public IdentityService {
         int next(NETWORKIDENTITY &retVal) override;
 };
 
-extern "C" IdentityService* makeGenIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService * makeGenIdentityService();
 
 #endif

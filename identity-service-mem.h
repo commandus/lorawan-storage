@@ -2,6 +2,7 @@
 #define IDENTITY_SERVICE_MEM_H_ 1
 
 #include "identity-service.h"
+#include "platform-specific.h"
 
 class MemoryIdentityService: public IdentityService {
 protected:
@@ -37,6 +38,6 @@ public:
     int next(NETWORKIDENTITY &retVal) override;
 };
 
-extern "C" IdentityService* makeMemoryIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService();
 
 #endif
