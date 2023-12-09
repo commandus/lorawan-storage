@@ -11,6 +11,8 @@
 #include "platform-defs.h"
 #endif
 
+#include "platform-specific.h"
+
 #define FIELD_LIST "activation, deviceclass, deveui, nwkskey, appskey, version, appeui, appkey, nwkkey, devnonce, joinnonce, name, addr"
 
 SqliteIdentityService::SqliteIdentityService()
@@ -288,7 +290,7 @@ int SqliteIdentityService::next(
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
-extern "C" IdentityService* makeSqliteIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService()
 {
     return new SqliteIdentityService;
 }

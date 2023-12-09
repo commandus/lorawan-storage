@@ -2,6 +2,7 @@
 #define IDENTITY_SERVICE_GEN_H_ 1
 
 #include <sqlite3.h>
+#include "platform-specific.h"
 #include "identity-service.h"
 
 class SqliteIdentityService: public IdentityService {
@@ -39,6 +40,6 @@ public:
     int next(NETWORKIDENTITY &retVal) override;
 };
 
-extern "C" IdentityService* makeSqliteIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService();
 
 #endif
