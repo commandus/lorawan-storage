@@ -3,6 +3,7 @@
 
 #include "gateway-service.h"
 #include "sqlite3.h"
+#include "platform-specific.h"
 
 class SqliteGatewayService: public GatewayService {
 protected:
@@ -23,5 +24,7 @@ public:
     void flush() override;
     void done() override;
 };
+
+EXPORT_SHARED_C_FUNC GatewayService* makeSqliteGatewayService();
 
 #endif

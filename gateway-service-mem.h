@@ -5,6 +5,7 @@
 #include <mutex>
 #include <map>
 #include "gateway-service.h"
+#include "platform-specific.h"
 
 class MemoryGatewayService: public GatewayService {
 protected:
@@ -25,5 +26,7 @@ public:
     void flush() override;
     void done() override;
 };
+
+EXPORT_SHARED_C_FUNC GatewayService* makeMemoryGatewayService();
 
 #endif

@@ -270,3 +270,8 @@ void SqliteGatewayService::done()
     sqlite3_close(db);
     db = nullptr;
 }
+
+EXPORT_SHARED_C_FUNC GatewayService* makeSqliteGatewayService()
+{
+    return new SqliteGatewayService;
+}

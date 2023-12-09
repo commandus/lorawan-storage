@@ -129,3 +129,8 @@ void MemoryGatewayService::done()
 {
     clear();
 }
+
+EXPORT_SHARED_C_FUNC GatewayService* makeMemoryGatewayService()
+{
+    return new MemoryGatewayService;
+}
