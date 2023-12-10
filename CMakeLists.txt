@@ -171,9 +171,10 @@ else()
 	add_library(storage-gen SHARED identity-service-gen.cpp gateway-service-mem.cpp key128gen.cpp ${AES_SRC})
 	target_link_libraries(storage-gen PRIVATE lorawan)
 	target_include_directories(storage-gen PRIVATE "third-party")
-	add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp file-helper.cpp sqlite-helper.cpp)
-	target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
-	
+	if (ENABLE_SQLITE)
+		add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp file-helper.cpp sqlite-helper.cpp)
+		target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
+	endif()
 	#
 	# lorawan-service
 	#
@@ -194,13 +195,26 @@ else()
 	#
 	set(LORAWAN_QUERY_SRC
 		cli-query-main.cpp ${CLI_SRC}
-		identity-serialization.cpp gateway-serialization.cpp lorawan/lorawan-date.cpp
+		identity-serialization.cpp gateway-serialization.cpp lorawan/lorawan-date.cpp cli-helper.cpp
 		${ARGTABLE}
 	)
 	add_executable(lorawan-query ${LORAWAN_QUERY_SRC})
 	target_link_libraries(lorawan-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-query PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-query PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+
+	#
+	# lorawan-query-plugin
+	#
+	set(LORAWAN_QUERY_PLUGIN_SRC
+		cli-query-plugin-main.cpp plugin-client.cpp cli-helper.cpp
+		identity-serialization.cpp gateway-serialization.cpp
+		lorawan/lorawan-date.cpp
+		${ARGTABLE}
+	)
+	add_executable(lorawan-query-plugin ${LORAWAN_QUERY_PLUGIN_SRC})
+	target_link_libraries(lorawan-query-plugin PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} lorawan)
+	target_include_directories(lorawan-query-plugin PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'
