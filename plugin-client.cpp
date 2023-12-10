@@ -20,82 +20,21 @@
 #include "lorawan-msg.h"
 #endif
 
-static void parseResponse(
-    PluginClient *client,
-    const unsigned char *buf,
-    ssize_t nRead
-) {
-    if (!client)
-        return;
-    if (isIdentityTag(buf, nRead)) {
-        enum IdentityQueryTag tag = validateIdentityQuery(buf, nRead);
-        switch (tag) {
-            case QUERY_IDENTITY_EUI:   // request gateway identifier(with address) by network address.
-            case QUERY_IDENTITY_ADDR:   // request gateway address (with identifier) by identifier.
-            {
-                IdentityGetResponse gr(buf, nRead);
-                gr.ntoh();
-                client->onResponse->onIdentityGet(client, &gr);
-            }
-                break;
-            case QUERY_IDENTITY_LIST:   // List entries
-            {
-                IdentityListResponse gr(buf, nRead);
-                gr.response = NTOH4(gr.response);
-                gr.ntoh();
-                client->onResponse->onIdentityList(client, &gr);
-            }
-                break;
-            default: {
-                IdentityOperationResponse gr(buf, nRead);
-                gr.ntoh();
-                client->onResponse->onIdentityOperation(client, &gr);
-            }
-                break;
-        }
-
-    } else {
-        enum GatewayQueryTag tag = validateGatewayQuery(buf, nRead);
-        switch (tag) {
-            case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
-            case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
-            {
-                GatewayGetResponse gr(buf, nRead);
-                gr.ntoh();
-                client->onResponse->onGatewayGet(client, &gr);
-            }
-                break;
-            case QUERY_GATEWAY_LIST:   // List entries
-            {
-                GatewayListResponse gr(buf, nRead);
-                gr.response = NTOH4(gr.response);
-                gr.ntoh();
-                client->onResponse->onGatewayList(client, &gr);
-            }
-                break;
-            default: {
-                GatewayOperationResponse gr(buf, nRead);
-                gr.ntoh();
-                client->onResponse->onGatewayOperation(client, &gr);
-            }
-                break;
-        }
-    }
-}
-
 typedef IdentityService*(*makeIdentityServiceFunc)();
 typedef GatewayService*(*makeGatewayServiceFunc)();
 
 const std::string MAKE_FUNC_PREFIX = "make";
+const std::string MAKE_FUNC_IDENTITY_SUFFIX = "IdentityService";
+const std::string MAKE_FUNC_GATEWAY_SUFFIX = "GatewayService";
+
 
 int PluginClient::load(
     const std::string &fileName,
-    const std::string &identityClassName,
-    const std::string &gatewayClassName
+    const std::string &className
 )
 {
-    std::string makeIdentityClass = MAKE_FUNC_PREFIX + identityClassName;
-    std::string makeGatewayClass = MAKE_FUNC_PREFIX + gatewayClassName;
+    std::string makeIdentityClass = MAKE_FUNC_PREFIX + className + MAKE_FUNC_IDENTITY_SUFFIX;
+    std::string makeGatewayClass = MAKE_FUNC_PREFIX + className + MAKE_FUNC_GATEWAY_SUFFIX;
     handleSvc = dlopen(fileName.c_str(), RTLD_LAZY);
     if (handleSvc) {
         makeIdentityServiceFunc fI = (makeIdentityServiceFunc) dlsym(handleSvc, makeIdentityClass.c_str());
@@ -122,107 +61,19 @@ void PluginClient::unload()
     }
 }
 
-void PluginClient::stop()
-{
-    status = ERR_CODE_STOPPED;
-}
-
 PluginClient::PluginClient(
     const std::string &fileName,
-    const std::string &identityClassName,
-    const std::string &gatewayClassName,
-    ResponseIntf *aOnResponse,
+    const std::string &className,
     int32_t aCode,
     uint64_t aAccessCode
 )
-	: QueryClient(aOnResponse), handleSvc(0), svcIdentity(nullptr), svcGateway(nullptr),
-    status(CODE_OK), query(nullptr), code(aCode), accessCode(aAccessCode)
+	: handleSvc(0), svcIdentity(nullptr), svcGateway(nullptr),
+    status(CODE_OK), code(aCode), accessCode(aAccessCode)
 {
-    load(fileName, identityClassName, gatewayClassName);
+    load(fileName, className);
 }
 
 PluginClient::~PluginClient()
 {
-    stop();
     unload();
-}
-
-ServiceMessage* PluginClient::request(
-    ServiceMessage* value
-)
-{
-    ServiceMessage* r = query;
-    query = value;
-    return r;
-}
-
-void PluginClient::start() {
-    IdentitySerialization identitySerialization(svcIdentity, code, accessCode);
-    GatewaySerialization gatewaySerialization(svcGateway, code, accessCode);
-    while (status != ERR_CODE_STOPPED) {
-        if (!query) {
-            status = ERR_CODE_STOPPED;
-            break;
-        }
-        unsigned char rBuf[307];
-        unsigned char qBuf[307];
-        size_t qSize = query->serialize(qBuf);
-        size_t sz = identitySerialization.query(rBuf, sizeof(rBuf), qBuf, qSize);
-        if (sz == 0) {
-            sz = gatewaySerialization.query(rBuf, sizeof(rBuf), qBuf, qSize);
-        }
-        if (isIdentityTag(rBuf, sz)) {
-            enum IdentityQueryTag tag = validateIdentityQuery(rBuf, sz);
-            switch (tag) {
-                case QUERY_IDENTITY_EUI:   // request gateway identifier(with address) by network address.
-                case QUERY_IDENTITY_ADDR:   // request gateway address (with identifier) by identifier.
-                {
-                    IdentityGetResponse gr(rBuf, sz);
-                    gr.ntoh();
-                    onResponse->onIdentityGet(this, &gr);
-                }
-                    break;
-                case QUERY_IDENTITY_LIST:   // List entries
-                {
-                    IdentityListResponse gr(rBuf, sz);
-                    gr.response = NTOH4(gr.response);
-                    gr.ntoh();
-                    onResponse->onIdentityList(this, &gr);
-                }
-                    break;
-                default: {
-                    IdentityOperationResponse gr(rBuf, sz);
-                    gr.ntoh();
-                    onResponse->onIdentityOperation(this, &gr);
-                }
-                    break;
-            }
-        } else {
-            enum GatewayQueryTag tag = validateGatewayQuery(rBuf, sz);
-            switch (tag) {
-                case QUERY_GATEWAY_ADDR:   // request gateway identifier(with address) by network address.
-                case QUERY_GATEWAY_ID:   // request gateway address (with identifier) by identifier.
-                {
-                    GatewayGetResponse gr(rBuf, sz);
-                    gr.ntoh();
-                    onResponse->onGatewayGet(this, &gr);
-                }
-                    break;
-                case QUERY_GATEWAY_LIST:   // List entries
-                {
-                    GatewayListResponse gr(rBuf, sz);
-                    gr.response = NTOH4(gr.response);
-                    gr.ntoh();
-                    onResponse->onGatewayList(this, &gr);
-                }
-                    break;
-                default: {
-                    GatewayOperationResponse gr(rBuf, sz);
-                    gr.ntoh();
-                    onResponse->onGatewayOperation(this, &gr);
-                }
-                    break;
-            }
-        }
-    }
 }

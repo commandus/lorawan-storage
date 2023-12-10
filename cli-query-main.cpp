@@ -20,100 +20,13 @@
 #include "identity-serialization.h"
 #include "ip-address.h"
 #include "ip-helper.h"
+#include "cli-helper.h"
 
 const char *programName = "lorawan-query";
 #define DEF_PORT 4244
 
-static std::string listCommands() {
-    std::stringstream ss;
-    const std::string &cs = identityCommandSet();
-    for (auto i = 0; i < cs.size(); i++) {
-        auto c = cs[i];
-        ss << "  " << c << "\t" << identityTag2string((enum IdentityQueryTag) c);
-        if (c == QUERY_IDENTITY_ADDR)
-            ss << " (default)";
-        ss << "\n";
-    }
-    for (auto i = 0; i < cs.size(); i++) {
-        auto c = gatewayCommandSet()[i];
-        ss << "  " << c << "\t" << gatewayTag2string((enum GatewayQueryTag) c);
-        ss << "\n";
-    }
-    return ss.str();
-}
-
-static std::string shortCommandList(char delimiter) {
-    std::stringstream ss;
-    ss << "command: ";
-    const std::string &cs = identityCommandSet();
-    for (auto i = 0; i < cs.size(); i++) {
-        ss << cs[i] << delimiter;
-    }
-    for (auto i = 0; i < cs.size(); i++) {
-        ss << cs[i] << delimiter;
-    }
-    ss << cs[cs.size() - 1];
-    ss << ", gateway id: 16 hex digits";
-    return ss.str();
-}
-
-static std::string commandLongName(int tag)
-{
-    std::string r = identityTag2string((enum IdentityQueryTag) tag);
-    if (r.empty())
-        r = gatewayTag2string((enum GatewayQueryTag) tag);
-    return r;
-}
-
-static GatewayQueryTag isGatewayTag(const char *tag) {
-    if (!tag)
-        return QUERY_GATEWAY_NONE;
-    const std::string &cs = gatewayCommandSet();
-    auto len = strlen(tag);
-    if (len == 1) {
-        if (cs.find(*tag) != std::string::npos) {
-            return (GatewayQueryTag) *tag;
-        }
-    } else {
-        for (auto it : cs) {
-            if (strcmp(gatewayTag2string((GatewayQueryTag) it), tag) == 0)
-                return (GatewayQueryTag) it;
-        }
-    }
-    return QUERY_GATEWAY_NONE;
-}
-
-static IdentityQueryTag isIdentityTag(const char *tag) {
-    if (!tag)
-        return QUERY_IDENTITY_NONE;
-    const std::string &cs = identityCommandSet();
-    auto len = strlen(tag);
-    if (len == 1) {
-        if (cs.find(*tag) != std::string::npos) {
-            return (IdentityQueryTag) *tag;
-        }
-    } else {
-        for (auto it : cs) {
-            if (strcmp(identityTag2string((IdentityQueryTag) it), tag) == 0)
-                return (IdentityQueryTag) it;
-        }
-    }
-    return QUERY_IDENTITY_NONE;
-}
-
-class DeviceOrGatewayIdentity {
-public:
-    bool hasDevice;
-    bool hasGateway;
-    GatewayIdentity gid;
-    NETWORKIDENTITY nid;
-    DeviceOrGatewayIdentity()
-        : hasDevice(false), hasGateway(false)
-    {};
-};
-
 // global parameters
-class CliGatewayQueryParams {
+class CliQueryParams {
 public:
     char tag;
     std::vector<DeviceOrGatewayIdentity> query;
@@ -129,7 +42,7 @@ public:
 
     int32_t retCode;
 
-    CliGatewayQueryParams()
+    CliQueryParams()
         : tag(QUERY_GATEWAY_NONE), queryPos(0), useTcp(false), verbose(0), port(DEF_PORT), code(42), accessCode(42), offset(0), size(0),
           retCode(0)
     {
@@ -158,7 +71,7 @@ public:
     }
 };
 
-static CliGatewayQueryParams params;
+static CliQueryParams params;
 
 class ResponsePrinter : public ResponseIntf {
 public:
@@ -435,7 +348,7 @@ static void run()
 
 int main(int argc, char **argv) {
     std::string shortCL = shortCommandList('|');
-    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | gateway-id | address:port>", 1, 100,
+    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address:port>", 1, 100,
         shortCL.c_str());
     struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
@@ -562,7 +475,7 @@ int main(int argc, char **argv) {
 			arg_print_errors(stderr, a_end, programName);
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "LoRaWAN gateway storage query" << std::endl;
+		std::cerr << "LoRaWAN storage query" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
         std::cerr << "Commands:\n" << listCommands() << std::endl;
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
@@ -575,8 +488,13 @@ int main(int argc, char **argv) {
 
 #ifdef _MSC_VER
     WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int r = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (r)
+        return r;
 #endif
 	run();
+#ifdef _MSC_VER
+    WSACleanup();
+#endif
     return params.retCode;
 }

@@ -2,8 +2,9 @@
 #define PLUGIN_CLIENT_H_	1
 
 #include <string>
-#include "gateway-serialization.h"
-#include "query-client.h"
+
+#include "identity-service.h"
+#include "gateway-service.h"
 
 #ifdef _MSC_VER
 #include <Windows.h>
@@ -13,42 +14,29 @@
 typedef void * HINSTANCE;
 #endif
 
-class PluginClient : public QueryClient {
+class PluginClient {
 private:
     HINSTANCE handleSvc;
-    IdentityService *svcIdentity;
-    GatewayService *svcGateway;
     int status;
-    ServiceMessage* query;
     int32_t code;
     uint64_t accessCode;
     int load(
         const std::string &fileName,
-        const std::string &identityClassName,
-        const std::string &gatewayClassName
+        const std::string &className
     );
     void unload();
 public:
+    IdentityService* svcIdentity;
+    GatewayService* svcGateway;
+
     explicit PluginClient(
         const std::string &fileName,
-        const std::string &identityClassName,
-        const std::string &gatewayClassName,
-        ResponseIntf *onResponse,
+        const std::string &className,
         int32_t code,
         uint64_t accessCode
     );
-    ~PluginClient() override;
+    virtual ~PluginClient();
 
-    /**
-     * Prepare to send request
-     * @param value
-     * @return previous message, NULL if not exists
-     */
-    ServiceMessage* request(
-        ServiceMessage* value
-    ) override;
-    void start() override;
-    void stop() override;
 };
 
 #endif
