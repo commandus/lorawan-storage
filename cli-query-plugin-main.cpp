@@ -26,15 +26,13 @@ public:
     std::string pluginFilePath;
     std::string pluginIdentityClassName;
     std::string pluginGatewayClassName;
-    int32_t code;
-    uint64_t accessCode;
     size_t offset;
     size_t size;
 
     int32_t retCode;
 
     CliQueryParams()
-        : tag(QUERY_GATEWAY_NONE), queryPos(0), verbose(0), code(42), accessCode(42), offset(0), size(0),
+        : tag(QUERY_GATEWAY_NONE), queryPos(0), verbose(0), offset(0), size(0),
           retCode(0)
     {
 
@@ -44,8 +42,8 @@ public:
         std::stringstream ss;
         ss
             << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName << " "
-            << "command: " << commandLongName(tag) << ", code: " << std::hex << code << ", access code: "  << accessCode << " "
-            << "offset: " << std::dec << offset << ", size: "  << size << "\n";
+            << "command: " << commandLongName(tag)
+            << ", offset: " << std::dec << offset << ", size: "  << size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
                 if (!it.nid.devaddr.empty())
@@ -192,8 +190,6 @@ int main(int argc, char **argv) {
     struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address", 1, 100,
         shortCL.c_str());
     struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin-file:class-prefix>", "Default " DEF_PLUGIN);
-    struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
-    struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
@@ -202,7 +198,6 @@ int main(int argc, char **argv) {
 
 	void* argtable[] = {
 		a_query, a_plugin_file_n_class,
-        a_code, a_access_code,
         a_offset, a_size,  a_verbose,
 		a_help, a_end
 	};
@@ -293,17 +288,7 @@ int main(int argc, char **argv) {
         mergeIdAddress(params.query);
     }
 
-    if (a_access_code->count)
-        params.accessCode = strtoull(*a_access_code->sval, nullptr, 16);
-    else
-        params.accessCode = 42;
-
-    if (a_code->count)
-        params.code = *a_code->ival;
-    else
-        params.code = 42;
-
-    // special case: '--help' takes precedence over error reporting
+   // special case: '--help' takes precedence over error reporting
 	if ((a_help->count) || errorCount) {
 		if (errorCount)
 			arg_print_errors(stderr, a_end, programName);
