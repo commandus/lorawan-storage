@@ -305,29 +305,6 @@ public:
     }
 };
 
-/**
- * Merge address and identifiers
- * @param query Each item has address or identifier
- * @return true if success
- */
-static bool mergeIdAddress(
-    std::vector<DeviceOrGatewayIdentity> &query
-)
-{
-    auto pairSize = query.size() / 2;
-    for (int i = 0; i < pairSize; i++) {
-        if (query[i * 2].gid.gatewayId) {
-            query[i].gid.gatewayId = query[i * 2].gid.gatewayId;
-            memmove(&query[i].gid.sockaddr, &query[(i * 2) + 1].gid.sockaddr, sizeof(struct sockaddr));
-        } else {
-            memmove(&query[i].gid.sockaddr, &query[(i * 2)].gid.sockaddr, sizeof(struct sockaddr));
-            query[i].gid.gatewayId = query[(i * 2) + 1].gid.gatewayId;
-        }
-    }
-    query.resize(pairSize);
-    return true;
-}
-
 static void run()
 {
 	ResponsePrinter onResp(params.query, params.verbose);
@@ -363,7 +340,7 @@ int main(int argc, char **argv) {
 	void* argtable[] = { 
 		a_query, a_interface_n_port,
         a_code, a_access_code, a_tcp,
-        a_offset, a_size,  a_verbose,
+        a_offset, a_size, a_verbose,
 		a_help, a_end 
 	};
 

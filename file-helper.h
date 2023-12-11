@@ -30,6 +30,7 @@ namespace file {
 	);
 
     bool fileExists(const std::string &fileName);
+    std::string expandFileName(const std::string &relativeName);
 }
 
 /**

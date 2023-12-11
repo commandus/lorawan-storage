@@ -159,6 +159,15 @@ size_t file::filesInPath
 
 #define F_OK	0
 
+std::string file::expandFileName(
+    const std::string &relativeName
+)
+{
+    char realPath[MAX_PATH + 1];
+    GetFullPathName(relativeName.c_str(), MAX_PATH, realPath, nullptr);
+    return std::string(realPath);
+}
+
 bool file::fileExists(const std::string &fileName)
 {
     return _access(fileName.c_str(), F_OK) != -1;
@@ -285,10 +294,21 @@ size_t file::filesInPath
 	return count;
 }
 
-bool file::fileExists(const std::string &fileName)
+bool file::fileExists(
+    const std::string &fileName
+)
 {
     struct stat r;
     return stat(fileName.c_str(), &r) == 0;
+}
+
+std::string file::expandFileName(
+    const std::string &relativeName
+)
+{
+    char realPath[PATH_MAX + 1];
+    realpath((char *) relativeName.c_str(), realPath);
+    return std::string(realPath);
 }
 
 #endif
@@ -346,7 +366,10 @@ void URL::clear() {
     query = "";
 }
 
-void URL::parse(const std::string &url) {
+void URL::parse(
+    const std::string &url
+)
+{
     clear();
     size_t pHost;
     size_t pProto = url.find("://");

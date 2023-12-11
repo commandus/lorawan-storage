@@ -8,21 +8,17 @@
 
 #ifdef _MSC_VER
 #include <Windows.h>
-#define PLUGIN_FILE_NAME_SUFFIX ".dll"
 #else
-#define PLUGIN_FILE_NAME_SUFFIX ".so"
 typedef void * HINSTANCE;
 #endif
 
 class PluginClient {
 private:
     HINSTANCE handleSvc;
-    int status;
-    int32_t code;
-    uint64_t accessCode;
     int load(
         const std::string &fileName,
-        const std::string &className
+        const std::string &classIdentityName,
+        const std::string &classGatewayName
     );
     void unload();
 public:
@@ -31,9 +27,8 @@ public:
 
     explicit PluginClient(
         const std::string &fileName,
-        const std::string &className,
-        int32_t code,
-        uint64_t accessCode
+        const std::string &classIdentityName,
+        const std::string &classGatewayName
     );
     virtual ~PluginClient();
 

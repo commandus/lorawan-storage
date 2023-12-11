@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include <sstream>
-#include <cstring>
 
 #include "argtable3/argtable3.h"
 
@@ -13,9 +12,7 @@
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/lorawan-string.h"
 #include "log.h"
-#include "gateway-identity.h"
 #include "ip-address.h"
-#include "ip-helper.h"
 
 const char *programName = "lorawan-query-plugin";
 
@@ -27,7 +24,8 @@ public:
     size_t queryPos;
     int verbose;
     std::string pluginFilePath;
-    std::string pluginClassName;
+    std::string pluginIdentityClassName;
+    std::string pluginGatewayClassName;
     int32_t code;
     uint64_t accessCode;
     size_t offset;
@@ -45,7 +43,7 @@ public:
     std::string toString() {
         std::stringstream ss;
         ss
-            << "Plugin: " << pluginFilePath << ":" << pluginClassName << " "
+            << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName << " "
             << "command: " << commandLongName(tag) << ", code: " << std::hex << code << ", access code: "  << accessCode << " "
             << "offset: " << std::dec << offset << ", size: "  << size << "\n";
         for (auto & it : query) {
@@ -69,52 +67,129 @@ public:
  */
 static bool splitFileClass(
     std::string& retFile,
-    std::string& retClass,
+    std::string& retIdentityClass,
+    std::string& retGatewayClass,
     const std::string& value
 )
 {
-    size_t pos = value.find_last_of(':');
-    if (pos == std::string::npos)
+    size_t pos1 = value.find_first_of(':');
+    if (pos1 == std::string::npos)
         return false;
-    retFile = value.substr(0, pos);
-    retClass = value.substr(pos + 1);
+    size_t pos2 = value.find_last_of(':');
+    if (pos2 == pos1) {
+        retFile = value.substr(0, pos1);
+        retIdentityClass = value.substr(pos1 + 1);
+        retGatewayClass = retIdentityClass;
+        return true;
+    }
+    retFile = value.substr(0, pos1);
+    retIdentityClass = value.substr(pos1 + 1, pos2 - pos1 - 1);
+    retGatewayClass = value.substr(pos2 + 1);
     return true;
 }
 
 
 static CliQueryParams params;
 
-#define DEF_PLUGIN  "storage-gen:Gen"
+#define DEF_PLUGIN  "storage-gen:Gen:Memory"
 
 static void run()
 {
-
-    PluginClient c(params.pluginFilePath, params.pluginClassName, params.code, params.accessCode);
+    PluginClient c(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
     if (!c.svcIdentity || !c.svcGateway) {
-        params.retCode = ERR_CODE_INSUFFICIENT_PARAMS;
+        std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
+            << ERR_LOAD_PLUGINS_FAILED
+            << params.pluginFilePath
+            << ":" << params.pluginIdentityClassName << ":" << params.pluginGatewayClassName
+            << std::endl;
+        params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
         return;
     }
 
-    for (auto& it : params.query) {
-        if (it.hasDevice) {
-            c.svcIdentity->get(it.nid.devid, it.nid.devaddr);
-            if (!it.nid.devaddr.empty())
-                std::cout << DEVADDR2string(it.nid.devaddr);
-            std::cout << "\t" << it.nid.devid.toString() << "\n";
-        }
-        if (it.hasGateway) {
-            c.svcGateway->get(it.gid, it.gid);
-            if (it.gid.gatewayId)
-                std::cout << std::hex << it.gid.gatewayId;
-            std::cout << "\t" << sockaddr2string(&it.gid.sockaddr) << "\n";
-        }
+    std::vector <NETWORKIDENTITY> nids;
+    std::vector <GatewayIdentity> gids;
+    switch (params.tag) {
+        case QUERY_IDENTITY_LIST:
+            c.svcIdentity->list(nids, params.offset, params.size);
+            for (auto &it: nids) {
+                std::cout << DEVADDR2string(it.devaddr) << "\t"
+                    << it.devid.toString()
+                    << std::endl;
+            }
+            break;
+        case QUERY_IDENTITY_COUNT:
+            std::cout << c.svcIdentity->size() << std::endl;
+            break;
+        case QUERY_IDENTITY_ASSIGN:
+            for (auto &it: params.query) {
+                c.svcIdentity->put(it.nid.devaddr, it.nid.devid);
+            }
+            break;
+        case QUERY_IDENTITY_RM:
+            for (auto &it: params.query) {
+                c.svcIdentity->rm(it.nid.devaddr);
+            }
+            break;
+        case QUERY_IDENTITY_FORCE_SAVE:
+            c.svcIdentity->flush();
+            break;
+        case QUERY_IDENTITY_CLOSE_RESOURCES:
+            c.svcIdentity->done();
+            break;
+        case QUERY_GATEWAY_LIST:
+            c.svcGateway->list(gids, params.offset, params.size);
+            for (auto &it: gids) {
+                std::cout << sockaddr2string(&it.sockaddr) << "\t"
+                    << gatewayId2str(it.gatewayId)
+                    << std::endl;
+            }
+            break;
+        case QUERY_GATEWAY_COUNT:
+            std::cout << c.svcGateway->size() << std::endl;
+            break;
+        case QUERY_GATEWAY_ASSIGN:
+            for (auto &it: params.query) {
+                c.svcGateway->put(it.gid);
+            }
+            break;
+        case QUERY_GATEWAY_RM:
+            for (auto &it: params.query) {
+                c.svcGateway->rm(it.gid);
+            }
+            break;
+        case QUERY_GATEWAY_FORCE_SAVE:
+            c.svcGateway->flush();
+            break;
+        case QUERY_GATEWAY_CLOSE_RESOURCES:
+            c.svcGateway->done();
+            break;
+        case QUERY_IDENTITY_EUI:
+        case QUERY_IDENTITY_ADDR:
+        case QUERY_GATEWAY_ID:
+        case QUERY_GATEWAY_ADDR:
+            for (auto &it: params.query) {
+                if (it.hasDevice) {
+                    c.svcIdentity->get(it.nid.devid, it.nid.devaddr);
+                    if (!it.nid.devaddr.empty())
+                        std::cout << DEVADDR2string(it.nid.devaddr);
+                    std::cout << "\t" << it.nid.devid.toString() << "\n";
+                }
+                if (it.hasGateway) {
+                    c.svcGateway->get(it.gid, it.gid);
+                    if (it.gid.gatewayId)
+                        std::cout << std::hex << it.gid.gatewayId;
+                    std::cout << "\t" << sockaddr2string(&it.gid.sockaddr) << "\n";
+                }
+            }
+            break;
+        default:
+            break;
     }
-
 }
 
 int main(int argc, char **argv) {
     std::string shortCL = shortCommandList('|');
-    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | gateway-id | plugin:class>", 1, 100,
+    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address", 1, 100,
         shortCL.c_str());
     struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin-file:class-prefix>", "Default " DEF_PLUGIN);
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
@@ -125,11 +200,11 @@ int main(int argc, char **argv) {
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
-	void* argtable[] = { 
+	void* argtable[] = {
 		a_query, a_plugin_file_n_class,
         a_code, a_access_code,
         a_offset, a_size,  a_verbose,
-		a_help, a_end 
+		a_help, a_end
 	};
 
 	// verify the argtable[] entries were allocated successfully
@@ -142,7 +217,7 @@ int main(int argc, char **argv) {
 
     params.verbose = a_verbose->count;
 
-    if (!splitFileClass(params.pluginFilePath, params.pluginClassName, 
+    if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
         (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN)))
         return ERR_CODE_COMMAND_LINE;
 

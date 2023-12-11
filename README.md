@@ -38,9 +38,7 @@ apt install cmake build-essential
 
 ### Autotools
 
-
 First install dependencies (see below) and then configure and make project using Autotools:
-
 
 ```
 cd lorawan-storage
@@ -162,14 +160,13 @@ Used Flash size :  857611 bytes
            .text:  679975 bytes
          .rodata:  177380 bytes
 Total image size:  951361 bytes (.bin may be padded larger)```
+```
 
 Flash
 ```
 idf.py flash -p /dev/ttyUSB0
 ```
-
 Visual Studio Code
-
 - Press F1; select ESP-IDF: Set Espressif device target; select lorawan-storage; select ESP32; select ESP32 chip (via ESP USB bridge)
 - Press F1; select ESP-IDF: Build your project
 - Press F1; select ESP-IDF: Flush your project

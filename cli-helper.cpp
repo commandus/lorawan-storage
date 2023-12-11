@@ -1,4 +1,5 @@
 #include <sstream>
+#include <cstring>
 #include "cli-helper.h"
 
 std::string listCommands() {
@@ -30,7 +31,7 @@ std::string shortCommandList(char delimiter) {
         ss << cs[i] << delimiter;
     }
     ss << cs[cs.size() - 1];
-    ss << ", gateway id: 16 hex digits";
+    ss << ", gateway id- 16, device id- 8 hex digits";
     return ss.str();
 }
 

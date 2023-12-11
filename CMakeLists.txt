@@ -114,6 +114,7 @@ else()
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+	set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 	if (ENABLE_IPV6)
 		set(GATEWAY_DEF ENABLE_IPV6 )
@@ -139,9 +140,9 @@ else()
 		set(CLI_SRC uv-client.cpp uv-mem.cpp)
 	else()
 		set(LSNR_SRC udp-listener.cpp)
-		set(CLI_SRC udp-client.cpp plugin-client.cpp)
+		set(CLI_SRC udp-client.cpp)
 	endif()
-	set(CLI_SRC ${CLI_SRC} plugin-client.cpp)
+	set(CLI_SRC ${CLI_SRC})
 
 	if (ENABLE_GEN)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_GEN)
@@ -168,13 +169,17 @@ else()
 	#
 	add_library(storage-mem SHARED identity-service-mem.cpp gateway-service-mem.cpp)
 	target_link_libraries(storage-mem PRIVATE lorawan)
+	set_property(TARGET storage-mem PROPERTY POSITION_INDEPENDENT_CODE ON)
 	add_library(storage-gen SHARED identity-service-gen.cpp gateway-service-mem.cpp key128gen.cpp ${AES_SRC})
 	target_link_libraries(storage-gen PRIVATE lorawan)
 	target_include_directories(storage-gen PRIVATE "third-party")
+	set_property(TARGET storage-gen PROPERTY POSITION_INDEPENDENT_CODE ON)
 	if (ENABLE_SQLITE)
 		add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp file-helper.cpp sqlite-helper.cpp)
 		target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
+		set_property(TARGET storage-sqlite PROPERTY POSITION_INDEPENDENT_CODE ON)
 	endif()
+
 	#
 	# lorawan-service
 	#
@@ -208,7 +213,7 @@ else()
 	#
 	set(LORAWAN_QUERY_PLUGIN_SRC
 		cli-query-plugin-main.cpp plugin-client.cpp cli-helper.cpp
-		identity-serialization.cpp gateway-serialization.cpp
+		file-helper.cpp identity-serialization.cpp gateway-serialization.cpp
 		lorawan/lorawan-date.cpp
 		${ARGTABLE}
 	)

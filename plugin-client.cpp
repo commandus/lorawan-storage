@@ -3,16 +3,20 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-msg.h"
+#include "file-helper.h"
+
+#define PLUGIN_FILE_NAME_PREFIX "lib"
 
 #ifdef _MSC_VER
 #define dlopen(fileName, opt) LoadLibraryA(fileName)
 #define dlclose FreeLibrary
 #define dlsym GetProcAddress
+#define PLUGIN_FILE_NAME_SUFFIX ".dll"
 #else
 #include <dlfcn.h>
 #include <algorithm>
+#define PLUGIN_FILE_NAME_SUFFIX ".so"
 #endif
-
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -30,15 +34,29 @@ const std::string MAKE_FUNC_GATEWAY_SUFFIX = "GatewayService";
 
 int PluginClient::load(
     const std::string &fileName,
-    const std::string &className
+    const std::string &classIdentityName,
+    const std::string &classGatewayName
 )
 {
-    std::string makeIdentityClass = MAKE_FUNC_PREFIX + className + MAKE_FUNC_IDENTITY_SUFFIX;
-    std::string makeGatewayClass = MAKE_FUNC_PREFIX + className + MAKE_FUNC_GATEWAY_SUFFIX;
-    handleSvc = dlopen(fileName.c_str(), RTLD_LAZY);
+    std::string fn(fileName);
+    if (!file::fileExists(fn)) {
+        if (fn.rfind(PLUGIN_FILE_NAME_SUFFIX) == std::string::npos) {
+            fn += PLUGIN_FILE_NAME_SUFFIX;
+        }
+        if (!file::fileExists(fn)) {
+            if (fn.find(PLUGIN_FILE_NAME_PREFIX) == std::string::npos) {
+                fn = PLUGIN_FILE_NAME_PREFIX + fn;
+            }
+        }
+    }
+    fn = file::expandFileName(fn);
+
+    std::string makeIdentityClass = MAKE_FUNC_PREFIX + classIdentityName + MAKE_FUNC_IDENTITY_SUFFIX;
+    std::string makeGatewayClass = MAKE_FUNC_PREFIX + classGatewayName + MAKE_FUNC_GATEWAY_SUFFIX;
+    handleSvc = dlopen(fn.c_str(), RTLD_LAZY);
     if (handleSvc) {
-        makeIdentityServiceFunc fI = (makeIdentityServiceFunc) dlsym(handleSvc, makeIdentityClass.c_str());
-        makeGatewayServiceFunc fG = (makeGatewayServiceFunc) dlsym(handleSvc, makeGatewayClass.c_str());
+        auto fI = (makeIdentityServiceFunc) dlsym(handleSvc, makeIdentityClass.c_str());
+        auto fG = (makeGatewayServiceFunc) dlsym(handleSvc, makeGatewayClass.c_str());
         if (fI && fG) {
             svcIdentity = fI();
             svcGateway = fG();
@@ -57,20 +75,18 @@ void PluginClient::unload()
 
     if (handleSvc) {
         dlclose(handleSvc);
-        handleSvc = 0;
+        handleSvc = nullptr;
     }
 }
 
 PluginClient::PluginClient(
     const std::string &fileName,
-    const std::string &className,
-    int32_t aCode,
-    uint64_t aAccessCode
+    const std::string &classIdentityName,
+    const std::string &classGatewayName
 )
-	: handleSvc(0), svcIdentity(nullptr), svcGateway(nullptr),
-    status(CODE_OK), code(aCode), accessCode(aAccessCode)
+	: handleSvc(nullptr), svcIdentity(nullptr), svcGateway(nullptr)
 {
-    load(fileName, className);
+    load(fileName, classIdentityName, classGatewayName);
 }
 
 PluginClient::~PluginClient()
