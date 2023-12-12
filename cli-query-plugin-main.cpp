@@ -7,7 +7,9 @@
 
 #include "cli-helper.h"
 
+#include "service-client.h"
 #include "plugin-client.h"
+
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/lorawan-string.h"
@@ -26,6 +28,7 @@ public:
     std::string pluginFilePath;
     std::string pluginIdentityClassName;
     std::string pluginGatewayClassName;
+    std::string svcName;
     size_t offset;
     size_t size;
 
@@ -40,8 +43,11 @@ public:
 
     std::string toString() {
         std::stringstream ss;
-        ss
-            << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName << " "
+        if (svcName.empty())
+            ss << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName;
+        else
+            ss << "Direct service: " << svcName;
+        ss << " "
             << "command: " << commandLongName(tag)
             << ", offset: " << std::dec << offset << ", size: "  << size << "\n";
         for (auto & it : query) {
@@ -93,8 +99,12 @@ static CliQueryParams params;
 
 static void run()
 {
-    PluginClient c(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
-    if (!c.svcIdentity || !c.svcGateway) {
+    DirectClient *c;
+    if (params.svcName.empty())
+        c = new PluginClient(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
+    else
+        c = new ServiceClient(params.svcName);
+    if (!c->svcIdentity || !c->svcGateway) {
         std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
             << ERR_LOAD_PLUGINS_FAILED
             << params.pluginFilePath
@@ -108,7 +118,7 @@ static void run()
     std::vector <GatewayIdentity> gids;
     switch (params.tag) {
         case QUERY_IDENTITY_LIST:
-            c.svcIdentity->list(nids, params.offset, params.size);
+            c->svcIdentity->list(nids, params.offset, params.size);
             for (auto &it: nids) {
                 std::cout << DEVADDR2string(it.devaddr) << "\t"
                     << it.devid.toString()
@@ -116,26 +126,26 @@ static void run()
             }
             break;
         case QUERY_IDENTITY_COUNT:
-            std::cout << c.svcIdentity->size() << std::endl;
+            std::cout << c->svcIdentity->size() << std::endl;
             break;
         case QUERY_IDENTITY_ASSIGN:
             for (auto &it: params.query) {
-                c.svcIdentity->put(it.nid.devaddr, it.nid.devid);
+                c->svcIdentity->put(it.nid.devaddr, it.nid.devid);
             }
             break;
         case QUERY_IDENTITY_RM:
             for (auto &it: params.query) {
-                c.svcIdentity->rm(it.nid.devaddr);
+                c->svcIdentity->rm(it.nid.devaddr);
             }
             break;
         case QUERY_IDENTITY_FORCE_SAVE:
-            c.svcIdentity->flush();
+            c->svcIdentity->flush();
             break;
         case QUERY_IDENTITY_CLOSE_RESOURCES:
-            c.svcIdentity->done();
+            c->svcIdentity->done();
             break;
         case QUERY_GATEWAY_LIST:
-            c.svcGateway->list(gids, params.offset, params.size);
+            c->svcGateway->list(gids, params.offset, params.size);
             for (auto &it: gids) {
                 std::cout << sockaddr2string(&it.sockaddr) << "\t"
                     << gatewayId2str(it.gatewayId)
@@ -143,23 +153,23 @@ static void run()
             }
             break;
         case QUERY_GATEWAY_COUNT:
-            std::cout << c.svcGateway->size() << std::endl;
+            std::cout << c->svcGateway->size() << std::endl;
             break;
         case QUERY_GATEWAY_ASSIGN:
             for (auto &it: params.query) {
-                c.svcGateway->put(it.gid);
+                c->svcGateway->put(it.gid);
             }
             break;
         case QUERY_GATEWAY_RM:
             for (auto &it: params.query) {
-                c.svcGateway->rm(it.gid);
+                c->svcGateway->rm(it.gid);
             }
             break;
         case QUERY_GATEWAY_FORCE_SAVE:
-            c.svcGateway->flush();
+            c->svcGateway->flush();
             break;
         case QUERY_GATEWAY_CLOSE_RESOURCES:
-            c.svcGateway->done();
+            c->svcGateway->done();
             break;
         case QUERY_IDENTITY_EUI:
         case QUERY_IDENTITY_ADDR:
@@ -167,13 +177,13 @@ static void run()
         case QUERY_GATEWAY_ADDR:
             for (auto &it: params.query) {
                 if (it.hasDevice) {
-                    c.svcIdentity->get(it.nid.devid, it.nid.devaddr);
+                    c->svcIdentity->get(it.nid.devid, it.nid.devaddr);
                     if (!it.nid.devaddr.empty())
                         std::cout << DEVADDR2string(it.nid.devaddr);
                     std::cout << "\t" << it.nid.devid.toString() << "\n";
                 }
                 if (it.hasGateway) {
-                    c.svcGateway->get(it.gid, it.gid);
+                    c->svcGateway->get(it.gid, it.gid);
                     if (it.gid.gatewayId)
                         std::cout << std::hex << it.gid.gatewayId;
                     std::cout << "\t" << sockaddr2string(&it.gid.sockaddr) << "\n";
@@ -183,6 +193,7 @@ static void run()
         default:
             break;
     }
+    delete c;
 }
 
 int main(int argc, char **argv) {
@@ -213,8 +224,12 @@ int main(int argc, char **argv) {
     params.verbose = a_verbose->count;
 
     if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
-        (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN)))
-        return ERR_CODE_COMMAND_LINE;
+        (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN))) {
+        if (ServiceClient::hasService(*a_plugin_file_n_class->sval)) {
+            params.svcName = *a_plugin_file_n_class->sval;
+        } else
+            return ERR_CODE_COMMAND_LINE;
+    }
 
     params.tag = QUERY_IDENTITY_ADDR;
 

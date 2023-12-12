@@ -31,7 +31,6 @@ const std::string MAKE_FUNC_PREFIX = "make";
 const std::string MAKE_FUNC_IDENTITY_SUFFIX = "IdentityService";
 const std::string MAKE_FUNC_GATEWAY_SUFFIX = "GatewayService";
 
-
 int PluginClient::load(
     const std::string &fileName,
     const std::string &classIdentityName,
@@ -84,7 +83,7 @@ PluginClient::PluginClient(
     const std::string &classIdentityName,
     const std::string &classGatewayName
 )
-	: handleSvc(nullptr), svcIdentity(nullptr), svcGateway(nullptr)
+	: DirectClient(), handleSvc(nullptr)
 {
     load(fileName, classIdentityName, classGatewayName);
 }

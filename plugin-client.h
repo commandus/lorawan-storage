@@ -3,8 +3,7 @@
 
 #include <string>
 
-#include "identity-service.h"
-#include "gateway-service.h"
+#include "direct-client.h"
 
 #ifdef _MSC_VER
 #include <Windows.h>
@@ -12,7 +11,8 @@
 typedef void * HINSTANCE;
 #endif
 
-class PluginClient {
+
+class PluginClient : public DirectClient {
 private:
     HINSTANCE handleSvc;
     int load(
@@ -22,16 +22,12 @@ private:
     );
     void unload();
 public:
-    IdentityService* svcIdentity;
-    GatewayService* svcGateway;
-
     explicit PluginClient(
         const std::string &fileName,
         const std::string &classIdentityName,
         const std::string &classGatewayName
     );
     virtual ~PluginClient();
-
 };
 
 #endif

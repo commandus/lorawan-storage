@@ -169,15 +169,12 @@ else()
 	#
 	add_library(storage-mem SHARED identity-service-mem.cpp gateway-service-mem.cpp)
 	target_link_libraries(storage-mem PRIVATE lorawan)
-	set_property(TARGET storage-mem PROPERTY POSITION_INDEPENDENT_CODE ON)
 	add_library(storage-gen SHARED identity-service-gen.cpp gateway-service-mem.cpp key128gen.cpp ${AES_SRC})
 	target_link_libraries(storage-gen PRIVATE lorawan)
 	target_include_directories(storage-gen PRIVATE "third-party")
-	set_property(TARGET storage-gen PROPERTY POSITION_INDEPENDENT_CODE ON)
 	if (ENABLE_SQLITE)
 		add_library(storage-sqlite SHARED identity-service-sqlite.cpp gateway-service-sqlite.cpp file-helper.cpp sqlite-helper.cpp)
 		target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
-		set_property(TARGET storage-sqlite PROPERTY POSITION_INDEPENDENT_CODE ON)
 	endif()
 
 	#
@@ -214,9 +211,14 @@ else()
 	set(LORAWAN_QUERY_PLUGIN_SRC
 		cli-query-plugin-main.cpp plugin-client.cpp cli-helper.cpp
 		file-helper.cpp identity-serialization.cpp gateway-serialization.cpp
+		service-client.cpp identity-service-mem.cpp gateway-service-mem.cpp identity-service-gen.cpp key128gen.cpp
 		lorawan/lorawan-date.cpp
-		${ARGTABLE}
+		${AES_SRC} ${ARGTABLE}
 	)
+	if (ENABLE_SQLITE)
+		set(LORAWAN_QUERY_PLUGIN_SRC ${LORAWAN_QUERY_PLUGIN_SRC} identity-service-sqlite.cpp gateway-service-sqlite.cpp)
+	endif()
+
 	add_executable(lorawan-query-plugin ${LORAWAN_QUERY_PLUGIN_SRC})
 	target_link_libraries(lorawan-query-plugin PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} lorawan)
 	target_include_directories(lorawan-query-plugin PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
