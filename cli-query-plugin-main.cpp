@@ -223,9 +223,11 @@ int main(int argc, char **argv) {
 
     params.verbose = a_verbose->count;
 
+    // try load shared library
     if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
         (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN))) {
         if (ServiceClient::hasService(*a_plugin_file_n_class->sval)) {
+            // "load" from static by name: "gen", "mem", "sqlite"
             params.svcName = *a_plugin_file_n_class->sval;
         } else
             return ERR_CODE_COMMAND_LINE;

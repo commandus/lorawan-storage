@@ -5,6 +5,9 @@
 
 #include "direct-client.h"
 
+/**
+ * Class to load specific identity and gateway services by name (gen, mem, sqlite)
+ */
 class ServiceClient : public DirectClient{
 public:
     explicit ServiceClient(

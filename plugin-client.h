@@ -11,10 +11,13 @@
 typedef void * HINSTANCE;
 #endif
 
-
+/**
+ * Class to load specific identity and gateway services from loadable modules (shared libraries)
+ */
 class PluginClient : public DirectClient {
 private:
     HINSTANCE handleSvc;
+    timeval r;
     int load(
         const std::string &fileName,
         const std::string &classIdentityName,

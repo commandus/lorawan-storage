@@ -4,6 +4,9 @@
 #include "identity-service.h"
 #include "gateway-service.h"
 
+/**
+ * Abstract class to load specific identity and gateway services
+ */
 class DirectClient {
 public:
     IdentityService* svcIdentity;

@@ -1,5 +1,5 @@
-#ifndef GATEWAY_SERVICE_GEN_H_
-#define GATEWAY_SERVICE_GEN_H_ 1
+#ifndef GATEWAY_SERVICE_SQLITE_H_
+#define GATEWAY_SERVICE_SQLITE_H_ 1
 
 #include "gateway-service.h"
 #include "sqlite3.h"

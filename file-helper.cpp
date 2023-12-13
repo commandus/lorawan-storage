@@ -307,8 +307,7 @@ std::string file::expandFileName(
 )
 {
     char realPath[PATH_MAX + 1];
-    realpath((char *) relativeName.c_str(), realPath);
-    return std::string(realPath);
+    return std::string(realpath((char *) relativeName.c_str(), realPath));
 }
 
 #endif

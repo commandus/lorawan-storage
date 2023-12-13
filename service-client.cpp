@@ -18,7 +18,6 @@
 #include "lorawan-msg.h"
 #endif
 
-
 ServiceClient::ServiceClient(
     const std::string &name
 )

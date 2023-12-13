@@ -1,5 +1,5 @@
-#ifndef IDENTITY_SERVICE_GEN_H_
-#define IDENTITY_SERVICE_GEN_H_ 1
+#ifndef IDENTITY_SERVICE_SQLITE_H_
+#define IDENTITY_SERVICE_SQLITE_H_ 1
 
 #include <sqlite3.h>
 #include "platform-specific.h"

@@ -12,7 +12,7 @@ COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
 ARGTABLE_SRC = third-party/argtable3/argtable3.c
 AES_SRC = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
-CLI_SRC = cli-query-main.cpp service-serialization.cpp identity-serialization.cpp gateway-serialization.cpp
+CLI_SRC = cli-query-main.cpp identity-serialization.cpp gateway-serialization.cpp
 
 LSNR_SRC =
 GATEWAY_DEF = $(COMMON_CPP_FLAGS)
@@ -45,10 +45,15 @@ $(bin_PROGRAMS): $(lib_LIBRARIES)
 
 lib_LIBRARIES = liblorawan.a
 
+lib_LTLIBRARIES = libstorage-mem.la libstorage-gen.la
+if ENABLE_SQLITE
+    lib_LTLIBRARIES += libstorage-sqlite.la
+endif
+
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-service lorawan-query
+bin_PROGRAMS = lorawan-service lorawan-query lorawan-query-plugin
 
 SRC_AES = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
@@ -75,33 +80,22 @@ nobase_dist_include_HEADERS = \
 # liblorawan
 #
 SRC_LIBLORAWAN = \
-	lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp \
-	network-identity.cpp lorawan/lorawan-date.cpp lorawan/lorawan-mac.cpp \
-	lorawan/lorawan-error.cpp lorawan/lorawan-msg.cpp \
-	gateway-identity.cpp gateway-service.cpp identity-service.cpp \
-	ip-helper.cpp ip-address.cpp \
-	third-party/strptime.cpp
+    lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp \
+    lorawan/lorawan-mac.cpp lorawan/lorawan-error.cpp lorawan/lorawan-msg.cpp \
+    network-identity.cpp gateway-identity.cpp \
+    gateway-service.cpp identity-service.cpp service-serialization.cpp \
+    ip-helper.cpp ip-address.cpp \
+    third-party/strptime.cpp
 
 LORAWAN_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) \
-    identity-serialization.cpp service-serialization.cpp \
-    gateway-serialization.cpp file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
+    identity-serialization.cpp gateway-serialization.cpp \
+    file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)
 liblorawan_a_CPPFLAGS = -fPIC
 
-storage_mem_la_SOURCES = identity-service-mem.cpp gateway-service-mem.cpp
-storage_mem_la_LDFLAGS = -version-info $(VERSION_INFO)
-
-storage_gen_la_SOURCES = identity-service-gen.cpp gateway-service-mem.cpp
-storage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
-storage_gen_la_LIBADD =
-
-storage_sqlite_la_SOURCES = identity-service-sqlite.cpp gateway-service-sqlite.cpp
-storage_sqlite_la_LDFLAGS = -version-info $(VERSION_INFO)
-storage_sqlite_la_LIBADD = -lsqlite
-
 lorawan_query_SOURCES = \
-	$(CLI_SRC) $(SRC_LIBLORAWAN) \
+	$(CLI_SRC) cli-helper.cpp $(SRC_LIBLORAWAN) \
 	$(SRC_ARGTABLE)
 lorawan_query_LDADD = $(EXTRA_LIB)
 lorawan_query_CPPFLAGS = $(GATEWAY_DEF)
@@ -110,6 +104,30 @@ lorawan_service_SOURCES = \
 	$(LORAWAN_SERVICE_SRC) $(SRC_LIBLORAWAN)
 lorawan_service_LDADD = $(EXTRA_LIB_SVC) $(EXTRA_LIB)
 lorawan_service_CPPFLAGS = $(GATEWAY_DEF) -DLNS_VERSION=$(VERSION)
+
+lorawan_query_plugin_SOURCES = \
+    cli-query-plugin-main.cpp plugin-client.cpp cli-helper.cpp \
+    file-helper.cpp identity-serialization.cpp gateway-serialization.cpp \
+    service-client.cpp identity-service-mem.cpp gateway-service-mem.cpp identity-service-gen.cpp key128gen.cpp \
+    $(AES_SRC) $(SRC_ARGTABLE) $(SRC_LIBLORAWAN)
+lorawan_query_plugin_LDADD = $(EXTRA_LIB)
+lorawan_query_plugin_CPPFLAGS = $(GATEWAY_DEF)
+if ENABLE_SQLITE
+    lorawan_query_plugin_SOURCES += identity-service-sqlite.cpp gateway-service-sqlite.cpp sqlite-helper.cpp
+endif
+
+#
+# Plugins
+#
+libstorage_mem_la_SOURCES = identity-service-mem.cpp gateway-service-mem.cpp
+libstorage_mem_la_LIBADD = -L. -llorawan
+libstorage_gen_la_SOURCES = identity-service-gen.cpp gateway-service-mem.cpp key128gen.cpp $(AES_SRC)
+libstorage_gen_la_LIBADD = -L. -llorawan
+libstorage_gen_la_CPPFLAGS = -Ithird-party
+if ENABLE_SQLITE
+    libstorage_sqlite_la_SOURCES = identity-service-sqlite.cpp gateway-service-sqlite.cpp file-helper.cpp sqlite-helper.cpp
+    libstorage_sqlite_la_LIBADD = -L. -llorawan $(EXTRA_LIB_SVC)
+endif
 
 #
 # Configs, readme, CMake etc.
