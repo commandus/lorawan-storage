@@ -7,6 +7,7 @@
 
 /**
  * Class to load specific identity and gateway services by name (gen, mem, sqlite)
+ * @see DirectClient
  */
 class ServiceClient : public DirectClient{
 public:

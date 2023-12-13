@@ -6,6 +6,8 @@
 
 /**
  * Abstract class to load specific identity and gateway services
+ * @see ServiceClient
+ * @see PluginClient
  */
 class DirectClient {
 public:

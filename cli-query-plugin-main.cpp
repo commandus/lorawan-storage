@@ -114,16 +114,17 @@ static void run()
         return;
     }
 
-    std::vector <NETWORKIDENTITY> nids;
-    std::vector <GatewayIdentity> gids;
     switch (params.tag) {
-        case QUERY_IDENTITY_LIST:
+        case QUERY_IDENTITY_LIST: {
+            std::vector<NETWORKIDENTITY> nids;
             c->svcIdentity->list(nids, params.offset, params.size);
             for (auto &it: nids) {
-                std::cout << DEVADDR2string(it.devaddr) << "\t"
+                std::cout
+                    << DEVADDR2string(it.devaddr) << "\t"
                     << it.devid.toString()
                     << std::endl;
             }
+        }
             break;
         case QUERY_IDENTITY_COUNT:
             std::cout << c->svcIdentity->size() << std::endl;
@@ -144,13 +145,16 @@ static void run()
         case QUERY_IDENTITY_CLOSE_RESOURCES:
             c->svcIdentity->done();
             break;
-        case QUERY_GATEWAY_LIST:
+        case QUERY_GATEWAY_LIST: {
+            std::vector <GatewayIdentity> gids;
             c->svcGateway->list(gids, params.offset, params.size);
             for (auto &it: gids) {
-                std::cout << sockaddr2string(&it.sockaddr) << "\t"
+                std::cout
+                    << sockaddr2string(&it.sockaddr) << "\t"
                     << gatewayId2str(it.gatewayId)
                     << std::endl;
             }
+        }
             break;
         case QUERY_GATEWAY_COUNT:
             std::cout << c->svcGateway->size() << std::endl;
