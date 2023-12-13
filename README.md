@@ -201,7 +201,7 @@ record is a comma-separated string consists of
 
 - address
 - activation type: ABP or OTAA
-- device class;: A, B or C
+- device class: A, B or C
 - device EUI identifier (up to 16 hexadecimal digits, 8 bytes)
 - nwkSKey- shared session key, 16 bytes
 - appSKey- private key, 16 bytes
@@ -272,6 +272,40 @@ Examples:
 ./lorawan-query gw-address 1.2.3.4:5
 ./lorawan-query gw-identifier 1.2.3.4:5
 ```
+
+### lorawan-query-plugin
+
+lorawan-query-plugin dynamically load shared libraries with exported function like:
+
+```
+IdentityService* makeMemoryIdentityService();
+GatewayService* makeMemoryGatewayService();
+```
+where Memory is a "class name" (actually name must also have "make" prefix and "IdentityService" or "GatewayService" suffix).
+
+IdentityService and GatewayService are interfaces to work with storage.
+
+Plugin files are:
+
+- storage-gen (libstorage-gen.so or libstorage-gen.DLL)
+- storage-mem (libstorage-mem.so or libstorage-mem.DLL)
+- storage-sqlite (libstorage-sqlite.so or libstorage-sqlite.DLL)
+ 
+Option -s set plugin file name and class prefix for device identities and gateways e.g.
+
+- -s storage-gen:Gen:Memory
+- -s storage-mem:Memory
+- -s storage-sqlite:Sqlite (if configured with ENABLE_SQLITE option)
+
+where storage-gen translated to libstorage-gen.so or libstorage-gen.DLL name according to system name considerations.
+
+There are same statically linked plugins:
+
+- -s gen
+- -s mem
+- -s sqlite (if configured with ENABLE_SQLITE option)
+
+Because plugin use direct calls there no --code --accesscode options available.
 
 ## Tests
 

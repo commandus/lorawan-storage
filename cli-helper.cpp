@@ -20,6 +20,16 @@ std::string listCommands() {
     return ss.str();
 }
 
+std::string listPlugins() {
+    std::stringstream ss;
+    ss << "mem|gen";
+#ifdef ENABLE_SQLITE
+    ss << "|sqlite";
+#endif
+    ss << "|<file-path:identity-class::gateway-class";
+    return ss.str();
+}
+
 std::string shortCommandList(char delimiter) {
     std::stringstream ss;
     ss << "command: ";

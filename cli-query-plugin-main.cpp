@@ -200,7 +200,7 @@ int main(int argc, char **argv) {
     std::string shortCL = shortCommandList('|');
     struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address", 1, 100,
         shortCL.c_str());
-    struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin-file:class-prefix>", "Default " DEF_PLUGIN);
+    struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin>", "Default " DEF_PLUGIN);
 	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
@@ -209,7 +209,7 @@ int main(int argc, char **argv) {
 
 	void* argtable[] = {
 		a_query, a_plugin_file_n_class,
-        a_offset, a_size,  a_verbose,
+        a_offset, a_size, a_verbose,
 		a_help, a_end
 	};
 
@@ -314,6 +314,7 @@ int main(int argc, char **argv) {
 		std::cerr << "LoRaWAN storage query" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
         std::cerr << "Commands:\n" << listCommands() << std::endl;
+        std::cerr << "Plugins:\n" << listPlugins() << std::endl;
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
 	}
