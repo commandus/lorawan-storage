@@ -24,6 +24,8 @@ public:
 
 std::string listCommands();
 
+std::string listPlugins();
+
 std::string shortCommandList(char delimiter);
 
 std::string commandLongName(int tag);
