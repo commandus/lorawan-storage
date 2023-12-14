@@ -4,7 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <map>
-#include "gateway-service.h"
+#include "lorawan/storage/service/gateway-service.h"
 #include "platform-specific.h"
 
 class MemoryGatewayService: public GatewayService {

@@ -4,9 +4,9 @@
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-msg.h"
 
-#include "identity-service-gen.h"
-#include "identity-service-mem.h"
-#include "gateway-service-mem.h"
+#include "lorawan/storage/service/identity-service-gen.h"
+#include "lorawan/storage/service/identity-service-mem.h"
+#include "lorawan/storage/service/gateway-service-mem.h"
 #ifdef ENABLE_SQLITE
 #include "identity-service-sqlite.h"
 #include "gateway-service-sqlite.h"

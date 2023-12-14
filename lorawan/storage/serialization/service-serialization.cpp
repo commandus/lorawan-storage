@@ -2,7 +2,7 @@
 
 #include "lorawan/lorawan-conv.h"
 #include "service-serialization.h"
-#include "ip-address.h"
+#include "lorawan/helper/ip-address.h"
 
 #ifdef ESP_PLATFORM
 #include "lwip/ip6_addr.h"

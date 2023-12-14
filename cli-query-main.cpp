@@ -8,7 +8,7 @@
 
 #ifdef ENABLE_LIBUV
 #include <uv.h>
-#include "uv-client.h"
+#include "lorawan/storage/client/uv-client.h"
 #else
 #include "udp-client.h"
 #endif
@@ -16,10 +16,10 @@
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/lorawan-string.h"
 #include "log.h"
-#include "gateway-identity.h"
-#include "identity-serialization.h"
-#include "ip-address.h"
-#include "ip-helper.h"
+#include "lorawan/storage/gateway-identity.h"
+#include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/helper/ip-address.h"
+#include "lorawan/helper/ip-helper.h"
 #include "cli-helper.h"
 
 const char *programName = "lorawan-query";

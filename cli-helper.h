@@ -8,8 +8,8 @@
 #include <vector>
 
 #include "lorawan/lorawan-types.h"
-#include "identity-serialization.h"
-#include "gateway-serialization.h"
+#include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
 
 class DeviceOrGatewayIdentity {
 public:

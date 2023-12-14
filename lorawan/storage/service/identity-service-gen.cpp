@@ -4,7 +4,7 @@
 #include "lorawan/lorawan-types.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
-#include "key128gen.h"
+#include "lorawan/helper/key128gen.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>

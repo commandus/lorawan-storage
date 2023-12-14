@@ -1,7 +1,7 @@
 #ifndef GATEWAY_SERVICE_SQLITE_H_
 #define GATEWAY_SERVICE_SQLITE_H_ 1
 
-#include "gateway-service.h"
+#include "lorawan/storage/service/gateway-service.h"
 #include "sqlite3.h"
 #include "platform-specific.h"
 

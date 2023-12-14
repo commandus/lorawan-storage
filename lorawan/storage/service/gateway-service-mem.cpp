@@ -1,7 +1,7 @@
 #include <cstring>
 
 #include "gateway-service-mem.h"
-#include "ip-address.h"
+#include "lorawan/helper/ip-address.h"
 #include "lorawan/lorawan-types.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"

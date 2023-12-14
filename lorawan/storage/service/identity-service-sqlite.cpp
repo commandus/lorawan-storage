@@ -3,8 +3,8 @@
 #include "identity-service-sqlite.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
-#include "file-helper.h"
-#include "sqlite-helper.h"
+#include "lorawan/helper/file-helper.h"
+#include "lorawan/helper/sqlite-helper.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>

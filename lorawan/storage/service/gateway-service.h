@@ -5,7 +5,7 @@
 #include <vector>
 
 #include "lorawan/lorawan-types.h"
-#include "gateway-identity.h"
+#include "lorawan/storage/gateway-identity.h"
 
 /**
  * Identity service interface

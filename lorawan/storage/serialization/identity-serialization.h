@@ -7,7 +7,7 @@ typedef SSIZE_T ssize_t;
 #else
 #include <cinttypes>
 #endif
-#include "identity-service.h"
+#include "lorawan/storage/service/identity-service.h"
 #include "service-serialization.h"
 
 enum IdentityQueryTag {

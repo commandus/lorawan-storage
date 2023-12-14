@@ -37,7 +37,7 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
-#include "ip-helper.h"
+#include "lorawan/helper/ip-helper.h"
 
 #define DEF_KEEPALIVE_SECS 60
 

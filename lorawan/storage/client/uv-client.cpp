@@ -2,7 +2,7 @@
 
 #include <uv.h>
 
-#include "ip-helper.h"
+#include "lorawan/helper/ip-helper.h"
 
 #ifdef _MSC_VER
 #include <io.h>
@@ -17,7 +17,7 @@
 #define SOCKET int
 #endif
 
-#include "uv-mem.h"
+#include "lorawan/helper/uv-mem.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-conv.h"

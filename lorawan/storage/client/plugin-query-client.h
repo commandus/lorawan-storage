@@ -2,8 +2,8 @@
 #define PLUGIN_CLIENT_H_	1
 
 #include <string>
-#include "gateway-serialization.h"
-#include "query-client.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
+#include "lorawan/storage/client/query-client.h"
 
 #ifdef _MSC_VER
 #include <Windows.h>

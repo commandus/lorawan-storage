@@ -4,7 +4,7 @@
 #include <cstring>
 
 #include "lorawan/lorawan-date.h"
-#include "ip-address.h"
+#include "lorawan/helper/ip-address.h"
 
 /**
  * Create empty gateway statistics

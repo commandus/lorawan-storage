@@ -11,7 +11,7 @@ typedef int SOCKET;
 #endif
 
 #include <string>
-#include "gateway-serialization.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
 #include "query-client.h"
 
 class UDPClient : public QueryClient {

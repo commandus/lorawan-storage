@@ -7,14 +7,14 @@
 
 #include "cli-helper.h"
 
-#include "service-client.h"
-#include "plugin-client.h"
+#include "lorawan/storage/client/service-client.h"
+#include "lorawan/storage/client/plugin-client.h"
 
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/lorawan-string.h"
 #include "log.h"
-#include "ip-address.h"
+#include "lorawan/helper/ip-address.h"
 
 const char *programName = "lorawan-query-plugin";
 

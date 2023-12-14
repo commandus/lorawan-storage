@@ -8,7 +8,7 @@ typedef SSIZE_T ssize_t;
 
 #include <string>
 #include <uv.h>
-#include "gateway-serialization.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
 #include "query-client.h"
 
 #define SEND_BUFFER_SIZE 155

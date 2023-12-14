@@ -2,8 +2,8 @@
 #include <cstring>
 
 #include "gateway-serialization.h"
-#include "ip-helper.h"
-#include "ip-address.h"
+#include "lorawan/helper/ip-helper.h"
+#include "lorawan/helper/ip-address.h"
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-error.h"
 

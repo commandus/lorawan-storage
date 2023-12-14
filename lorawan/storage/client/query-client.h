@@ -1,8 +1,8 @@
 #ifndef GATEWAY_CLIENT_H
 #define GATEWAY_CLIENT_H
 
-#include "identity-serialization.h"
-#include "gateway-serialization.h"
+#include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
 
 class QueryClient;
 

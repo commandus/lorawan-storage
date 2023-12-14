@@ -7,8 +7,8 @@ typedef SSIZE_T ssize_t;
 #else
 #include <cinttypes>
 #endif
-#include "gateway-service.h"
-#include "gateway-identity.h"
+#include "lorawan/storage/service/gateway-service.h"
+#include "lorawan/storage/gateway-identity.h"
 #include "service-serialization.h"
 
 enum GatewayQueryTag {

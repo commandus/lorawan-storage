@@ -1,9 +1,14 @@
 #ifndef GATEWAY_LISTENER_H
 #define GATEWAY_LISTENER_H
 
-#include "identity-serialization.h"
-#include "gateway-serialization.h"
-#include "log-intf.h"
+#include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
+
+class Log {
+public:
+    virtual std::ostream& strm(int level) = 0;
+    virtual void flush() = 0;
+};
 
 class StorageListener {
 public:

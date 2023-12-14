@@ -3,7 +3,7 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-msg.h"
-#include "file-helper.h"
+#include "lorawan/helper/file-helper.h"
 
 #define PLUGIN_FILE_NAME_PREFIX "lib"
 

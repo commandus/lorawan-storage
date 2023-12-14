@@ -11,13 +11,13 @@
 #include "lorawan/lorawan-error.h"
 
 #ifdef CONFIG_ESP_KEY_GEN
-#include "identity-service-gen.h"
+#include "lorawan/storage/service/identity-service-gen.h"
 #else
 #include "identity-service-mem.h"
 #endif
-#include "udp-listener.h"
-#include "gateway-serialization.h"
-#include "gateway-service-mem.h"
+#include "lorawan/storage/listener/udp-listener.h"
+#include "lorawan/storage/serialization/gateway-serialization.h"
+#include "lorawan/storage/service/gateway-service-mem.h"
 
 #define TAG "lorawan-storage"
 

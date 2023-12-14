@@ -26,7 +26,7 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-conv.h"
-#include "ip-helper.h"
+#include "lorawan/helper/ip-helper.h"
 
 #define DEF_KEEPALIVE_SECS 60
 #define DEF_READ_TIMEOUT_SECONDS    2

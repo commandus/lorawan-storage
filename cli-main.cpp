@@ -16,7 +16,7 @@
 #include "argtable3/argtable3.h"
 
 #ifdef ENABLE_LIBUV
-#include "uv-listener.h"
+#include "lorawan/storage/listener/uv-listener.h"
 #else
 #include "udp-listener.h"
 #endif
@@ -27,18 +27,18 @@
 #define DEF_DB  "lorawan.db"
 #else
 #ifdef ENABLE_GEN
-#include "identity-service-gen.h"
+#include "lorawan/storage/service/identity-service-gen.h"
 #else
 #include "identity-service-mem.h"
 #endif
-#include "gateway-service-mem.h"
+#include "lorawan/storage/service/gateway-service-mem.h"
 #endif
 
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
 #include "log.h"
 #include "daemonize.h"
-#include "ip-address.h"
+#include "lorawan/helper/ip-address.h"
 
 const char *programName = "lorawan-storage";
 

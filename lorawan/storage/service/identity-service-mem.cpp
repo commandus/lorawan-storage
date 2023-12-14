@@ -3,7 +3,7 @@
 #include "identity-service-mem.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
-#include "file-helper.h"
+#include "lorawan/helper/file-helper.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>

@@ -19,8 +19,8 @@
 #define SOCKET int
 #endif
 
-#include "uv-mem.h"
-#include "ip-helper.h"
+#include "lorawan/helper/uv-mem.h"
+#include "lorawan/helper/ip-helper.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-error.h"
 

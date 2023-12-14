@@ -7,24 +7,24 @@ set(IDENTITY_SRC
         ../lorawan/lorawan-types.cpp
         ../lorawan/lorawan-string.cpp
         ../lorawan/lorawan-conv.cpp
-        ../network-identity.cpp
-        ../gateway-identity.cpp
-        ../identity-service.cpp
-        ../gateway-service.cpp
-        ../gateway-service-mem.cpp
-        ../udp-listener.cpp
-        ../identity-serialization.cpp
-        ../gateway-serialization.cpp
-        ../udp-listener.cpp
-        ../service-serialization.cpp
-        ../ip-helper.cpp
-        ../ip-address.cpp
+        ../lorawan/storage/network-identity.cpp
+        ../lorawan/storage/gateway-identity.cpp
+        ../lorawan/storage/service/identity-service.cpp
+        ../lorawan/storage/service/gateway-service.cpp
+        ../lorawan/storage/service/gateway-service-mem.cpp
+        ../lorawan/storage/listener/udp-listener.cpp
+        ../lorawan/storage/serialization/identity-serialization.cpp
+        ../lorawan/storage/serialization/gateway-serialization.cpp
+        ../lorawan/storage/listener/udp-listener.cpp
+        ../lorawan/storage/serialization/service-serialization.cpp
+        ../lorawan/helper/ip-helper.cpp
+        ../lorawan/helper/ip-address.cpp
 )
 
 if(CONFIG_ESP_KEY_GEN)
-        set(IDENTITY_SRC ${IDENTITY_SRC} ../identity-service-gen.cpp ../key128gen.cpp ${AES_SRC})
+        set(IDENTITY_SRC ${IDENTITY_SRC} ../lorawan/storage/service/identity-service-gen.cpp ../lorawan/helper/key128gen.cpp ${AES_SRC})
 else()
-        set(IDENTITY_SRC ${IDENTITY_SRC} ../identity-service-mem.cpp)        
+        set(IDENTITY_SRC ${IDENTITY_SRC} ../lorawan/storage/service/identity-service-mem.cpp)
 endif()
 
 idf_component_register(
