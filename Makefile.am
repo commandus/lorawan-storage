@@ -60,8 +60,8 @@ SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
 nobase_dist_include_HEADERS = \
 	query-client.h log-intf.h \
-	identity-service.h identity-service-mem.h identity-service-sqlite.h \
-	gateway-service.h gateway-service-mem.h gateway-service-sqlite.h log.h \
+	identity-service.h async-wrapper-identity-service.h identity-service-mem.h identity-service-sqlite.h \
+	gateway-service.h async-wrapper-gateway-service.h gateway-service-mem.h gateway-service-sqlite.h log.h \
 	identity-service-gen.h key128gen.h \
 	lorawan/lorawan-error.h lorawan/lorawan-types.h lorawan/lorawan-const.h \
 	lorawan/lorawan-msg.h lorawan/lorawan-conv.h lorawan/lorawan-string.h \
