@@ -25,6 +25,7 @@ public:
     int init(const std::string &option, void *data) override;
     void flush() override;
     void done() override;
+    void setOption(int option, void *value) override;
 };
 
 EXPORT_SHARED_C_FUNC GatewayService* makeMemoryGatewayService();

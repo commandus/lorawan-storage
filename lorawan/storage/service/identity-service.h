@@ -15,11 +15,11 @@ protected:
     // LoraWAN network identifier
     NETID netid;
 public:
-    IdentityService() = default;
+    IdentityService();
 
-    IdentityService(const IdentityService &value) = default;
+    IdentityService(const IdentityService &value);
 
-    virtual ~IdentityService() = default;
+    virtual ~IdentityService();
 
     /**
     * request device identifier(w/o address) by network address. Return 0 if success, retVal = EUI and keys
@@ -67,6 +67,8 @@ public:
 
     // close resources
     virtual void done() = 0;
+
+    virtual void setOption(int option, void *value) = 0;
 
     virtual NETID *getNetworkId();
 

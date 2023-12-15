@@ -235,6 +235,15 @@ void SqliteGatewayService::done()
     db = nullptr;
 }
 
+void SqliteGatewayService::setOption(
+    int option,
+    void *value
+)
+
+{
+    // nothing to do
+}
+
 EXPORT_SHARED_C_FUNC GatewayService* makeSqliteGatewayService()
 {
     return new SqliteGatewayService;

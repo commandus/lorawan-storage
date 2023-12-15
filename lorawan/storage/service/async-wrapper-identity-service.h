@@ -90,6 +90,15 @@ public:
             NETWORKIDENTITY &retVal
         )> cb
     );
+
+    void setOption(
+        int option,
+        void *value,
+        std::function<void(
+            int retCode
+        )> cb
+    );
+
 };
 
 #endif

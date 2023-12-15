@@ -290,6 +290,15 @@ int SqliteIdentityService::next(
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
+void SqliteIdentityService::setOption(
+    int option,
+    void *value
+)
+
+{
+    // nothing to do
+}
+
 EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService()
 {
     return new SqliteIdentityService;

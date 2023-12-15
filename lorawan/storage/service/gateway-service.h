@@ -55,6 +55,8 @@ public:
 
     // close resources
     virtual void done() = 0;
+
+    virtual void setOption(int option, void *value) = 0;
 };
 
 #endif

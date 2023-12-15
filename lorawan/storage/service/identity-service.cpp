@@ -2,6 +2,14 @@
 #include "identity-service.h"
 #include "lorawan/lorawan-conv.h"
 
+IdentityService::IdentityService() = default;
+
+IdentityService::IdentityService(
+    const IdentityService &value
+) = default;
+
+IdentityService::~IdentityService() = default;
+
 int IdentityService::joinAccept(
     JOIN_ACCEPT_FRAME_HEADER &retval,
     NETWORKIDENTITY &networkIdentity

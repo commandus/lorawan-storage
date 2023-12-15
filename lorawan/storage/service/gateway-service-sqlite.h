@@ -23,6 +23,7 @@ public:
     int init(const std::string &dbName, void *db) override;
     void flush() override;
     void done() override;
+    void setOption(int option, void *value) override;
 };
 
 EXPORT_SHARED_C_FUNC GatewayService* makeSqliteGatewayService();

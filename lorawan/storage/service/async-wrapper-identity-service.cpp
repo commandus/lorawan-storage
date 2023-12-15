@@ -125,4 +125,14 @@ void AsyncWrapperIdentityService::next(
     cb(r);
 }
 
-#endif
+void AsyncWrapperIdentityService::setOption(
+    int option,
+    void *value,
+    std::function<void(
+        int retCode
+    )> cb
+)
+{
+    identityService->setOption(option, value);
+    cb(0);
+}

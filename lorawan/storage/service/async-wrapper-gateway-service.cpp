@@ -98,3 +98,15 @@ void AsyncWrapperGatewayService::done(
     gatewayService->done();
     cb(0);
 }
+
+void AsyncWrapperGatewayService::setOption(
+    int option,
+    void *value,
+    std::function<void(
+        int retCode
+    )> cb
+)
+{
+    gatewayService->setOption(option, value);
+    cb(0);
+}

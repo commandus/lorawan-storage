@@ -172,6 +172,18 @@ int GenIdentityService::nextBruteForce(
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
+void GenIdentityService::setOption(
+    int option,
+    void *value
+)
+
+{
+    if (!value)
+        return;
+    if (option == 0)
+        setMasterKey(*(std::string *) value);
+}
+
 EXPORT_SHARED_C_FUNC IdentityService* makeGenIdentityService()
 {
     return new GenIdentityService;

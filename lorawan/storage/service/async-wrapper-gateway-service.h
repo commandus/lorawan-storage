@@ -76,6 +76,15 @@ public:
             int retCode
         )> cb
     );
+
+    void setOption(
+        int option,
+        void *value,
+        std::function<void(
+            int retCode
+        )> cb
+    );
+
 };
 
 #endif

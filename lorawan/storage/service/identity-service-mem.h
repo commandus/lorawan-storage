@@ -36,6 +36,7 @@ public:
      * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
      */
     int next(NETWORKIDENTITY &retVal) override;
+    void setOption(int option, void *value) override;
 };
 
 EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService();
