@@ -13,8 +13,8 @@ class DirectClient {
 public:
     IdentityService* svcIdentity;
     GatewayService* svcGateway;
-    DirectClient() = default;
-    virtual ~DirectClient() = default;
+    DirectClient();
+    virtual ~DirectClient();
 };
 
 #endif

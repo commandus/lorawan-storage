@@ -39,7 +39,7 @@ public:
 
     virtual void setLog(int verbose, Log *log) = 0;
 
-    virtual ~StorageListener() = default;
+    virtual ~StorageListener();
 };
 
 

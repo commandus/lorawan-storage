@@ -50,13 +50,9 @@ public:
 
     QueryClient(
         ResponseIntf *aOnResponse
-    )
-    : onResponse(aOnResponse)
-    {
+    );
 
-    };
-
-    virtual ~QueryClient() = default;
+    virtual ~QueryClient();
 
     /**
      * Prepare to send request

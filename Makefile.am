@@ -18,13 +18,13 @@ LSNR_SRC =
 GATEWAY_DEF = $(COMMON_CPP_FLAGS)
 EXTRA_LIB =
 if ENABLE_LIBUV
-LSNR_SRC += lorawan/storage/listener/uv-listener.cpp lorawan/helper/uv-mem.cpp
-CLI_SRC += lorawan/storage/client/uv-client.cpp lorawan/helper/uv-mem.cpp
+LSNR_SRC += lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/uv-listener.cpp lorawan/helper/uv-mem.cpp
+CLI_SRC += lorawan/storage/client/query-client.cpp lorawan/storage/client/uv-client.cpp lorawan/helper/uv-mem.cpp
 GATEWAY_DEF += -DENABLE_LIBUV
 EXTRA_LIB += -luv
 else
-LSNR_SRC += lorawan/storage/listener/udp-listener.cpp
-CLI_SRC += lorawan/storage/client/udp-client.cpp
+LSNR_SRC += lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
+CLI_SRC += lorawan/storage/client/query-client.cpp lorawan/storage/client/udp-client.cpp
 endif
 
 if ENABLE_SQLITE
@@ -114,8 +114,8 @@ lorawan_service_LDADD = $(EXTRA_LIB_SVC) $(EXTRA_LIB)
 lorawan_service_CPPFLAGS = $(GATEWAY_DEF) -DLNS_VERSION=$(VERSION)
 
 lorawan_query_plugin_SOURCES = \
-    cli-query-plugin-main.cpp lorawan/storage/client/plugin-client.cpp cli-helper.cpp \
-    lorawan/helper/file-helper.cpp \
+    cli-query-plugin-main.cpp lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp \
+    cli-helper.cpp lorawan/helper/file-helper.cpp \
 	lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp \
     lorawan/storage/client/service-client.cpp lorawan/storage/service/identity-service-mem.cpp \
 	lorawan/storage/service/gateway-service-mem.cpp lorawan/storage/service/identity-service-gen.cpp lorawan/helper/key128gen.cpp \

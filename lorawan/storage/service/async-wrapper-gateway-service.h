@@ -19,12 +19,7 @@ public:
             int retCode,
             GatewayIdentity &retVal
         )> cb
-    )
-    {
-        GatewayIdentity gatewayIdentity;
-        int r = gatewayService->get(gatewayIdentity, request);
-        cb(r, gatewayIdentity);
-    }
+    );
 
     // Add or replace Address = EUI and keys pair
     void put(
@@ -32,11 +27,7 @@ public:
         std::function<void(
             int retCode
         )> cb
-    )
-    {
-        int r = gatewayService->put(identity);
-        cb(r);
-    }
+    );
 
     // Remove entry
     void rm(
@@ -44,11 +35,7 @@ public:
         std::function<void(
             int retCode
         )> cb
-    )
-    {
-        int r = gatewayService->rm(identity);
-        cb(r);
-    }
+    );
 
     // List entries
     void list(
@@ -58,34 +45,21 @@ public:
             int retCode,
             std::vector<GatewayIdentity> &retVal
         )> cb
-    )
-    {
-        std::vector<GatewayIdentity> gatewayIdentities;
-        int r = gatewayService->list(gatewayIdentities, offset, size);
-        cb(r, gatewayIdentities);
-    }
+    );
 
     // Entries count
     void size(
         std::function<void(
             size_t size
         )> cb
-    )
-    {
-        int r = gatewayService->size();
-        cb(r);
-    }
+    );
 
     // force save
     void flush(
         std::function<void(
             int retCode
         )> cb
-    )
-    {
-        gatewayService->flush();
-        cb(0);
-    }
+    );
 
     // reload
     int init(
@@ -94,21 +68,14 @@ public:
         std::function<void(
             int retCode
         )> cb
-    )
-    {
-        cb(gatewayService->init(option, data));
-    }
+    );
 
     // close resources
     void done(
         std::function<void(
             int retCode
         )> cb
-    )
-    {
-        gatewayService->done();
-        cb(0);
-    }
+    );
 };
 
 #endif

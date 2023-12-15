@@ -137,11 +137,11 @@ else()
 
 		find_package(${LIBUV})
 
-		set(LSNR_SRC lorawan/storage/listener/uv-listener.cpp lorawan/helper/uv-mem.cpp)
-		set(CLI_SRC lorawan/storage/client/uv-client.cpp lorawan/helper/uv-mem.cpp)
+		set(LSNR_SRC lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/uv-listener.cpp lorawan/helper/uv-mem.cpp)
+		set(CLI_SRC lorawan/storage/client/query-client.cpp lorawan/storage/client/uv-client.cpp lorawan/helper/uv-mem.cpp)
 	else()
-		set(LSNR_SRC lorawan/storage/listener/udp-listener.cpp)
-		set(CLI_SRC lorawan/storage/client/udp-client.cpp)
+		set(LSNR_SRC lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp)
+		set(CLI_SRC lorawan/storage/client/query-client.cpp lorawan/storage/client/udp-client.cpp)
 	endif()
 	set(CLI_SRC ${CLI_SRC})
 
@@ -194,7 +194,7 @@ else()
 		${ARGTABLE}
 	)
 	add_executable(lorawan-service ${LORAWAN_SERVICE_SRC})
-	target_link_libraries(lorawan-service PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
+	target_link_libraries(lorawan-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-service PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-service PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
@@ -215,9 +215,11 @@ else()
 	# lorawan-query-plugin
 	#
 	set(LORAWAN_QUERY_PLUGIN_SRC
-		cli-query-plugin-main.cpp lorawan/storage/client/plugin-client.cpp cli-helper.cpp
+		cli-query-plugin-main.cpp
+			lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp cli-helper.cpp
 			lorawan/helper/file-helper.cpp lorawan/storage/serialization/identity-serialization.cpp
-			lorawan/storage/serialization/gateway-serialization.cpp lorawan/storage/client/service-client.cpp
+			lorawan/storage/serialization/gateway-serialization.cpp
+			lorawan/storage/client/direct-client.cpp lorawan/storage/client/service-client.cpp
 			lorawan/storage/service/identity-service-mem.cpp lorawan/storage/service/gateway-service-mem.cpp
 			lorawan/storage/service/identity-service-gen.cpp lorawan/helper/key128gen.cpp
 			lorawan/lorawan-date.cpp
