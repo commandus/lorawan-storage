@@ -33,6 +33,7 @@ public:
     size_t size;
 
     int32_t retCode;
+    std::string masterkey;
 
     CliQueryParams()
         : tag(QUERY_GATEWAY_NONE), queryPos(0), verbose(0), offset(0), size(0),
@@ -96,6 +97,7 @@ static bool splitFileClass(
 static CliQueryParams params;
 
 #define DEF_PLUGIN  "storage-gen:Gen:Memory"
+#define DEF_MASTERKEY   "masterkey"
 
 static void run()
 {
@@ -113,6 +115,8 @@ static void run()
         params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
         return;
     }
+    // 0- pass master key to generate keys
+    c->svcIdentity->setOption(0, &params.masterkey);
 
     switch (params.tag) {
         case QUERY_IDENTITY_LIST: {
@@ -207,13 +211,14 @@ int main(int argc, char **argv) {
     struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin>", "Default " DEF_PLUGIN);
 	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
+    struct arg_str* a_masterkey = arg_str0("p", "masterkey", "<passphrase>", "Default " DEF_MASTERKEY);
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
 		a_query, a_plugin_file_n_class,
-        a_offset, a_size, a_verbose,
+        a_offset, a_size, a_masterkey, a_verbose,
 		a_help, a_end
 	};
 
@@ -236,6 +241,11 @@ int main(int argc, char **argv) {
         } else
             return ERR_CODE_COMMAND_LINE;
     }
+
+    if (a_masterkey->count)
+        params.masterkey = *a_masterkey->sval;
+    else
+        params.masterkey = DEF_MASTERKEY;
 
     params.tag = QUERY_IDENTITY_ADDR;
 
