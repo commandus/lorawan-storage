@@ -8,8 +8,8 @@
 #include "lorawan/storage/service/identity-service-mem.h"
 #include "lorawan/storage/service/gateway-service-mem.h"
 #ifdef ENABLE_SQLITE
-#include "identity-service-sqlite.h"
-#include "gateway-service-sqlite.h"
+#include "lorawan/storage/service/identity-service-sqlite.h"
+#include "lorawan/storage/service/gateway-service-sqlite.h"
 #endif
 
 #ifdef ENABLE_DEBUG

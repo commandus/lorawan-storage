@@ -18,18 +18,18 @@
 #ifdef ENABLE_LIBUV
 #include "lorawan/storage/listener/uv-listener.h"
 #else
-#include "udp-listener.h"
+#include "lorawan/storage/listener/udp-listener.h"
 #endif
 
 #ifdef ENABLE_SQLITE
-#include "identity-service-sqlite.h"
-#include "gateway-service-sqlite.h"
+#include "lorawan/storage/service/identity-service-sqlite.h"
+#include "lorawan/storage/service/gateway-service-sqlite.h"
 #define DEF_DB  "lorawan.db"
 #else
 #ifdef ENABLE_GEN
 #include "lorawan/storage/service/identity-service-gen.h"
 #else
-#include "identity-service-mem.h"
+#include "lorawan/storage/service/identity-service-mem.h"
 #endif
 #include "lorawan/storage/service/gateway-service-mem.h"
 #endif

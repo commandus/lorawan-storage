@@ -10,7 +10,7 @@
 #include <uv.h>
 #include "lorawan/storage/client/uv-client.h"
 #else
-#include "udp-client.h"
+#include "lorawan/storage/client/udp-client.h"
 #endif
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
