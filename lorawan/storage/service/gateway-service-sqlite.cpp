@@ -5,48 +5,12 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/ip-address.h"
 #include "lorawan/helper/file-helper.h"
+#include "lorawan/helper/sqlite-helper.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
 #include "platform-defs.h"
 #endif
-
-static int tableCallback(
-    void *env,
-    int columns,
-    char **value,
-    char **column
-)
-{
-    if (!env)
-        return 0;
-    auto *table = (std::vector<std::vector<std::string>> *) env;
-
-    std::vector<std::string> line;
-    for (int i = 0; i < columns; i++) {
-        line.emplace_back(value[i] ? value[i] : "");
-    }
-    table->push_back(line);
-    return 0;
-}
-
-static int rowCallback(
-    void *env,
-    int columns,
-    char **value,
-    char **column
-)
-{
-    if (!env)
-        return 0;
-    auto *row = (std::vector<std::string> *) env;
-    if (!row->empty())
-        return 0;   // just first row
-    for (int i = 0; i < columns; i++) {
-        row->emplace_back(value[i] ? value[i] : "");
-    }
-    return 0;
-}
 
 SqliteGatewayService::SqliteGatewayService()
     : db(nullptr)
