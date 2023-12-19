@@ -173,8 +173,8 @@ Visual Studio Code
 
 ### Dependencies
 
-- gettext
-- libuv
+- gettext (except ESP32)
+- libuv (optional)
 
 ```
 sudo apt install libuv1-dev gettext 
@@ -319,7 +319,7 @@ Wait for message:
 I (4488) lorawan-storage: 10.2.104.109:4242 master key: masterkey, net: 0, code: 42, access code: 42
 ```
 
-Open comsole in PC. Run:
+Open console in PC. Run:
 
 ```
 ./lorawan-query list -s 10.2.104.109:4242
