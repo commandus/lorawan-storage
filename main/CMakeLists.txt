@@ -12,6 +12,7 @@ set(IDENTITY_SRC
         ../lorawan/storage/service/identity-service.cpp
         ../lorawan/storage/service/gateway-service.cpp
         ../lorawan/storage/service/gateway-service-mem.cpp
+        ../lorawan/storage/listener/storage-listener.cpp
         ../lorawan/storage/listener/udp-listener.cpp
         ../lorawan/storage/serialization/identity-serialization.cpp
         ../lorawan/storage/serialization/gateway-serialization.cpp
