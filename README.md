@@ -52,7 +52,7 @@ Set ./configure command line options:
 - --enable-libuv use libuv
 - --enable-debug debug print on
 - --enable-gen enable key generator
-- --enable-sqlite enable SSQLite backend
+- --enable-sqlite enable SQLite3 backend
 - --enable-ipv6 enable IPv6 (reserved for future use)
 - --enable-tests enable tests
 
@@ -191,11 +191,11 @@ sudo apt install libuv1-dev gettext
 
 Manipulate device records by commands:
 
-- address <identifier>
-- identifier <address>
-- assign {<record>}
+- address \<identifier\>
+- identifier \<address\>
+- assign \{\<record\>\}
 - list
-- remove <address> | <identifier>
+- remove \<\address> | \<identifier\>
 
 record is a comma-separated string consists of
 
@@ -244,11 +244,11 @@ List records
 
 Manipulate gateway records by commands:
 
-- gw-address <identifier>
-- gw-identifier <address> 
-- gw-assign {<address> <identifier>}
+- gw-address \<identifier\>
+- gw-identifier \<address\> 
+- gw-assign \{\<address> \<identifier\>\}
 - gw-list
-- gw-remove <address> | <identifier> 
+- gw-remove \<address\> | \<identifier\> 
 
 gw-remove remove record by address or identifier
 
