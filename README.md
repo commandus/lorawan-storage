@@ -195,7 +195,7 @@ Manipulate device records by commands:
 - identifier \<address\>
 - assign \{\<record\>\}
 - list
-- remove \<\address> | \<identifier\>
+- remove \<address> | \<identifier\>
 
 record is a comma-separated string consists of
 
