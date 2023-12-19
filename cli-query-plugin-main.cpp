@@ -211,15 +211,15 @@ int main(int argc, char **argv) {
     struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin>", "Default " DEF_PLUGIN);
 	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
-    struct arg_str* a_masterkey = arg_str0("p", "masterkey", "<passphrase>", "Default " DEF_MASTERKEY);
+    struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", "<pass-phrase>", "Default " DEF_MASTERKEY);
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
-		a_query, a_plugin_file_n_class,
-        a_offset, a_size, a_masterkey, a_verbose,
-		a_help, a_end
+            a_query, a_plugin_file_n_class,
+            a_offset, a_size, a_pass_phrase, a_verbose,
+            a_help, a_end
 	};
 
 	// verify the argtable[] entries were allocated successfully
@@ -242,8 +242,8 @@ int main(int argc, char **argv) {
             return ERR_CODE_COMMAND_LINE;
     }
 
-    if (a_masterkey->count)
-        params.masterkey = *a_masterkey->sval;
+    if (a_pass_phrase->count)
+        params.masterkey = *a_pass_phrase->sval;
     else
         params.masterkey = DEF_MASTERKEY;
 

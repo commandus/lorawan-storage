@@ -834,7 +834,8 @@ const char* gatewayTag2string(
 
 static std::string GWCS("AILCPRSE");
 
-const std::string &gatewayCommandSet() {
+const std::string &gatewayCommandSet()
+{
     return GWCS;
 }
 

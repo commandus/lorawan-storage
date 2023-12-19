@@ -1,45 +1,32 @@
 SUBDIRS = .
 ACLOCAL_AMFLAGS = -I m4
-
-VERSION = 0.1
+VERSION = 1.0.3
+VERSION_INFO = 1:0:0
 
 # ../../third-party for make distcheck happy
 common_flags = -I. -Ithird-party -I../../third-party
 
 AM_CPPFLAGS=$(common_flags)
 AM_CXXFLAGS=$(common_flags) -std=c++11
-COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
+# COMMON_CPP_FLAGS = -D_GLIBCXX_USE_CXX11_ABI=0
 
 ARGTABLE_SRC = third-party/argtable3/argtable3.c
 AES_SRC = third-party/system/crypto/aes.c third-party/system/crypto/cmac.c
-CLI_SRC = cli-query-main.cpp lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp
 
-LSNR_SRC =
 GATEWAY_DEF = $(COMMON_CPP_FLAGS)
 EXTRA_LIB =
 if ENABLE_LIBUV
-LSNR_SRC += lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/uv-listener.cpp lorawan/helper/uv-mem.cpp
-CLI_SRC += lorawan/storage/client/query-client.cpp lorawan/storage/client/uv-client.cpp lorawan/helper/uv-mem.cpp
-GATEWAY_DEF += -DENABLE_LIBUV
-EXTRA_LIB += -luv
-else
-LSNR_SRC += lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
-CLI_SRC += lorawan/storage/client/query-client.cpp lorawan/storage/client/udp-client.cpp
+    GATEWAY_DEF += -DENABLE_LIBUV
+    EXTRA_LIB += -luv
 endif
 
 if ENABLE_SQLITE
-GATEWAY_DEF += -DENABLE_SQLITE
-GATEWAY_SRC = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
-	lorawan/helper/sqlite-helper.cpp
-EXTRA_LIB_SVC = -lsqlite3
+    GATEWAY_DEF += -DENABLE_SQLITE
+    EXTRA_LIB += -lsqlite3
 else
-if ENABLE_GEN
-GATEWAY_DEF += -DENABLE_GEN
-GATEWAY_SRC = lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp \
-	lorawan/helper/key128gen.cpp $(AES_SRC)
-else
-GATEWAY_SRC = lorawan/storage/service/identity-service-mem.cpp lorawan/storage/service/gateway-service-mem.cpp
-endif
+    if ENABLE_GEN
+        GATEWAY_DEF += -DENABLE_GEN
+    endif
 endif
 
 # Static library used for build binaries, so build library first.
@@ -55,7 +42,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-service lorawan-query lorawan-query-plugin
+bin_PROGRAMS = lorawan-service lorawan-query lorawan-query-direct
 
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
@@ -87,59 +74,66 @@ nobase_dist_include_HEADERS = \
 # liblorawan
 #
 SRC_LIBLORAWAN = \
-    lorawan/lorawan-types.cpp lorawan/lorawan-string.cpp lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp \
-    lorawan/lorawan-mac.cpp lorawan/lorawan-error.cpp lorawan/lorawan-msg.cpp \
-    lorawan/storage/network-identity.cpp lorawan/storage/gateway-identity.cpp \
-    lorawan/storage/service/gateway-service.cpp lorawan/storage/service/identity-service.cpp \
-	lorawan/storage/serialization/service-serialization.cpp \
-    lorawan/helper/ip-helper.cpp lorawan/helper/ip-address.cpp \
-    third-party/strptime.cpp
+    lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp lorawan/lorawan-error.cpp lorawan/lorawan-mac.cpp \
+    lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp \
+    lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp \
+    lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp lorawan/helper/uv-mem.cpp \
+    lorawan/storage/gateway-identity.cpp lorawan/storage/network-identity.cpp \
+    lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp \
+    lorawan/storage/client/plugin-query-client.cpp \
+    lorawan/storage/client/query-client.cpp lorawan/storage/client/service-client.cpp \
+    lorawan/storage/client/udp-client.cpp lorawan/storage/client/uv-client.cpp \
+    lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp \
+    lorawan/storage/listener/uv-listener.cpp \
+    lorawan/storage/serialization/gateway-serialization.cpp lorawan/storage/serialization/identity-serialization.cpp \
+    lorawan/storage/serialization/service-serialization.cpp \
+    lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp \
+    lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-mem.cpp \
+    lorawan/storage/service/identity-service.cpp \
+    lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-mem.cpp \
+    third-party/strptime.cpp \
+    ${AES_SRC}
 
-LORAWAN_SERVICE_SRC = cli-main.cpp $(LSNR_SRC) $(GATEWAY_SRC) \
-    lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp \
-    lorawan/helper/file-helper.cpp third-party/daemonize.cpp $(SRC_ARGTABLE)
+if ENABLE_SQLITE
+    SRC_LIBLORAWAN += lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp
+endif
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)
 liblorawan_a_CPPFLAGS = -fPIC
 
 lorawan_query_SOURCES = \
-	$(CLI_SRC) cli-helper.cpp $(SRC_LIBLORAWAN) \
+    cli-query-main.cpp cli-helper.cpp \
 	$(SRC_ARGTABLE)
-lorawan_query_LDADD = $(EXTRA_LIB)
+lorawan_query_LDADD = $(EXTRA_LIB) -L. -llorawan
 lorawan_query_CPPFLAGS = $(GATEWAY_DEF)
 
-lorawan_service_SOURCES = \
-	$(LORAWAN_SERVICE_SRC) $(SRC_LIBLORAWAN)
-lorawan_service_LDADD = $(EXTRA_LIB_SVC) $(EXTRA_LIB)
+lorawan_service_SOURCES = cli-main.cpp cli-helper.cpp third-party/daemonize.cpp \
+    $(SRC_ARGTABLE)
+lorawan_service_LDADD = $(EXTRA_LIB) -L. -llorawan
 lorawan_service_CPPFLAGS = $(GATEWAY_DEF) -DLNS_VERSION=$(VERSION)
 
-lorawan_query_plugin_SOURCES = \
-    cli-query-plugin-main.cpp lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp \
-    cli-helper.cpp lorawan/helper/file-helper.cpp \
-	lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp \
-    lorawan/storage/client/service-client.cpp lorawan/storage/service/identity-service-mem.cpp \
-	lorawan/storage/service/gateway-service-mem.cpp lorawan/storage/service/identity-service-gen.cpp lorawan/helper/key128gen.cpp \
-    $(AES_SRC) $(SRC_ARGTABLE) $(SRC_LIBLORAWAN)
-lorawan_query_plugin_LDADD = $(EXTRA_LIB)
-lorawan_query_plugin_CPPFLAGS = $(GATEWAY_DEF)
-if ENABLE_SQLITE
-    lorawan_query_plugin_SOURCES += lorawan/storage/service/identity-service-sqlite.cpp \
-	lorawan/storage/service/gateway-service-sqlite.cpp lorawan/helper/sqlite-helper.cpp
-endif
+lorawan_query_direct_SOURCES = cli-query-plugin-main.cpp cli-helper.cpp \
+    $(SRC_ARGTABLE)
+lorawan_query_direct_LDADD = $(EXTRA_LIB) -L. -llorawan
+lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
 
 #
 # Plugins
 #
 libstorage_mem_la_SOURCES = lorawan/storage/service/identity-service-mem.cpp lorawan/storage/service/gateway-service-mem.cpp
 libstorage_mem_la_LIBADD = -L. -llorawan
+libstorage_mem_la_LDFLAGS = -version-info $(VERSION_INFO)
+
 libstorage_gen_la_SOURCES = lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp \
 	lorawan/helper/key128gen.cpp $(AES_SRC)
 libstorage_gen_la_LIBADD = -L. -llorawan
 libstorage_gen_la_CPPFLAGS = -Ithird-party
+libstorage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
 if ENABLE_SQLITE
     libstorage_sqlite_la_SOURCES = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
-	lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp
-    libstorage_sqlite_la_LIBADD = -L. -llorawan $(EXTRA_LIB_SVC)
+	    lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp
+    libstorage_sqlite_la_LIBADD = $(EXTRA_LIB) -L. -llorawan
+    libstorage_sqlite_la_LDFLAGS = -version-info $(VERSION_INFO)
 endif
 
 #

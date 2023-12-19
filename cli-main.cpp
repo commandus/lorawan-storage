@@ -41,6 +41,7 @@
 #include "lorawan/helper/ip-address.h"
 
 const char *programName = "lorawan-storage";
+#define DEF_PASSPHRASE  "masterkey"
 
 enum IP_PROTO {
     PROTO_UDP,
@@ -198,7 +199,7 @@ int main(int argc, char **argv) {
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
 
 #ifdef ENABLE_GEN
-    struct arg_str *a_pass_phrase = arg_str1("m", "master-key", "<pass-phrase>", "");
+    struct arg_str *a_pass_phrase = arg_str0("m", "master-key", "<pass-phrase>", "Default " DEF_PASSPHRASE);
     struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
 #endif
 
@@ -241,6 +242,8 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_GEN
     if (a_pass_phrase->count)
         svc.passPhrase = *a_pass_phrase->sval;
+    else
+        svc.passPhrase = DEF_PASSPHRASE;
     if (a_net_id) {
         std::string v = *a_net_id->sval;
         auto p = v.find(':');

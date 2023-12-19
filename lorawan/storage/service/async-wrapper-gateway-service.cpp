@@ -77,7 +77,7 @@ void AsyncWrapperGatewayService::flush(
 }
 
 // reload
-int AsyncWrapperGatewayService::init(
+void AsyncWrapperGatewayService::init(
     const std::string &option,
     void *data,
     std::function<void(

@@ -62,7 +62,7 @@ public:
     );
 
     // reload
-    int init(
+    void init(
         const std::string &option,
         void *data,
         std::function<void(
