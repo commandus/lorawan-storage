@@ -185,8 +185,15 @@ sudo apt install libuv1-dev gettext
 
 ## Usage
 
+Executables:
+
 - lorawan-service
 - lorawan-query
+- lorawan-query-direct
+
+Static library:
+
+-liblorawan.a
 
 ### lorawan-service
 
@@ -276,9 +283,9 @@ Examples:
 ./lorawan-query gw-identifier 1.2.3.4:5
 ```
 
-### lorawan-query-plugin
+### lorawan-query-direct
 
-lorawan-query-plugin dynamically load shared libraries with exported function like:
+lorawan-query-direct dynamically load shared libraries with exported function like:
 
 ```
 IdentityService* makeMemoryIdentityService();
@@ -309,6 +316,28 @@ There are same statically linked plugins:
 - -s sqlite (if configured with ENABLE_SQLITE option)
 
 Because plugin use direct calls there no --code --accesscode options available.
+
+### Static library usage examples
+
+There are some example source code in the examples/ subdirectory:
+
+- example-mem.cpp in-memory device storage
+- example-gen.cpp device generator based on pass phrase 
+- example-gw-mem.cpp gateway in-memory storage
+
+shows how to compile source with liblorawan.a static library, for instance using gcc:
+
+```
+g++ -o example-direct -I.. example-direct.cpp -L../cmake-build-debug -llorawan
+```
+
+where -L../cmake-build-debug is a path to the directory where liblorawan.a resides. 
+
+Another sample code 
+
+- example-direct.cpp
+
+shows how to choose different storages: "gen", "mem", "sqlite" in your code.
 
 ## Tests
 

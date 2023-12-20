@@ -1,7 +1,6 @@
 #include <regex>
 
 #include "identity-service-gen.h"
-#include "lorawan/lorawan-types.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/key128gen.h"
