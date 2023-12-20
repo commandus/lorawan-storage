@@ -36,6 +36,9 @@ apt install cmake build-essential
 
 ## Build
 
+- autotools
+- CMake
+
 ### Autotools
 
 First install dependencies (see below) and then configure and make project using Autotools:
