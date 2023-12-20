@@ -1,6 +1,6 @@
 SUBDIRS = .
 ACLOCAL_AMFLAGS = -I m4
-VERSION = 1.0.3
+VERSION = 1.0.0
 VERSION_INFO = 1:0:0
 
 # ../../third-party for make distcheck happy
@@ -23,10 +23,9 @@ endif
 if ENABLE_SQLITE
     GATEWAY_DEF += -DENABLE_SQLITE
     EXTRA_LIB += -lsqlite3
-else
-    if ENABLE_GEN
-        GATEWAY_DEF += -DENABLE_GEN
-    endif
+endif
+if ENABLE_GEN
+    GATEWAY_DEF += -DENABLE_GEN
 endif
 
 # Static library used for build binaries, so build library first.
@@ -122,18 +121,18 @@ lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
 #
 libstorage_mem_la_SOURCES = lorawan/storage/service/identity-service-mem.cpp lorawan/storage/service/gateway-service-mem.cpp
 libstorage_mem_la_LIBADD = -L. -llorawan
-libstorage_mem_la_LDFLAGS = -version-info $(VERSION_INFO)
+#libstorage_mem_la_LDFLAGS = -version-info $(VERSION_INFO)
 
 libstorage_gen_la_SOURCES = lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp \
 	lorawan/helper/key128gen.cpp $(AES_SRC)
 libstorage_gen_la_LIBADD = -L. -llorawan
 libstorage_gen_la_CPPFLAGS = -Ithird-party
-libstorage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
+#libstorage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
 if ENABLE_SQLITE
     libstorage_sqlite_la_SOURCES = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
 	    lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp
     libstorage_sqlite_la_LIBADD = $(EXTRA_LIB) -L. -llorawan
-    libstorage_sqlite_la_LDFLAGS = -version-info $(VERSION_INFO)
+#    libstorage_sqlite_la_LDFLAGS = -version-info $(VERSION_INFO)
 endif
 
 #
@@ -143,7 +142,8 @@ configdir = $(datadir)
 dist_config_DATA = \
 	autogen.sh CMakeLists.txt CODE_OF_CONDUCT.md CONTRIBUTING.md COPYING HISTORY LICENSE README.md TODO \
 	third-party/argtable3/README \
-	tests/test-parse-packet.cpp
+	tests/test-parse-packet.cpp \
+	examples/example-direct.cpp examples/example-gen.cpp examples/example-gw-mem.cpp examples/example-mem.cpp
 #
 # Tests
 #

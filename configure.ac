@@ -10,7 +10,7 @@
 # ./configure --enable-gen=yes --enable-libuv=yes
 #
 AC_PREREQ([2.63])
-AC_INIT([lorawan-storage], [0.1], [andrei.i.ivanov@gmail.com])
+AC_INIT([lorawan-storage], [1.0], [andrei.i.ivanov@gmail.com])
 AM_INIT_AUTOMAKE([1.11 foreign no-define subdir-objects])
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_SRCDIR([cli-main.cpp])
