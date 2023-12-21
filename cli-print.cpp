@@ -2,7 +2,6 @@
 #include <iostream>
 
 #include <sstream>
-#include <cstring>
 #include <future>
 
 #include "argtable3/argtable3.h"
@@ -18,16 +17,13 @@
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-string.h"
 #include "log.h"
-#include "lorawan/storage/gateway-identity.h"
 #include "lorawan/storage/serialization/identity-serialization.h"
 #include "lorawan/helper/ip-address.h"
-#include "lorawan/helper/ip-helper.h"
 #include "cli-helper.h"
 
 #include "lorawan/storage/client/plugin-client.h"
 #include "lorawan/storage/client/plugin-query-client.h"
 #include "lorawan/storage/client/service-client.h"
-#include "lorawan/storage/client/udp-client.h"
 
 const char *programName = "lorawan-query";
 #define DEF_PORT 4244
@@ -384,8 +380,8 @@ int main(int argc, char **argv) {
                     params.pluginName = DEF_PLUGIN;
                 }
                 params.svcOrPlugin = 2;
-            }
-            params.svcOrPlugin = 1;
+            } else
+                params.svcOrPlugin = 1;
         }
     }
 

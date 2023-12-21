@@ -190,6 +190,7 @@ Executables:
 - lorawan-service
 - lorawan-query
 - lorawan-query-direct
+- lorawan-print
 
 Static library:
 
@@ -316,6 +317,13 @@ There are same statically linked plugins:
 - -s sqlite (if configured with ENABLE_SQLITE option)
 
 Because plugin use direct calls there no --code --accesscode options available.
+
+### lorawan-print
+
+```
+./lorawan-print -p gen 4030034501807b000239058672800d394af6863bf99148f63bec91543c086c171be37f3953
+./lorawan-print -p gen 4030034501807d00029139bff7333583847518599d50e3900b53d0e64c0d9eabda8ebc2aca
+```
 
 ### Static library usage examples
 
