@@ -211,11 +211,7 @@ else()
 	#
 	# lorawan-query
 	#
-	set(LORAWAN_QUERY_SRC
-		cli-query-main.cpp cli-helper.cpp
-		${ARGTABLE}
-	)
-	add_executable(lorawan-query ${LORAWAN_QUERY_SRC})
+	add_executable(lorawan-query cli-query-main.cpp cli-helper.cpp ${ARGTABLE})
 	target_link_libraries(lorawan-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-query PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-query PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
@@ -223,18 +219,16 @@ else()
 	#
 	# lorawan-query-direct
 	#
-	set(LORAWAN_QUERY_DIRECT_SRC
-		cli-query-plugin-main.cpp cli-helper.cpp
-		${ARGTABLE}
-	)
-	if (ENABLE_SQLITE)
-		set(LORAWAN_QUERY_DIRECT_SRC ${LORAWAN_QUERY_DIRECT_SRC} lorawan/storage/service/identity-service-sqlite.cpp
-			lorawan/storage/service/gateway-service-sqlite.cpp lorawan/helper/sqlite-helper.cpp)
-	endif()
-
-	add_executable(lorawan-query-direct ${LORAWAN_QUERY_DIRECT_SRC})
+	add_executable(lorawan-query-direct cli-query-plugin-main.cpp cli-helper.cpp ${ARGTABLE})
 	target_link_libraries(lorawan-query-direct PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
 	target_include_directories(lorawan-query-direct PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
+
+	#
+	# lorawan-print
+	#
+	add_executable(lorawan-print cli-print.cpp cli-helper.cpp ${ARGTABLE})
+	target_link_libraries(lorawan-print PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
+	target_include_directories(lorawan-print PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
 
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'

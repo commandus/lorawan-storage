@@ -111,3 +111,29 @@ bool mergeIdAddress(
     query.resize(pairSize);
     return true;
 }
+
+/**
+ * Split @param address e.g. FILE:CLASS to @param retFile and @param retClass
+ */
+bool splitFileClass(
+    std::string& retFile,
+    std::string& retIdentityClass,
+    std::string& retGatewayClass,
+    const std::string& value
+)
+{
+    size_t pos1 = value.find_first_of(':');
+    if (pos1 == std::string::npos)
+        return false;
+    size_t pos2 = value.find_last_of(':');
+    if (pos2 == pos1) {
+        retFile = value.substr(0, pos1);
+        retIdentityClass = value.substr(pos1 + 1);
+        retGatewayClass = retIdentityClass;
+        return true;
+    }
+    retFile = value.substr(0, pos1);
+    retIdentityClass = value.substr(pos1 + 1, pos2 - pos1 - 1);
+    retGatewayClass = value.substr(pos2 + 1);
+    return true;
+}

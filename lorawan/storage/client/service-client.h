@@ -14,7 +14,7 @@ public:
     explicit ServiceClient(
         const std::string &name
     );
-    static bool hasService(const std::string &name);
+    static bool hasStaticPlugin(const std::string &name);
     virtual ~ServiceClient();
 };
 

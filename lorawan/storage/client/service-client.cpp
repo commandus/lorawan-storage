@@ -41,7 +41,7 @@ ServiceClient::ServiceClient(
     }
 }
 
-bool ServiceClient::hasService(
+bool ServiceClient::hasStaticPlugin(
     const std::string &name
 )
 {

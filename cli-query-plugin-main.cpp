@@ -33,7 +33,7 @@ public:
     size_t size;
 
     int32_t retCode;
-    std::string masterkey;
+    std::string masterKey;
 
     CliQueryParams()
         : tag(QUERY_GATEWAY_NONE), queryPos(0), verbose(0), offset(0), size(0),
@@ -67,32 +67,6 @@ public:
     }
 };
 
-/**
- * Split @param address e.g. FILE:CLASS to @param retFile and @param retClass
- */
-static bool splitFileClass(
-    std::string& retFile,
-    std::string& retIdentityClass,
-    std::string& retGatewayClass,
-    const std::string& value
-)
-{
-    size_t pos1 = value.find_first_of(':');
-    if (pos1 == std::string::npos)
-        return false;
-    size_t pos2 = value.find_last_of(':');
-    if (pos2 == pos1) {
-        retFile = value.substr(0, pos1);
-        retIdentityClass = value.substr(pos1 + 1);
-        retGatewayClass = retIdentityClass;
-        return true;
-    }
-    retFile = value.substr(0, pos1);
-    retIdentityClass = value.substr(pos1 + 1, pos2 - pos1 - 1);
-    retGatewayClass = value.substr(pos2 + 1);
-    return true;
-}
-
 
 static CliQueryParams params;
 
@@ -116,7 +90,7 @@ static void run()
         return;
     }
     // 0- pass master key to generate keys
-    c->svcIdentity->setOption(0, &params.masterkey);
+    c->svcIdentity->setOption(0, &params.masterKey);
 
     switch (params.tag) {
         case QUERY_IDENTITY_LIST: {
@@ -208,7 +182,7 @@ int main(int argc, char **argv) {
     std::string shortCL = shortCommandList('|');
     struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address", 1, 100,
         shortCL.c_str());
-    struct arg_str *a_plugin_file_n_class = arg_str0("s", "service", "<plugin>", "Default " DEF_PLUGIN);
+    struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", "<plugin>", "Default " DEF_PLUGIN);
 	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
     struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", "<pass-phrase>", "Default " DEF_MASTERKEY);
@@ -217,9 +191,9 @@ int main(int argc, char **argv) {
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
-            a_query, a_plugin_file_n_class,
-            a_offset, a_size, a_pass_phrase, a_verbose,
-            a_help, a_end
+        a_query, a_plugin_file_n_class,
+        a_offset, a_size, a_pass_phrase, a_verbose,
+        a_help, a_end
 	};
 
 	// verify the argtable[] entries were allocated successfully
@@ -235,7 +209,7 @@ int main(int argc, char **argv) {
     // try load shared library
     if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
         (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN))) {
-        if (ServiceClient::hasService(*a_plugin_file_n_class->sval)) {
+        if (ServiceClient::hasStaticPlugin(*a_plugin_file_n_class->sval)) {
             // "load" from static by name: "gen", "mem", "sqlite"
             params.svcName = *a_plugin_file_n_class->sval;
         } else
@@ -243,9 +217,9 @@ int main(int argc, char **argv) {
     }
 
     if (a_pass_phrase->count)
-        params.masterkey = *a_pass_phrase->sval;
+        params.masterKey = *a_pass_phrase->sval;
     else
-        params.masterkey = DEF_MASTERKEY;
+        params.masterKey = DEF_MASTERKEY;
 
     params.tag = QUERY_IDENTITY_ADDR;
 

@@ -73,11 +73,11 @@ public:
 
 static CliQueryParams params;
 
-class ResponsePrinter : public ResponseIntf {
+class ResponseService : public ResponseIntf {
 public:
     const std::vector<DeviceOrGatewayIdentity> &query;
     int verbose;
-    explicit ResponsePrinter(
+    explicit ResponseService(
         const std::vector<DeviceOrGatewayIdentity> &aQuery,
         int aVerbose
     )
@@ -307,10 +307,10 @@ public:
 
 static void run()
 {
-	ResponsePrinter onResp(params.query, params.verbose);
+	ResponseService onResp(params.query, params.verbose);
     QueryClient *client;
 #ifdef ENABLE_LIBUV
-    client = new UvClient(params.useTcp, params.intf, params.port, &onResp);
+    client = new UvClient(params.useTcp, params.address, params.port, &onResp);
 #else
     client = new UDPClient(params.intf, params.port, &onResp);
 #endif

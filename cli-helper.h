@@ -43,4 +43,14 @@ bool mergeIdAddress(
     std::vector<DeviceOrGatewayIdentity> &query
 );
 
+/**
+ * Split @param address e.g. FILE:CLASS to @param retFile and @param retClass
+ */
+bool splitFileClass(
+    std::string& retFile,
+    std::string& retIdentityClass,
+    std::string& retGatewayClass,
+    const std::string& value
+);
+
 #endif
