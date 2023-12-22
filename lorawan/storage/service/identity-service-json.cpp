@@ -110,10 +110,6 @@ int JsonIdentityService::rm(
     return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 }
 
-/**
-        << "\",\"\":\"" << name.toString()
- * @return
- */
 bool JsonIdentityService::load()
 {
     std::ifstream f(fileName);
@@ -121,38 +117,40 @@ bool JsonIdentityService::load()
     if (!js.is_array())
         return false;
     for (auto& e : js) {
+        std::cerr << "==" << std::endl;
         DEVADDR a;
-        if (!e.contains("addr") || !e.is_string())
+        if (!e.contains("addr"))
             continue;
-        string2DEVADDR(a, e["activation"]);
-
+        string2DEVADDR(a, e["addr"]);
+        std::cerr << "===" << std::endl;
         DEVICEID id;
-        if (e.contains("activation") && e.is_string())
+        if (e.contains("activation"))
             id.activation = string2activation(e["activation"]);
-        if (e.contains("class") && e.is_string())
+        if (e.contains("class"))
             id.setClass(string2deviceclass(e["class"]));
-        if (e.contains("deveui") && e.is_string())
+        if (e.contains("deveui"))
             string2DEVEUI(id.devEUI, e["deveui"]);
-        if (e.contains("nwkSKey") && e.is_string())
+        if (e.contains("nwkSKey"))
             string2KEY(id.nwkSKey, e["nwkSKey"]);
-        if (e.contains("appSKey") && e.is_string())
+        if (e.contains("appSKey"))
             string2KEY(id.appSKey, e["appSKey"]);
-        if (e.contains("version") && e.is_string())
+        if (e.contains("version"))
             id.version = string2LORAWAN_VERSION(e["version"]);
-        if (e.contains("appeui") && e.is_string())
+        if (e.contains("appeui"))
             string2DEVEUI(id.appEUI, e["appeui"]);
-        if (e.contains("appKey") && e.is_string())
+        if (e.contains("appKey"))
             string2KEY(id.appKey, e["appKey"]);
-        if (e.contains("nwkKey") && e.is_string())
+        if (e.contains("nwkKey"))
             string2KEY(id.nwkKey, e["nwkKey"]);
-        if (e.contains("devNonce") && e.is_string())
+        if (e.contains("devNonce"))
             id.devNonce = string2DEVNONCE(e["devNonce"]);
-        if (e.contains("joinNonce") && e.is_string())
+        if (e.contains("joinNonce"))
             string2JOINNONCE(id.joinNonce, e["joinNonce"]);
-        if (e.contains("name") && e.is_string()) {
+        if (e.contains("name")) {
             std::string s = e["name"];
             string2DEVICENAME(id.name, s.c_str());
         }
+        std::cerr << "a: " << DEVADDR2string(a) << std::endl;
         storage[a] = id;
     }
     f.close();

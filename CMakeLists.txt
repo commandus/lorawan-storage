@@ -121,9 +121,11 @@ else()
 		lorawan/storage/serialization/gateway-serialization.cpp lorawan/storage/serialization/identity-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
-		lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-mem.cpp
+		lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-json.cpp
+		lorawan/storage/service/gateway-service-mem.cpp
 		lorawan/storage/service/gateway-service-sqlite.cpp lorawan/storage/service/identity-service.cpp
-		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-mem.cpp
+		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-json.cpp
+		lorawan/storage/service/identity-service-mem.cpp
 		lorawan/storage/service/identity-service-sqlite.cpp
 		third-party/strptime.cpp
 		${AES_SRC}

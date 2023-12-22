@@ -2,11 +2,10 @@
 
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-conv.h"
-#include "lorawan/lorawan-msg.h"
 
+#include "lorawan/storage/service/identity-service-json.h"
 #include "lorawan/storage/service/identity-service-gen.h"
-#include "lorawan/storage/service/identity-service-mem.h"
-#include "lorawan/storage/service/gateway-service-mem.h"
+#include "lorawan/storage/service/gateway-service-json.h"
 #ifdef ENABLE_SQLITE
 #include "lorawan/storage/service/identity-service-sqlite.h"
 #include "lorawan/storage/service/gateway-service-sqlite.h"
@@ -23,20 +22,25 @@ ServiceClient::ServiceClient(
 )
 	: DirectClient()
 {
-    if (name == "gen") {
-        svcIdentity = new GenIdentityService;
-        svcGateway = new MemoryGatewayService;
+    if (name == "json") {
+        svcIdentity = new JsonIdentityService;
+        svcGateway = new JsonGatewayService;
     } else {
-        if (name == "mem") {
-            svcIdentity = new MemoryIdentityService;
+        if (name == "gen") {
+            svcIdentity = new GenIdentityService;
             svcGateway = new MemoryGatewayService;
         } else {
+            if (name == "mem") {
+                svcIdentity = new MemoryIdentityService;
+                svcGateway = new MemoryGatewayService;
+            } else {
 #ifdef ENABLE_SQLITE
-            if (name == "sqlite") {
-                svcIdentity = new SqliteIdentityService;
-                svcGateway = new SqliteGatewayService;
-            }
+                if (name == "sqlite") {
+                    svcIdentity = new SqliteIdentityService;
+                    svcGateway = new SqliteGatewayService;
+                }
 #endif
+            }
         }
     }
 }

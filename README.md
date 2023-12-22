@@ -298,12 +298,14 @@ IdentityService and GatewayService are interfaces to work with storage.
 
 Plugin files are:
 
+- storage-json (libstorage-json.so or libstorage-json.DLL)
 - storage-gen (libstorage-gen.so or libstorage-gen.DLL)
 - storage-mem (libstorage-mem.so or libstorage-mem.DLL)
 - storage-sqlite (libstorage-sqlite.so or libstorage-sqlite.DLL)
  
 Option -s set plugin file name and class prefix for device identities and gateways e.g.
 
+- -s storage-json:Json
 - -s storage-gen:Gen:Memory
 - -s storage-mem:Memory
 - -s storage-sqlite:Sqlite (if configured with ENABLE_SQLITE option)
@@ -312,6 +314,7 @@ where storage-gen translated to libstorage-gen.so or libstorage-gen.DLL name acc
 
 There are same statically linked plugins:
 
+- -s json
 - -s gen
 - -s mem
 - -s sqlite (if configured with ENABLE_SQLITE option)
