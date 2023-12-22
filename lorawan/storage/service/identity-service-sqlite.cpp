@@ -155,24 +155,24 @@ int SqliteIdentityService::put(
     std::stringstream statement;
 
     statement << "INSERT INTO device(" FIELD_LIST ") VALUES ('"
-              << activation2string(id.activation) << "', "
-              << "'" << deviceclass2string(id.deviceclass) << "', "
-              << "'" << DEVEUI2string(id.devEUI) << "', "
-              << "'" << KEY2string(id.nwkSKey) << "', "
-              << "'" << KEY2string(id.appSKey) << "', "
-              << "'" << LORAWAN_VERSION2string(id.version) << "', "
-              << "'" << DEVEUI2string(id.appEUI) << "', "
-              << "'" << KEY2string(id.appKey) << "', "
-              << "'" << KEY2string(id.nwkKey) << "', "
-              << "'" << DEVNONCE2string(id.devNonce) << "', "
-              << "'" << JOINNONCE2string(id.joinNonce) << "', "
-              << "'" << DEVICENAME2string(id.name) << "', "
-              << "'" << DEVADDR2string(devAddr)
-              << "') ON CONFLICT(addr) DO UPDATE SET "
-                 "activation=excluded.activation, deviceclass=excluded.deviceclass, deveui=excluded.deveui, "
-                 "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
-                 "appeui=excluded.appeui, appkey=excluded.appkey, nwkkey=excluded.nwkkey, "
-                 "devnonce=excluded.devnonce, joinnonce=excluded.joinnonce, name=excluded.name";
+        << activation2string(id.activation) << "', "
+        << "'" << deviceclass2string(id.deviceclass) << "', "
+        << "'" << DEVEUI2string(id.devEUI) << "', "
+        << "'" << KEY2string(id.nwkSKey) << "', "
+        << "'" << KEY2string(id.appSKey) << "', "
+        << "'" << LORAWAN_VERSION2string(id.version) << "', "
+        << "'" << DEVEUI2string(id.appEUI) << "', "
+        << "'" << KEY2string(id.appKey) << "', "
+        << "'" << KEY2string(id.nwkKey) << "', "
+        << "'" << DEVNONCE2string(id.devNonce) << "', "
+        << "'" << JOINNONCE2string(id.joinNonce) << "', "
+        << "'" << DEVICENAME2string(id.name) << "', "
+        << "'" << DEVADDR2string(devAddr)
+        << "') ON CONFLICT(addr) DO UPDATE SET "
+        "activation=excluded.activation, deviceclass=excluded.deviceclass, deveui=excluded.deveui, "
+        "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
+        "appeui=excluded.appeui, appkey=excluded.appkey, nwkkey=excluded.nwkkey, "
+        "devnonce=excluded.devnonce, joinnonce=excluded.joinnonce, name=excluded.name";
     int r = sqlite3_exec(db, statement.str().c_str(), nullptr, nullptr, &zErrMsg);
     if (r != SQLITE_OK) {
         if (zErrMsg) {
