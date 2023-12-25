@@ -117,12 +117,10 @@ bool JsonIdentityService::load()
     if (!js.is_array())
         return false;
     for (auto& e : js) {
-        std::cerr << "==" << std::endl;
         DEVADDR a;
         if (!e.contains("addr"))
             continue;
         string2DEVADDR(a, e["addr"]);
-        std::cerr << "===" << std::endl;
         DEVICEID id;
         if (e.contains("activation"))
             id.activation = string2activation(e["activation"]);
@@ -150,7 +148,6 @@ bool JsonIdentityService::load()
             std::string s = e["name"];
             string2DEVICENAME(id.name, s.c_str());
         }
-        std::cerr << "a: " << DEVADDR2string(a) << std::endl;
         storage[a] = id;
     }
     f.close();
@@ -167,7 +164,7 @@ bool JsonIdentityService::store()
             isFirst = false;
         else
             f << ",\n";
-        f << e.second.toJsonString();
+        f << e.second.toJsonString(e.first);
     }
     f << "]\n";
     f.close();

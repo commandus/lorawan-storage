@@ -589,7 +589,9 @@ public:
 	void setClass(const DEVICECLASS &value);
 
 	std::string toString() const;
+    std::string toString(const DEVADDR &addr) const;
 	std::string toJsonString() const;
+    std::string toJsonString(const DEVADDR &addr) const;
 	void setProperties(std::map<std::string, std::string> &retval);
 
     bool empty() const;

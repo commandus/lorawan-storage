@@ -1597,45 +1597,65 @@ void DEVICEID::setClass(
 	deviceclass = value;
 }
 
-std::string DEVICEID::toString() const 
+std::string DEVICEID::toString() const
 {
-	std::stringstream ss;
-	ss
-		<< activation2string(activation)
-		<< LIST_SEPARATOR << deviceclass2string(deviceclass)
-		<< LIST_SEPARATOR << DEVEUI2string(devEUI)
-		<< LIST_SEPARATOR << KEY2string(nwkSKey)
-		<< LIST_SEPARATOR << KEY2string(appSKey)
-		<< LIST_SEPARATOR << LORAWAN_VERSION2string(version)
+    DEVADDR a;
+	return toString(a);
+}
+
+std::string DEVICEID::toString(
+    const DEVADDR &addr
+) const
+{
+    std::stringstream ss;
+    if (!addr.empty())
+        ss << DEVADDR2string(addr) << LIST_SEPARATOR;
+    ss
+        << activation2string(activation)
+        << LIST_SEPARATOR << deviceclass2string(deviceclass)
+        << LIST_SEPARATOR << DEVEUI2string(devEUI)
+        << LIST_SEPARATOR << KEY2string(nwkSKey)
+        << LIST_SEPARATOR << KEY2string(appSKey)
+        << LIST_SEPARATOR << LORAWAN_VERSION2string(version)
         << LIST_SEPARATOR << DEVEUI2string(appEUI)
         << LIST_SEPARATOR << KEY2string(appKey)
         << LIST_SEPARATOR << KEY2string(nwkKey)
         << LIST_SEPARATOR << DEVNONCE2string(devNonce)
         << LIST_SEPARATOR << JOINNONCE2string(joinNonce)
-		<< LIST_SEPARATOR << DEVICENAME2string(name);
-	return ss.str();
+        << LIST_SEPARATOR << DEVICENAME2string(name);
+    return ss.str();
 }
 
 std::string DEVICEID::toJsonString() const
 {
-	std::stringstream ss;
-	ss << "{" 
-		<< "\"activation\":\"" << activation2string(activation)
-		<< "\",\"class\":\"" << deviceclass2string(deviceclass)
-		<< "\",\"deveui\":\"" << DEVEUI2string(devEUI)
-		<< "\",\"nwkSKey\":\"" << KEY2string(nwkSKey)
-		<< "\",\"appSKey\":\"" << KEY2string(appSKey)
-		<< "\",\"version\":\"" << LORAWAN_VERSION2string(version)
+    DEVADDR a;
+    return toJsonString(a);
+}
 
-        << "\",\"appeui\":\"" << DEVEUI2string(appEUI)
-        << "\",\"appKey\":\"" << KEY2string(appKey)
-        << "\",\"nwkKey\":\"" << KEY2string(nwkKey)
-        << "\",\"devNonce\":\"" << DEVNONCE2string(devNonce)
-        << "\",\"joinNonce\":\"" << JOINNONCE2string(joinNonce)
+std::string DEVICEID::toJsonString(
+    const DEVADDR &addr
+) const
+{
+    std::stringstream ss;
+    ss << "{";
+    if (!addr.empty())
+        ss << "\"addr\":\"" << DEVADDR2string(addr) << "\",";
+    ss << "\"activation\":\"" << activation2string(activation)
+       << "\",\"class\":\"" << deviceclass2string(deviceclass)
+       << "\",\"deveui\":\"" << DEVEUI2string(devEUI)
+       << "\",\"nwkSKey\":\"" << KEY2string(nwkSKey)
+       << "\",\"appSKey\":\"" << KEY2string(appSKey)
+       << "\",\"version\":\"" << LORAWAN_VERSION2string(version)
 
-        << "\",\"name\":\"" << name.toString()
-		<< "\"}";
-	return ss.str();
+       << "\",\"appeui\":\"" << DEVEUI2string(appEUI)
+       << "\",\"appKey\":\"" << KEY2string(appKey)
+       << "\",\"nwkKey\":\"" << KEY2string(nwkKey)
+       << "\",\"devNonce\":\"" << DEVNONCE2string(devNonce)
+       << "\",\"joinNonce\":\"" << JOINNONCE2string(joinNonce)
+
+       << "\",\"name\":\"" << name.toString()
+       << "\"}";
+    return ss.str();
 }
 
 void DEVICEID::setProperties
@@ -1712,15 +1732,10 @@ void NETWORKIDENTITY::set(
 
 std::string NETWORKIDENTITY::toString() const 
 {
-	std::stringstream ss;
-	ss << DEVADDR2string(devaddr) << LIST_SEPARATOR << devid.toString();
-	return ss.str();
+    return devid.toString(devaddr);
 }
 
 std::string NETWORKIDENTITY::toJsonString() const
 {
-    std::stringstream ss;
-	ss << R"({"addr": ")" << DEVADDR2string(devaddr)
-        << "\", \"device\": " << devid.toJsonString() << "}";
-	return ss.str();
+	return devid.toJsonString(devaddr);
 }
