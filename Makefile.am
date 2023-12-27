@@ -51,7 +51,7 @@ SRC_ARGTABLE = third-party/argtable3/argtable3.c
 nobase_dist_include_HEADERS = \
 	lorawan/lorawan-const.h lorawan/lorawan-conv.h lorawan/lorawan-date.h lorawan/lorawan-error.h \
 	lorawan/lorawan-mac.h lorawan/lorawan-msg.h lorawan/lorawan-string.h lorawan/lorawan-types.h \
-	lorawan/helper/file-helper.h lorawan/helper/ip-address.h lorawan/helper/ip-helper.h \
+	lorawan/helper/aes-helper.h lorawan/helper/file-helper.h lorawan/helper/ip-address.h lorawan/helper/ip-helper.h \
 	lorawan/helper/key128gen.h lorawan/helper/sqlite-helper.h lorawan/helper/uv-mem.h \
 	lorawan/storage/gateway-identity.h lorawan/storage/network-identity.h \
 	lorawan/storage/client/direct-client.h lorawan/storage/client/plugin-client.h \
@@ -80,7 +80,7 @@ nobase_dist_include_HEADERS = \
 SRC_LIBLORAWAN = \
     lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp lorawan/lorawan-error.cpp lorawan/lorawan-mac.cpp \
     lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp \
-    lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp \
+    lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp \
     lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp lorawan/helper/uv-mem.cpp \
     lorawan/storage/gateway-identity.cpp lorawan/storage/network-identity.cpp \
     lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp \

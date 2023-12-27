@@ -16,7 +16,7 @@
 #include "log.h"
 #include "lorawan/helper/ip-address.h"
 
-const char *programName = "lorawan-query-plugin";
+const char *programName = "lorawan-query-direct";
 
 // global parameters
 class CliQueryParams {
@@ -33,21 +33,25 @@ public:
     size_t size;
 
     int32_t retCode;
-    std::string masterKey;
+    std::string passPhrase;
+    NETID netid;
+    std::string db;
 
     CliQueryParams()
         : tag(QUERY_GATEWAY_NONE), queryPos(0), verbose(0), offset(0), size(0),
-          retCode(0)
+          retCode(0), netid(0, 0)
     {
 
     }
 
     std::string toString() {
         std::stringstream ss;
-        if (svcName.empty())
+        if (svcName.empty()) {
             ss << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName;
-        else
+        } else
             ss << "Direct service: " << svcName;
+        if (!db.empty())
+            ss << ". Database file name: " << db;
         ss << " "
             << "command: " << commandLongName(tag)
             << ", offset: " << std::dec << offset << ", size: "  << size << "\n";
@@ -80,6 +84,11 @@ static void run()
         c = new PluginClient(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
     else
         c = new ServiceClient(params.svcName);
+    if (!params.db.empty())
+        c->svcIdentity->init(params.db, nullptr);
+    else
+        c->svcIdentity->init(params.passPhrase, &params.netid);
+
     if (!c->svcIdentity || !c->svcGateway) {
         std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
             << ERR_LOAD_PLUGINS_FAILED << " " << params.svcName
@@ -89,7 +98,7 @@ static void run()
         return;
     }
     // 0- pass master key to generate keys
-    c->svcIdentity->setOption(0, &params.masterKey);
+    c->svcIdentity->setOption(0, &params.passPhrase);
 
     switch (params.tag) {
         case QUERY_IDENTITY_LIST: {
@@ -182,16 +191,19 @@ int main(int argc, char **argv) {
     struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address", 1, 100,
         shortCL.c_str());
     struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", "<plugin>", "Default " DEF_PLUGIN);
+    struct arg_str *a_db = arg_str0("d", "db", "<database file>", "database file name. Default none");
 	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
     struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
     struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", "<pass-phrase>", "Default " DEF_MASTERKEY);
+    struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
     struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
-        a_query, a_plugin_file_n_class,
-        a_offset, a_size, a_pass_phrase, a_verbose,
+        a_query, a_plugin_file_n_class, a_db,
+        a_offset, a_size, a_pass_phrase, a_net_id,
+        a_verbose,
         a_help, a_end
 	};
 
@@ -204,6 +216,9 @@ int main(int argc, char **argv) {
 	int errorCount = arg_parse(argc, argv, argtable);
 
     params.verbose = a_verbose->count;
+
+    if (a_db->count)
+        params.db = *a_db->sval;
 
     // try load shared library
     std::string s(a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN);
@@ -218,10 +233,11 @@ int main(int argc, char **argv) {
     }
 
     if (a_pass_phrase->count)
-        params.masterKey = *a_pass_phrase->sval;
+        params.passPhrase = *a_pass_phrase->sval;
     else
-        params.masterKey = DEF_MASTERKEY;
-
+        params.passPhrase = DEF_MASTERKEY;
+    if (a_net_id)
+        readNetId(params.netid, *a_net_id->sval);
     params.tag = QUERY_IDENTITY_ADDR;
 
     params.query.reserve(a_query->count);

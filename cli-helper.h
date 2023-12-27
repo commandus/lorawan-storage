@@ -53,4 +53,15 @@ bool splitFileClass(
     const std::string& value
 );
 
+/**
+ * Read hexadecimal <network-id> or <net-type>:<net-id>.
+ * @param retVal return value
+ * @param value string to read
+ * @return true
+ */
+bool readNetId(
+    NETID &retVal,
+    const std::string &value
+);
+
 #endif

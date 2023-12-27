@@ -203,7 +203,7 @@ void run() {
 
 int main(int argc, char **argv) {
 	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4244");
-    struct arg_str *a_db = arg_str0("d", "db", "<file>", "database file name. Default " DEF_DB);
+    struct arg_str *a_db = arg_str0("d", "db", "<database file>", "database file name. Default " DEF_DB);
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
 #ifdef ENABLE_GEN
     struct arg_str *a_pass_phrase = arg_str0("m", "master-key", "<pass-phrase>", "Default " DEF_PASSPHRASE);
@@ -251,29 +251,17 @@ int main(int argc, char **argv) {
         svc.passPhrase = *a_pass_phrase->sval;
     else
         svc.passPhrase = DEF_PASSPHRASE;
-    if (a_net_id) {
-        std::string v = *a_net_id->sval;
-        auto p = v.find(':');
-        if (p != std::string::npos) {
-            svc.netid.set(
-                strtoul(v.substr(0, p - 1).c_str(), nullptr, 16),
-                strtoul(v.substr(p + 1).c_str(), nullptr, 16)
-            );
-        } else
-            svc.netid.set(strtoul(v.c_str(), nullptr, 16));
-    }
+    if (a_net_id)
+        readNetId(svc.netid, *a_net_id->sval);
 #endif
-
     if (a_db->count)
         svc.db = *a_db->sval;
     else
         svc.db = DEF_DB;
-
     if (a_code->count)
         svc.code = *a_code->ival;
     else
         svc.code = 42;
-
     if (a_access_code->count)
         svc.accessCode = strtoull(*a_access_code->sval, nullptr, 16);
     else
@@ -285,7 +273,7 @@ int main(int argc, char **argv) {
 			arg_print_errors(stderr, a_end, programName);
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "LoRaWAN gateway storage example" << std::endl;
+		std::cerr << "LoRaWAN gateway storage service" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;

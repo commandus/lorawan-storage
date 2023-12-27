@@ -43,13 +43,14 @@ public:
     std::string pluginFilePath;
     std::string pluginIdentityClassName;
     std::string pluginGatewayClassName;
-
-    std::string masterKey;
+    std::string passPhrase;
+    NETID netid;
+    std::string db;
     int verbose;
     int32_t retCode;
 
     CliPrintParams()
-        : port(DEF_PORT), code(42), accessCode(42), verbose(0), retCode(0)
+        : port(DEF_PORT), code(42), accessCode(42), netid(0), verbose(0), retCode(0)
     {
 
     }
@@ -67,8 +68,9 @@ public:
             default:
                 ss << "Direct : " << pluginName;
         }
-        ss
-            << " pass-phrase: " << masterKey << " verbose: " << verbose << "\n";
+        if (!db.empty())
+            ss << ". Database file name: " << db;
+        ss << ". Pass-phrase: " << passPhrase << ". Verbose: " << verbose << "\n";
         for (auto & it : payload) {
             ss << hexString(it) << "\n";
         }
@@ -220,11 +222,20 @@ static bool getDeviceByAddr(
                 params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
                 return false;
             }
+            if (!params.db.empty())
+                c.svcIdentity->init(params.db, nullptr);
+            else
+                c.svcIdentity->init(params.passPhrase, &params.netid);
             return c.svcIdentity->get(retVal, devaddr) == 0;
         }
         default:
         {
             auto c = ServiceClient(params.pluginName);
+            if (!params.db.empty())
+                c.svcIdentity->init(params.db, nullptr);
+            else
+                c.svcIdentity->init(params.passPhrase, &params.netid);
+
             if (!c.svcIdentity || !c.svcGateway) {
                 std::cerr
                     << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
@@ -235,7 +246,7 @@ static bool getDeviceByAddr(
                 return false;
             }
             // 0- pass master key to generate keys
-            c.svcIdentity->setOption(0, &params.masterKey);
+            c.svcIdentity->setOption(0, &params.passPhrase);
             return c.svcIdentity->get(retVal, devaddr) == 0;
         }
     }
@@ -246,7 +257,7 @@ static std::string decodePayload(
     const std::string &payload
 )
 {
-    return "";
+    return payload;
 }
 
 static void printPacket(
@@ -280,7 +291,7 @@ static void printPacket(
                 DEVICEID deviceId;
                 if (getDeviceByAddr(deviceId, rfm->devaddr)) {
                     strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
-                         << decodePayload(deviceId, std::string(pl, sz - (pl - (char *) rfm)));
+                         << hexString(decodePayload(deviceId, std::string(pl, sz - (pl - (char *) rfm))));
                 } else
                     strm << DLMT << "n/a" << DLMT << hexString(pl, sz - (pl - (char *) rfm));
             }
@@ -309,7 +320,8 @@ static void printPacket(
         else {
             DEVICEID deviceId;
             if (getDeviceByAddr(deviceId, rfm->devaddr)) {
-                strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT << decodePayload(deviceId, std::string(pl, sz - (pl - (char *) rfm)));
+                strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
+                    << hexString(decodePayload(deviceId, std::string(pl, sz - (pl - (char *) rfm))));
             } else
                 strm << DLMT << "n/a" << DLMT << hexString(pl, sz - (pl - (char *) rfm));
         }
@@ -332,7 +344,9 @@ int main(int argc, char **argv) {
     struct arg_str *a_hex = arg_strn(nullptr, nullptr, "<hex>",  1, 100, "payload");
     struct arg_str *a_service_n_port = arg_str0("s", "service", "<address:port>", "");
     struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", "<plugin>", "Default " DEF_PLUGIN);
+    struct arg_str *a_db = arg_str0("d", "db", "<database file>", "database file name. Default none");
     struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", "<pass-phrase>", "Default " DEF_MASTERKEY);
+    struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
     struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
@@ -341,8 +355,8 @@ int main(int argc, char **argv) {
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
-		a_hex, a_service_n_port, a_plugin_file_n_class, a_pass_phrase, a_code, a_access_code,
-        a_tcp, a_verbose,
+		a_hex, a_service_n_port, a_plugin_file_n_class, a_db, a_pass_phrase, a_net_id,
+        a_code, a_access_code, a_tcp, a_verbose,
 		a_help, a_end 
 	};
 
@@ -357,6 +371,15 @@ int main(int argc, char **argv) {
     params.verbose = a_verbose->count;
 
     if (!a_help->count) {
+        if (a_db->count)
+            params.db = *a_db->sval;
+        if (a_pass_phrase->count)
+            params.passPhrase = *a_pass_phrase->sval;
+        else
+            params.passPhrase = DEF_MASTERKEY;
+        if (a_net_id)
+            readNetId(params.netid, *a_net_id->sval);
+
         if (a_service_n_port->count) {
             if (!splitAddress(params.address, params.port, std::string(*a_service_n_port->sval))) {
                 std::cerr << "Invalid service address:port " << *a_service_n_port->sval << std::endl;

@@ -16,7 +16,6 @@
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/lorawan-string.h"
 #include "log.h"
-#include "lorawan/storage/gateway-identity.h"
 #include "lorawan/storage/serialization/identity-serialization.h"
 #include "lorawan/helper/ip-address.h"
 #include "lorawan/helper/ip-helper.h"

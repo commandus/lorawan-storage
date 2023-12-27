@@ -137,3 +137,19 @@ bool splitFileClass(
     retGatewayClass = value.substr(pos2 + 1);
     return true;
 }
+
+bool readNetId(
+    NETID &retVal,
+    const std::string &value
+)
+{
+    auto p = value.find(':');
+    if (p != std::string::npos) {
+        retVal.set(
+            strtoul(value.substr(0, p - 1).c_str(), nullptr, 16),
+            strtoul(value.substr(p + 1).c_str(), nullptr, 16)
+        );
+    } else
+        retVal.set(strtoul(value.c_str(), nullptr, 16));
+    return true;
+}
