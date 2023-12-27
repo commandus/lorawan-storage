@@ -25,12 +25,18 @@
 #include "lorawan/storage/service/identity-service-sqlite.h"
 #include "lorawan/storage/service/gateway-service-sqlite.h"
 #define DEF_DB  "lorawan.db"
-#else
+#endif
+
 #ifdef ENABLE_GEN
 #include "lorawan/storage/service/identity-service-gen.h"
+#endif
+
+#ifdef ENABLE_JSON
+#include "lorawan/storage/service/identity-service-json.h"
+#include "lorawan/storage/service/gateway-service-json.h"
+#define DEF_DB  "identity.json"
 #else
 #include "lorawan/storage/service/identity-service-mem.h"
-#endif
 #include "lorawan/storage/service/gateway-service-mem.h"
 #endif
 
@@ -76,23 +82,18 @@ public:
     uint64_t accessCode;
     bool runAsDaemon;
     int verbose;
-#ifdef ENABLE_SQLITE
     std::string db;
-#endif
     int32_t retCode;
-
 #ifdef ENABLE_GEN
     std::string passPhrase;
     NETID netid;
 #endif
-
     CliServiceDescriptorNParams()
         : server(nullptr), proto(PROTO_UDP), port(4244), code(0), accessCode(0), verbose(0), retCode(0),
         runAsDaemon(false)
 #ifdef ENABLE_GEN
         , netid(0, 0)
 #endif
-
     {
 
     }
@@ -102,6 +103,8 @@ public:
         ss
             << "Service: " << intf << ":" << port << " " << IP_PROTO2string(proto) << ".\n"
             << "Code: " << std::hex << code << ", access code: "  << accessCode << " " << "\n";
+        if (!db.empty())
+            ss << "database file name: " << db << "\n";
         return ss.str();
     }
 
@@ -114,7 +117,6 @@ public:
     void flush() override {
         std::cerr << std::endl;
     }
-
 };
 
 CliServiceDescriptorNParams svc;
@@ -122,6 +124,7 @@ CliServiceDescriptorNParams svc;
 static void done() {
     if (svc.server) {
         svc.server->stop();
+        svc.server->identitySerialization->svc->flush();
         delete svc.server;
         svc.server = nullptr;
         std::cerr << MSG_GRACEFULLY_STOPPED << std::endl;
@@ -159,24 +162,28 @@ void run() {
 #ifdef ENABLE_SQLITE
         new SqliteIdentityService;
     identityService->init(svc.db, nullptr);
-#else
+#endif
+
 #ifdef ENABLE_GEN
-            new GenIdentityService;
+        new GenIdentityService;
     identityService->init(svc.passPhrase, &svc.netid);
+#endif
+#ifdef ENABLE_JSON
+        new JsonIdentityService;
+    identityService->init(svc.db, nullptr);
 #else
         new MemoryIdentityService;
-        identityService->init("", nullptr);
+    identityService->init("", nullptr);
 #endif
-#endif
+
     auto gatewayService =
 #ifdef ENABLE_SQLITE
         new SqliteGatewayService;
     gatewayService->init(svc.db, nullptr);
 #else
-    new MemoryGatewayService;
+        new MemoryGatewayService;
     gatewayService->init("", nullptr);
 #endif
-
     auto identitySerialization = new IdentitySerialization(identityService, svc.code, svc.accessCode);
     auto gatewaySerialization = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
@@ -186,6 +193,9 @@ void run() {
 #endif
     svc.server->setAddress(svc.intf, svc.port);
     svc.server->setLog(svc.verbose, &svc);
+    if (svc.verbose)
+        std::cout << "Identities: " << svc.server->identitySerialization->svc->size() << std::endl;
+
     svc.retCode = svc.server->run();
     if (svc.retCode)
         std::cerr << ERR_MESSAGE << svc.retCode << ": " << std::endl;
@@ -193,11 +203,8 @@ void run() {
 
 int main(int argc, char **argv) {
 	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4244");
-#ifdef ENABLE_SQLITE
     struct arg_str *a_db = arg_str0("d", "db", "<file>", "database file name. Default " DEF_DB);
-#endif
     struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
-
 #ifdef ENABLE_GEN
     struct arg_str *a_pass_phrase = arg_str0("m", "master-key", "<pass-phrase>", "Default " DEF_PASSPHRASE);
     struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
@@ -257,12 +264,11 @@ int main(int argc, char **argv) {
     }
 #endif
 
-#ifdef ENABLE_SQLITE
     if (a_db->count)
         svc.db = *a_db->sval;
     else
         svc.db = DEF_DB;
-#endif
+
     if (a_code->count)
         svc.code = *a_code->ival;
     else
@@ -303,9 +309,8 @@ int main(int argc, char **argv) {
 		// CLOSESYSLOG()
 	} else {
 		setSignalHandler();
-        if (svc.verbose > 1) {
-            std::cerr << svc.toString() << std::endl;
-        }
+        if (svc.verbose > 1)
+            std::cerr << svc.toString();
 		run();
 		done();
 	}

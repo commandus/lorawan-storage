@@ -70,7 +70,7 @@ public:
 
 static CliQueryParams params;
 
-#define DEF_PLUGIN  "storage-gen:Gen:Memory"
+#define DEF_PLUGIN  "json"
 #define DEF_MASTERKEY   "masterkey"
 
 static void run()
@@ -210,7 +210,7 @@ int main(int argc, char **argv) {
     if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
         (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN))) {
         if (ServiceClient::hasStaticPlugin(*a_plugin_file_n_class->sval)) {
-            // "load" from static by name: "gen", "mem", "sqlite"
+            // "load" from static by name: "json", "gen", "mem", "sqlite"
             params.svcName = *a_plugin_file_n_class->sval;
         } else
             return ERR_CODE_COMMAND_LINE;

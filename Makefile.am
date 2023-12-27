@@ -20,12 +20,15 @@ if ENABLE_LIBUV
     EXTRA_LIB += -luv
 endif
 
+if ENABLE_GEN
+    GATEWAY_DEF += -DENABLE_GEN
+endif
+if ENABLE_JSON
+    GATEWAY_DEF += -DENABLE_JSON
+endif
 if ENABLE_SQLITE
     GATEWAY_DEF += -DENABLE_SQLITE
     EXTRA_LIB += -lsqlite3
-endif
-if ENABLE_GEN
-    GATEWAY_DEF += -DENABLE_GEN
 endif
 
 # Static library used for build binaries, so build library first.
@@ -33,7 +36,7 @@ $(bin_PROGRAMS): $(lib_LIBRARIES)
 
 lib_LIBRARIES = liblorawan.a
 
-lib_LTLIBRARIES = libstorage-mem.la libstorage-gen.la
+lib_LTLIBRARIES = libstorage-mem.la libstorage-json.la libstorage-gen.la
 if ENABLE_SQLITE
     lib_LTLIBRARIES += libstorage-sqlite.la
 endif
@@ -61,8 +64,10 @@ nobase_dist_include_HEADERS = \
 	lorawan/storage/serialization/service-serialization.h \
 	lorawan/storage/service/async-wrapper-gateway-service.h lorawan/storage/service/async-wrapper-identity-service.h \
 	lorawan/storage/service/gateway-service.h lorawan/storage/service/gateway-service-mem.h \
+	lorawan/storage/service/gateway-service-json.h \
 	lorawan/storage/service/gateway-service-sqlite.h lorawan/storage/service/identity-service-gen.h \
 	lorawan/storage/service/identity-service.h lorawan/storage/service/identity-service-mem.h \
+	lorawan/storage/service/identity-service-json.h \
 	lorawan/storage/service/identity-service-sqlite.h \
 	cli-helper.h config.h log.h platform-specific.h \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
@@ -88,8 +93,10 @@ SRC_LIBLORAWAN = \
     lorawan/storage/serialization/service-serialization.cpp \
     lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp \
     lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-mem.cpp \
+    lorawan/storage/service/gateway-service-json.cpp \
     lorawan/storage/service/identity-service.cpp \
     lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-mem.cpp \
+    lorawan/storage/service/identity-service-json.cpp \
     third-party/strptime.cpp \
     ${AES_SRC}
 
@@ -123,11 +130,18 @@ libstorage_mem_la_SOURCES = lorawan/storage/service/identity-service-mem.cpp lor
 libstorage_mem_la_LIBADD = -L. -llorawan
 #libstorage_mem_la_LDFLAGS = -version-info $(VERSION_INFO)
 
+libstorage_json_la_SOURCES = lorawan/storage/service/identity-service-json.cpp lorawan/storage/service/gateway-service-json.cpp \
+	$(AES_SRC)
+libstorage_json_la_LIBADD = -L. -llorawan
+libstorage_json_la_CPPFLAGS = -Ithird-party
+#libstorage_json_la_LDFLAGS = -version-info $(VERSION_INFO)
+
 libstorage_gen_la_SOURCES = lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp \
 	lorawan/helper/key128gen.cpp $(AES_SRC)
 libstorage_gen_la_LIBADD = -L. -llorawan
 libstorage_gen_la_CPPFLAGS = -Ithird-party
 #libstorage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
+
 if ENABLE_SQLITE
     libstorage_sqlite_la_SOURCES = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
 	    lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp

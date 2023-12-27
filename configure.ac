@@ -2,6 +2,7 @@
 # Options:
 # --enable-libuv=no   	enable libuv UDP/TCP. Default UDP only
 # --enable-debug=no   	enable debugging output
+# --enable-json=no      enable JSON backend
 # --enable-gen=no       enable gen backend
 # --enable-sqlite=no    enable SQLite backend
 # --enable-ipv6=no    	enable IPv6(reserved)
@@ -65,6 +66,15 @@ AC_ARG_ENABLE([libuv],
   *) AC_MSG_ERROR([bad value ${enableval} for --enable-libuv]) ;;
 esac],[libuv=false])
 AM_CONDITIONAL([ENABLE_LIBUV], [test x$libuv = xtrue])
+
+AC_ARG_ENABLE([json],
+[  --enable-json    Turn on JSON file backend],
+[case "${enableval}" in
+  yes) json=true ;;
+  no)  json=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-json]) ;;
+esac],[json=false])
+AM_CONDITIONAL([ENABLE_JSON], [test x$json = xtrue])
 
 AC_ARG_ENABLE([gen],
 [  --enable-gen    Turn on gen backend],

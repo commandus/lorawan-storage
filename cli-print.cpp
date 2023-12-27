@@ -325,7 +325,7 @@ static void run()
 }
 
 // for shared library use "storage-gen:Gen:Memory"
-#define DEF_PLUGIN  "gen"
+#define DEF_PLUGIN  "json"
 #define DEF_MASTERKEY   "masterkey"
 
 int main(int argc, char **argv) {

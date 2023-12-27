@@ -522,7 +522,7 @@ IdentitySerialization::IdentitySerialization(
     int32_t aCode,
     uint64_t aAccessCode
 )
-    : svc(aSvc), code(aCode), accessCode(aAccessCode)
+    : code(aCode), accessCode(aAccessCode), svc(aSvc)
 {
 
 }

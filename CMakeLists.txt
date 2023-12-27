@@ -89,6 +89,7 @@ else()
 	option(ENABLE_LIBUV "Build with libuv" OFF)
 	option(ENABLE_GEN "Build with generator" OFF)
 	option(ENABLE_SQLITE "Build with SQLite" OFF)
+	option(ENABLE_JSON "Build with JSON file" ON)
 
 	set(THREADS_PREFER_PTHREAD_FLAG ON)
 	find_package(Threads REQUIRED)
@@ -174,6 +175,10 @@ else()
 			set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
 			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
 		endif ()
+	endif()
+
+	if (ENABLE_JSON)
+		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_JSON)
 	endif()
 
 	#

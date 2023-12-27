@@ -117,10 +117,10 @@ public:
 
 class IdentitySerialization {
 private:
-    IdentityService *svc;
     int32_t code;
     uint64_t accessCode;
 public:
+    IdentityService *svc;
     explicit IdentitySerialization(
         IdentityService *svc,
         int32_t code,
