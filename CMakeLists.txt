@@ -192,7 +192,7 @@ else()
 	add_library(storage-json SHARED lorawan/storage/service/identity-service-json.cpp lorawan/storage/service/gateway-service-json.cpp)
 	target_link_libraries(storage-json PRIVATE lorawan)
 	target_include_directories(storage-json PRIVATE "." "third-party")
-	set_target_properties(storage-mem PROPERTIES SOVERSION ${VERSION_INFO})
+	set_target_properties(storage-json PROPERTIES SOVERSION ${VERSION_INFO})
 
 	add_library(storage-gen SHARED lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp lorawan/helper/key128gen.cpp ${AES_SRC})
 	target_link_libraries(storage-gen PRIVATE lorawan)

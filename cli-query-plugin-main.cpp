@@ -82,8 +82,7 @@ static void run()
         c = new ServiceClient(params.svcName);
     if (!c->svcIdentity || !c->svcGateway) {
         std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
-            << ERR_LOAD_PLUGINS_FAILED
-            << params.pluginFilePath
+            << ERR_LOAD_PLUGINS_FAILED << " " << params.svcName
             << ":" << params.pluginIdentityClassName << ":" << params.pluginGatewayClassName
             << std::endl;
         params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
@@ -207,13 +206,15 @@ int main(int argc, char **argv) {
     params.verbose = a_verbose->count;
 
     // try load shared library
-    if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
-        (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN))) {
-        if (ServiceClient::hasStaticPlugin(*a_plugin_file_n_class->sval)) {
+    std::string s(a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN);
+    if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName, s)) {
+        if (ServiceClient::hasStaticPlugin(s)) {
             // "load" from static by name: "json", "gen", "mem", "sqlite"
             params.svcName = *a_plugin_file_n_class->sval;
-        } else
-            return ERR_CODE_COMMAND_LINE;
+        } else {
+            std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": " << ERR_LOAD_PLUGINS_FAILED << std::endl;
+            errorCount++;
+        }
     }
 
     if (a_pass_phrase->count)

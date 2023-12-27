@@ -22,10 +22,7 @@ std::string listCommands() {
 
 std::string listPlugins() {
     std::stringstream ss;
-    ss << "mem|gen";
-#ifdef ENABLE_JSON
-    ss << "|json";
-#endif
+    ss << "mem|gen|json";
 #ifdef ENABLE_SQLITE
     ss << "|sqlite";
 #endif

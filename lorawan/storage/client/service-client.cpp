@@ -49,7 +49,7 @@ bool ServiceClient::hasStaticPlugin(
     const std::string &name
 )
 {
-    if (name == "gen" || name == "mem")
+    if (name == "json" || name == "gen" || name == "mem")
         return true;
     else {
 #ifdef ENABLE_SQLITE
