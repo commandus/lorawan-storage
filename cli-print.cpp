@@ -24,6 +24,7 @@
 #include "lorawan/storage/client/plugin-client.h"
 #include "lorawan/storage/client/plugin-query-client.h"
 #include "lorawan/storage/client/service-client.h"
+#include "lorawan/helper/aes-helper.h"
 
 const char *programName = "lorawan-query";
 #define DEF_PORT 4244
@@ -252,14 +253,6 @@ static bool getDeviceByAddr(
     }
 }
 
-static std::string decodePayload(
-    const DEVICEID &deviceid,
-    const std::string &payload
-)
-{
-    return payload;
-}
-
 static void printPacket(
     std::ostream &strm,
     const std::string &payload,
@@ -289,11 +282,19 @@ static void printPacket(
                 strm << DLMT << "n/a";
             else {
                 DEVICEID deviceId;
+                std::string payload (pl, sz - (pl - (char *) rfm));
                 if (getDeviceByAddr(deviceId, rfm->devaddr)) {
+
+                    strm
+                        << DLMT << "fcnt: " << (int) rfm->fcnt
+                        << DLMT << "direction: " << (int) (rfm->macheader.f.mtype & 1)
+                        << DLMT << "devAddr: " << DEVADDR2string(rfm->devaddr)
+                        << DLMT << "appSKey: " << KEY2string(deviceId.appSKey);
+                    decryptPayload(payload, rfm->fcnt, rfm->macheader.f.mtype & 1, rfm->devaddr, deviceId.appSKey);
                     strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
-                         << hexString(decodePayload(deviceId, std::string(pl, sz - (pl - (char *) rfm))));
+                         << hexString(payload);
                 } else
-                    strm << DLMT << "n/a" << DLMT << hexString(pl, sz - (pl - (char *) rfm));
+                    strm << DLMT << "n/a" << DLMT << hexString(payload);
             }
         }
         strm << std::endl;
@@ -319,11 +320,14 @@ static void printPacket(
             strm << DLMT << "n/a";
         else {
             DEVICEID deviceId;
+
+            std::string payload(pl, sz - (pl - (char *) rfm));
             if (getDeviceByAddr(deviceId, rfm->devaddr)) {
+                decryptPayload(payload, rfm->fcnt, rfm->macheader.f.mtype & 1, rfm->devaddr, deviceId.appSKey);
                 strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
-                    << hexString(decodePayload(deviceId, std::string(pl, sz - (pl - (char *) rfm))));
+                     << hexString(payload);
             } else
-                strm << DLMT << "n/a" << DLMT << hexString(pl, sz - (pl - (char *) rfm));
+                strm << DLMT << "n/a" << DLMT << hexString(payload);
         }
     }
 }

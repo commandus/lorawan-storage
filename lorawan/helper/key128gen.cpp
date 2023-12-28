@@ -192,6 +192,6 @@ uint8_t *sessionKeyGen(
 	memset(aesContext.ksch, '\0', 240);
 	aes_set_key(key.c, 16, &aesContext);
 	memset(retVal, 0, 16);
-	open_aes_encrypt(a, retVal, &aesContext);
+	aes_encrypt(a, retVal, &aesContext);
 	return retVal;
 }

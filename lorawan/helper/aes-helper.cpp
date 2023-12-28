@@ -65,13 +65,13 @@ void encryptPayload(
 
 void decryptPayload(
     std::string &payload,
-    unsigned int frameCounter,
-    unsigned char direction,
-    DEVADDR &devAddr,
-    KEY128 &appSKey
+    const unsigned int frameCounter,
+    const unsigned char direction,
+    const DEVADDR &devAddr,
+    const KEY128 &appSKey
 )
 {
-    encryptPayload(payload, frameCounter, direction, devAddr,appSKey);
+    encryptPayload(payload, frameCounter, direction, devAddr, appSKey);
 }
 
 /**
