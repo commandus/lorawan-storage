@@ -1,18 +1,16 @@
 #ifndef LORAWAN_NETWORK_TYPES_H_
 #define LORAWAN_NETWORK_TYPES_H_	1
 
-#define PACK( __Declaration__ ) __Declaration__
-/*
+// #define PACK( __Declaration__ ) __Declaration__
 #ifdef __GNUC__
-#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+    #define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
 #else
-#ifdef _MSC_VER
-#define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
-#else
-#define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+    #ifdef _MSC_VER
+        #define PACK( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+    #else
+        #define PACK( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+    #endif
 #endif
-#endif
-*/
 
 #define LORAWAN_MAJOR_VERSION   0
 
@@ -26,7 +24,7 @@
 #define INVALID_ID 0xffffffff
 
 // typedef unsigned char NETID[3];
-class NETID {
+PACK(class NETID {
 private:
     int getTypeMask() const;
 public:
@@ -59,7 +57,7 @@ public:
     int getRFUBitsCount() const;
     int getNetIdBitsCount() const;
     size_t size();
-};
+});
 
 typedef PACK(struct {
     uint8_t v0;
@@ -72,7 +70,7 @@ typedef PACK(struct {
 
 // typedef unsigned char DEVADDR[4];
 
-class DEVADDR {
+PACK(class DEVADDR {
 private:
     int setNetIdType(uint8_t value);
 
@@ -149,12 +147,12 @@ public:
 
     // return dev address space size
     size_t size();
-};	// 4 bytes
+});	// 4 bytes
 
 #define SIZE_DEVADDR 4
 
 // typedef unsigned char KEY128[16];
-class KEY128 {
+PACK(class KEY128 {
 public:
     union {
         unsigned char c[16];
@@ -172,14 +170,14 @@ public:
     bool operator<(const KEY128 &rhs) const;
     bool operator>(const KEY128 &rhs) const;
     bool operator!=(const KEY128 &rhs) const;
-};   // 16 bytes
+});   // 16 bytes
 
 #define SIZE_KEY128 16
 
 /*
 typedef unsigned char DEVEUI[8];
 */
-class DEVEUI {
+PACK(class DEVEUI {
 public:
 	union {
 		unsigned char c[8];
@@ -195,12 +193,12 @@ public:
 	bool operator<(const DEVEUI &rhs) const;
 	bool operator>(const DEVEUI &rhs) const;
 	bool operator!=(const DEVEUI &rhs) const;
-};
+});
 
 #define SIZE_DEVEUI 9
 
 // typedef unsigned char JOINNONCE[3];
-class JOINNONCE {
+PACK(class JOINNONCE {
 public:
     union {
         unsigned char c[3];
@@ -208,12 +206,12 @@ public:
     JOINNONCE();
     explicit JOINNONCE(const std::string &hex);
     explicit JOINNONCE(uint32_t value);
-};
+});
 
 #define SIZE_JOINNONCE 3
 
 // typedef uint16_t DEVNONCE;
-class DEVNONCE {
+PACK(class DEVNONCE {
 public:
     union {
         unsigned char c[2];
@@ -222,12 +220,12 @@ public:
     DEVNONCE();
     explicit DEVNONCE(const std::string& hex);
     explicit DEVNONCE(uint16_t value);
-};
+});
 
 #define SIZE_DEVNONCE 2
 
 // typedef unsigned char APPNONCE[3];
-class APPNONCE {
+PACK(class APPNONCE {
 public:
     union {
         unsigned char c[3];
@@ -235,20 +233,20 @@ public:
     APPNONCE();
     explicit APPNONCE(const std::string& hex);
     explicit APPNONCE(uint32_t value);
-};
+});
 
 #define SIZE_APPNONCE 3
 
 typedef uint8_t FREQUENCY[3];
 
-class DEVICENAME {
+PACK(class DEVICENAME {
 public:
     char c[8];
     DEVICENAME();
     explicit DEVICENAME(const std::string &value);
     explicit DEVICENAME(const char *value);
     std::string toString() const;
-};
+});
 
 #define SIZE_DEVICENAME 8
 
@@ -424,6 +422,8 @@ typedef PACK( struct {
 
 #define SIZE_JOIN_REQUEST_HEADER 23
 
+#define SIZE_MIC    4
+
 typedef PACK( struct {
     uint8_t RX2DataRate: 4;	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
     uint8_t RX1DROffset: 3;	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
@@ -485,7 +485,7 @@ typedef enum {
 	CLASS_C = 2
 } DEVICECLASS;
 
-class LORAWAN_VERSION {
+PACK(class LORAWAN_VERSION {
 public:
     union {
         uint8_t c;
@@ -498,7 +498,7 @@ public:
     LORAWAN_VERSION();
     LORAWAN_VERSION(uint8_t major, uint8_t minor, uint8_t release);
     LORAWAN_VERSION(uint8_t value);
-};	// 1 byte
+});	// 1 byte
 
 #define SIZE_LORAWAN_VERSION 1
 
@@ -512,7 +512,7 @@ typedef PACK( struct {
 #define SIZE_REGIONAL_PARAMETERS_VERSION 1
 
 class NETWORKIDENTITY;
-class DEVICEID {
+PACK(class DEVICEID {
 public:
     DEVICEID(uint64_t devEUI);
     DEVICEID(const DEVEUI &devEUI);
@@ -595,11 +595,11 @@ public:
 	void setProperties(std::map<std::string, std::string> &retval);
 
     bool empty() const;
-};					// 44 bytes + 8 + 18 = 70
+});					// 44 bytes + 8 + 18 = 70
 
 #define SIZE_DEVICEID 70
 
-class NETWORKIDENTITY {
+PACK(class NETWORKIDENTITY {
 public:
 	// key
 	DEVADDR devaddr;		///< network address 4 bytes
@@ -614,7 +614,7 @@ public:
 	void set(const DEVADDR &addr, const DEVICEID &value);
 	std::string toString() const;
     std::string toJsonString() const;
-};  // 95 bytes
+});  // 95 bytes
 
 #define SIZE_NETWORKIDENTITY 96
 

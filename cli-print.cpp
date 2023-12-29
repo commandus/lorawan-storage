@@ -26,7 +26,7 @@
 #include "lorawan/storage/client/service-client.h"
 #include "lorawan/helper/aes-helper.h"
 
-const char *programName = "lorawan-query";
+const char *programName = "lorawan-print";
 #define DEF_PORT 4244
 
 // global parameters
@@ -67,14 +67,12 @@ public:
                 ss << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName << ":" << pluginGatewayClassName;
                 break;
             default:
-                ss << "Direct : " << pluginName;
+                ss << "Identity source: " << pluginName;
         }
         if (!db.empty())
             ss << ". Database file name: " << db;
         ss << ". Pass-phrase: " << passPhrase << ". Verbose: " << verbose << "\n";
-        for (auto & it : payload) {
-            ss << hexString(it) << "\n";
-        }
+        // for (auto & it : payload) ss << hexString(it) << "\n";
         return ss.str();
     }
 };
@@ -282,9 +280,8 @@ static void printPacket(
                 strm << DLMT << "n/a";
             else {
                 DEVICEID deviceId;
-                std::string payload (pl, sz - (pl - (char *) rfm));
+                std::string payload (pl, sz - (pl - (char *) rfm) - SIZE_MIC);
                 if (getDeviceByAddr(deviceId, rfm->devaddr)) {
-
                     strm
                         << DLMT << "fcnt: " << (int) rfm->fcnt
                         << DLMT << "direction: " << (int) (rfm->macheader.f.mtype & 1)
@@ -320,8 +317,7 @@ static void printPacket(
             strm << DLMT << "n/a";
         else {
             DEVICEID deviceId;
-
-            std::string payload(pl, sz - (pl - (char *) rfm));
+            std::string payload(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
             if (getDeviceByAddr(deviceId, rfm->devaddr)) {
                 decryptPayload(payload, rfm->fcnt, rfm->macheader.f.mtype & 1, rfm->devaddr, deviceId.appSKey);
                 strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
@@ -432,7 +428,7 @@ int main(int argc, char **argv) {
 			arg_print_errors(stderr, a_end, programName);
 		std::cerr << "Usage: " << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "LoRaWAN storage query" << std::endl;
+		std::cerr << "Print LoRaWAN packet" << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;

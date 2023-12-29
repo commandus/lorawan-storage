@@ -1,5 +1,8 @@
 #include "lorawan-types.h"
 
+#define IS_LITTLE_ENDIAN (*(unsigned char *)&(uint16_t){1})
+#define IS_BIG_ENDIAN (!*(unsigned char *)&(uint16_t){1})
+
 #ifdef ESP_PLATFORM
     #include <arpa/inet.h>
 #endif
@@ -80,3 +83,11 @@ int FREQUENCY2int(const FREQUENCY &frequency);
 void int2JOINNONCE(JOINNONCE &retVal, int value);
 
 void int2APPNONCE(APPNONCE& retVal, int value);
+
+#ifdef IS_LITTLE_ENDIAN
+void ntoh_DEVADDR(DEVADDR &value);
+void ntoh_RFM_HEADER(RFM_HEADER *value);
+#else
+#define ntoh_DEVADDR(a) {}
+#define ntoh_RFM_HEADER(v) {}
+#endif

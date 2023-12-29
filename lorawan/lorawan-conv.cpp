@@ -108,3 +108,22 @@ void int2APPNONCE(
     retVal.c[1] = (r >> 8) & 0xff;
     retVal.c[2] = (r >> 16) & 0xff;
 }
+
+#ifdef IS_LITTLE_ENDIAN
+
+void ntoh_DEVADDR(
+    DEVADDR &value
+)
+{
+    *((uint32_t*) &value.u) = NTOH4(*((uint32_t*) &value.u));
+}
+
+void ntoh_RFM_HEADER(
+    RFM_HEADER *value
+)
+{
+    ntoh_DEVADDR(value->devaddr);
+    value->fcnt = NTOH2(value->fcnt);	// frame counter 0..65535
+}
+
+#endif
