@@ -282,9 +282,9 @@ UvClient::UvClient(
 {
     int r;
     if (isAddrStringIPv6(aHost.c_str()))
-        uv_ip6_addr(aHost.c_str(), aPort, (sockaddr_in6*) &serverAddress);
+        r = uv_ip6_addr(aHost.c_str(), aPort, (sockaddr_in6*) &serverAddress);
     else
-        uv_ip4_addr(aHost.c_str(), aPort, (sockaddr_in*) &serverAddress);
+        r = uv_ip4_addr(aHost.c_str(), aPort, (sockaddr_in*) &serverAddress);
     if (r)
         status = ERR_CODE_ADDR_OUT_OF_RANGE;
     init();
