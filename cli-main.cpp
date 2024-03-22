@@ -81,6 +81,7 @@ public:
     int32_t code;
     uint64_t accessCode;
     bool runAsDaemon;
+    std::string pidfile;
     int verbose;
     std::string db;
     int32_t retCode;
@@ -212,7 +213,8 @@ int main(int argc, char **argv) {
 
     struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
 	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
-	struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v - verbose, -vv - debug");
+    struct arg_str *a_pidfile = arg_str0("p", "pidfile", "<file>", "Check whether a process has created the file pidfile");
+    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v - verbose, -vv - debug");
 	struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
 	struct arg_end *a_end = arg_end(20);
 
@@ -224,7 +226,7 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_SQLITE
         a_db,
 #endif
-        a_code, a_access_code, a_verbose, a_daemonize,
+        a_code, a_access_code, a_verbose, a_daemonize, a_pidfile,
 		a_help, a_end 
 	};
 
@@ -237,7 +239,12 @@ int main(int argc, char **argv) {
 	int nerrors = arg_parse(argc, argv, argtable);
 
     svc.runAsDaemon = a_daemonize->count > 0;
-	svc.verbose = a_verbose->count;
+    if (a_pidfile->count)
+        svc.pidfile = *a_pidfile->sval;
+    else
+        svc.pidfile = "";
+
+    svc.verbose = a_verbose->count;
 
 	if (a_interface_n_port->count) {
         splitAddress(svc.intf, svc.port, std::string(*a_interface_n_port->sval));
@@ -293,7 +300,7 @@ int main(int argc, char **argv) {
                       << "(" << programPath << "/" << programName << "). "
                       << MSG_CHECK_SYSLOG << std::endl;
 		OPEN_SYSLOG(programName)
-        Daemonize daemon(programName, programPath, run, stop, done);
+        Daemonize daemon(programName, programPath, run, stop, done, 0, svc.pidfile);
 		// CLOSESYSLOG()
 	} else {
 		setSignalHandler();

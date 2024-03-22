@@ -1,5 +1,10 @@
 #include "lorawan-types.h"
 
+/*
+ * Conversion functions from one type to another except string.
+ * String conversion defined in the @see lorawan-string.h
+ */
+
 #define IS_LITTLE_ENDIAN (*(unsigned char *)&(uint16_t){1})
 #define IS_BIG_ENDIAN (!*(unsigned char *)&(uint16_t){1})
 
@@ -86,8 +91,12 @@ void int2APPNONCE(APPNONCE& retVal, int value);
 
 #ifdef IS_LITTLE_ENDIAN
 void ntoh_DEVADDR(DEVADDR &value);
+void ntoh_DEVEUI(DEVEUI &value);
 void ntoh_RFM_HEADER(RFM_HEADER *value);
+void ntoh_SEMTECH_PREFIX_GW(SEMTECH_PREFIX_GW &value);
 #else
 #define ntoh_DEVADDR(a) {}
+#define ntoh_DEVEUI(e) {}
 #define ntoh_RFM_HEADER(v) {}
+#define ntoh_SEMTECH_PREFIX_GW(v) {}
 #endif

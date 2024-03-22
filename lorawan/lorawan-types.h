@@ -251,17 +251,17 @@ public:
 #define SIZE_DEVICENAME 8
 
 enum ERR_CODE_TX {
-	JIT_TX_OK = 0,                 	// Packet ok to be sent
-	JIT_TX_ERROR_TOO_LATE = 1,     	// Too late to send this packet
-	JIT_TX_ERROR_TOO_EARLY = 2,    	// Too early to queue this packet
+	JIT_TX_OK = 0,                 	// Packet ok to be sent {"txpk_ack":{"error":"NONE"}}"
+	JIT_TX_ERROR_TOO_LATE = 1,     	// Too late to send this packet {"txpk_ack":{"error":"TOO_LATE"}}
+	JIT_TX_ERROR_TOO_EARLY = 2,    	// Too early to queue this packet {"txpk_ack":{"error":"TOO_EARLY"}}
 	JIT_TX_ERROR_FULL = 3,         	// Downlink queue is full
 	JIT_TX_ERROR_EMPTY = 4,        	// Downlink queue is empty
-	JIT_TX_ERROR_COLLISION_PACKET = 5, // A packet is already enqueued for this timeframe
-	JIT_TX_ERROR_COLLISION_BEACON = 6, // A beacon is planned for this timeframe
-	JIT_TX_ERROR_TX_FREQ = 7,      	// The required frequency for downlink is not supported
-	JIT_TX_ERROR_TX_POWER = 8,     	// The required power for downlink is not supported
-	JIT_TX_ERROR_GPS_UNLOCKED = 9, 	// GPS timestamp could not be used as GPS is unlocked
-	JIT_TX_ERROR_INVALID = 10       	// Packet is invalid
+	JIT_TX_ERROR_COLLISION_PACKET = 5, // A packet is already enqueued for this timeframe {"txpk_ack":{"error":"COLLISION_PACKET"}}
+	JIT_TX_ERROR_COLLISION_BEACON = 6, // A beacon is planned for this timeframe {"txpk_ack":{"error":"COLLISION_BEACON"}}
+	JIT_TX_ERROR_TX_FREQ = 7,      	// The required frequency for downlink is not supported {"txpk_ack":{"error":"TX_FREQ"}}
+	JIT_TX_ERROR_TX_POWER = 8,     	// The required power for downlink is not supported {"txpk_ack":{"error":"TX_POWER"}}
+	JIT_TX_ERROR_GPS_UNLOCKED = 9, 	// GPS timestamp could not be used as GPS is unlocked {"txpk_ack":{"error":"GPS_UNLOCKED"}}
+	JIT_TX_ERROR_INVALID = 10       // Packet is invalid
 };
 
 // network server receives SEMTECH_GW_PUSH_DATA, SEMTECH_GW_PULL_DATA, SEMTECH_GW_TX_ACK
@@ -269,9 +269,9 @@ enum ERR_CODE_TX {
 #define SEMTECH_GW_PUSH_DATA	0
 // network server responds on PUSH_DATA to acknowledge immediately all the PUSH_DATA packets received
 #define SEMTECH_GW_PUSH_ACK		1
-// gateway initiate receiving packates from the metwork server (because of NAT)
+// gateway initiate receiving packets from the network server (because of NAT)
 #define SEMTECH_GW_PULL_DATA	2
-// network server send packet to the gateway afrer PULL_DATA - PULL_ACK sequence
+// network server send packet to the gateway after PULL_DATA - PULL_ACK sequence
 #define SEMTECH_GW_PULL_RESP	3
 // network server responds on PULL_DATA
 #define SEMTECH_GW_PULL_ACK		4
@@ -282,7 +282,9 @@ typedef PACK( struct {
 	uint8_t version;			// protocol version = 2
 	uint16_t token;				// random token
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
-} ) SEMTECH_PREFIX;		// 4 bytes
+} ) SEMTECH_PREFIX;		        // 4 bytes
+
+#define SIZE_SEMTECH_PREFIX  4
 
 typedef PACK( struct {
     uint64_t gatewayId;
@@ -292,14 +294,14 @@ typedef PACK( struct {
     uint8_t rfch;				// Concentrator "RF chain" used for RX (unsigned integer)
     uint32_t freq;				// RX central frequency in Hz, not Mhz. MHz (unsigned float, Hz precision) 868.900000
     int8_t stat;				// CRC status: 1 = OK, -1 = fail, 0 = no CRC
-    MODULATION modu;			// LORA, FSK
-    BANDWIDTH bandwith;
+    MODULATION modu;			// MODULATION_LORA, MODULATION_FSK
+    BANDWIDTH bandwidth;
     SPREADING_FACTOR spreadingFactor;
     CODING_RATE codingRate;
-    uint32_t bps;				// FSK bits per second
+    uint32_t bps;				// MODULATION_FSK bits per second
     int16_t rssi;				// RSSI in dBm (signed integer, 1 dB precision) e.g. -35
     float lsnr; 				// Lora SNR ratio in dB (signed float, 0.1 dB precision) e.g. 5.1
-} ) SEMTECH_PROTOCOL_METADATA;
+} ) SEMTECH_PROTOCOL_METADATA_RX;
 
 /**
  * Semtech PUSH DATA packet described in section 3.2
@@ -313,6 +315,29 @@ typedef PACK( struct {
 	uint8_t tag;				// PUSH_DATA 0x00 PULL_DATA 0x02
 	DEVEUI mac;					// 4-11	Gateway unique identifier (MAC address). For example : 00:0c:29:19:b2:37
 } ) SEMTECH_PREFIX_GW;	        // 12 bytes
+
+/**
+@struct lgw_pkt_tx_s
+@brief Structure containing the configuration of a packet to send and a pointer to the payload
+*/
+typedef PACK( struct {
+    uint32_t    freq_hz;        ///> center frequency of
+    uint8_t     tx_mode;        ///> select on what event/time the TX is triggered IMMEDIATE 0, TIMESTAMPED 1, ON_GPS 2
+    uint32_t    count_us;       ///> timestamp or delay in microseconds for TX trigger
+    uint8_t     rf_chain;       ///> through which RF chain will the packet be sent
+    int8_t      rf_power;       ///> TX power, in dBm
+    uint8_t     modulation;     ///> modulation to use for the packet
+    uint8_t     bandwidth;      ///> modulation bandwidth (LoRa only)
+    uint32_t    datarate;       ///> TX datarate (baudrate for MODULATION_FSK, SF for LoRa)
+    uint8_t     coderate;       ///> error-correcting code of the packet (LoRa only)
+    bool        invert_pol;     ///> invert signal polarity, for orthogonal downlinks (LoRa only)
+    uint8_t     f_dev;          ///> frequency deviation, in kHz (MODULATION_FSK only)
+    uint16_t    preamble;       ///> set the preamble length, 0 for default
+    bool        no_crc;         ///> if true, do not send a CRC in the packet
+    bool        no_header;      ///> if true, enable implicit header mode (LoRa), fixed length (MODULATION_FSK)
+    uint16_t    size;           ///> payload size in bytes
+    // uint8_t     payload[256];   ///> buffer containing the payload
+} ) SEMTECH_PROTOCOL_METADATA_TX;
 
 #define SIZE_SEMTECH_PREFIX_GW 12
 
@@ -361,7 +386,8 @@ typedef enum {
 	REJOINREQUEST2 = 2
  } JOINREQUESTTYPE;
 
-typedef PACK( struct {
+PACK( class MHDR {
+public:
 	union {
 		uint8_t i;
 		struct {
@@ -370,7 +396,9 @@ typedef PACK( struct {
 			uint8_t mtype: 3;   ///< enum MTYPE
 		} f;
 	};
-} ) MHDR;			// 1 byte
+    bool operator==(const MHDR &rhs) const;
+    bool operator!=(const MHDR &rhs) const;
+} );			// 1 byte
 
 #define SIZE_MHDR 1
 /**
@@ -406,11 +434,19 @@ typedef PACK( struct {
 
 #define SIZE_RFM_HEADER 8
 
- typedef PACK( struct {
-	DEVEUI joinEUI;			    // JoinEUI
+PACK(
+class JOIN_REQUEST_FRAME {
+public:
+	DEVEUI joinEUI;			    // AppEUI, JoinEUI
 	DEVEUI devEUI;			    // DevEUI
 	DEVNONCE devNonce;
-} ) JOIN_REQUEST_FRAME;	// 8 + 8 + 2 = 18 bytes
+    bool operator==(const JOIN_REQUEST_FRAME &rhs) const;
+    bool operator<(const JOIN_REQUEST_FRAME &rhs) const;
+    bool operator>(const JOIN_REQUEST_FRAME &rhs) const;
+    bool operator<=(const JOIN_REQUEST_FRAME &rhs) const;
+    bool operator>=(const JOIN_REQUEST_FRAME &rhs) const;
+    bool operator!=(const JOIN_REQUEST_FRAME &rhs) const;
+} ) ;	// 8 + 8 + 2 = 18 bytes
 
 #define SIZE_JOIN_REQUEST_FRAME 18
 
@@ -445,13 +481,16 @@ typedef PACK( struct {
 
 #define SIZE_JOIN_ACCEPT_FRAME_HEADER 12
 
-typedef PACK( struct {
-    MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
+// MHDR mhdr;  			            // 0x00 Join request. MAC header byte: message type, RFU, Major
+PACK( class JOIN_ACCEPT_FRAME {
+public:
     JOIN_ACCEPT_FRAME_HEADER hdr;   //
     uint32_t mic;			        // MIC
-} ) JOIN_ACCEPT_FRAME;	            // 1 12 4 = 17 bytes
+    bool operator==(const JOIN_ACCEPT_FRAME &rhs) const;
+    bool operator==(const JOIN_ACCEPT_FRAME_HEADER &rhs) const;
+} );	            // 12 4 = 16 bytes
 
-#define SIZE_JOIN_ACCEPT_FRAME 17
+#define SIZE_JOIN_ACCEPT_FRAME 16
 
 // Channel frequency list
 typedef PACK( struct {
@@ -461,14 +500,14 @@ typedef PACK( struct {
 
 #define SIZE_CFLIST 16
 
+//  MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
 typedef PACK( struct {
-    MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
     JOIN_ACCEPT_FRAME_HEADER hdr;   // 12
     CFLIST cflist;
     uint32_t mic;			        // MIC
-} ) JOIN_ACCEPT_FRAME_CFLIST;	// 1 12 16 4 = 33 bytes
+} ) JOIN_ACCEPT_FRAME_CFLIST;	    // 12 16 4 = 32 bytes
 
-#define SIZE_JOIN_ACCEPT_FRAME_CFLIST 33
+#define SIZE_JOIN_ACCEPT_FRAME_CFLIST 32
 
 typedef PACK( struct {
 	uint8_t fopts[15];

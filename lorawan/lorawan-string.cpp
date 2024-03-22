@@ -2,9 +2,12 @@
 #include <iomanip>
 #include <sstream>
 
-#include "lorawan-conv.h"
-#include "lorawan-string.h"
-#include "lorawan-mac.h"
+#include "lorawan/lorawan-conv.h"
+#include "lorawan/lorawan-string.h"
+#include "lorawan/lorawan-date.h"
+#include "lorawan/lorawan-mac.h"
+
+#define DEF_CODING_RATE CRLORA_4_6
 
 /**
  * @see https://stackoverflow.com/questions/2896600/how-to-replace-all-occurrences-of-a-character-in-string
@@ -211,9 +214,9 @@ std::string JOIN_ACCEPT_FRAME2string(
     const JOIN_ACCEPT_FRAME &value
 ) {
     std::stringstream ss;
-    ss << "{\"mhdr\": " << MHDR2String(value.mhdr)
-        << ", \"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr)
+    ss << "{\"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr)
         << R"(, "mic": ")" << MIC2String(value.mic) << "\"}";
+    return ss.str();
     return ss.str();
 }
 
@@ -244,10 +247,55 @@ std::string JOIN_ACCEPT_FRAME_CFLIST2string(
     const JOIN_ACCEPT_FRAME_CFLIST &value
 ) {
     std::stringstream ss;
-    ss << "{\"mhdr\": " << MHDR2String(value.mhdr)
-       << ", \"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr) << ", "
+    ss << "{\"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr) << ", "
        << ", \"cflist\": " << CFLIST2string(value.cflist) << ", "
        << R"(, "mic": ")" << MIC2String(value.mic) << "\"}";
+    return ss.str();
+}
+
+std::string DOWNLINK_STORAGE2String(
+    const DOWNLINK_STORAGE &value,
+    int size
+)
+{
+    std::stringstream ss;
+    int payloadSize = size - SIZE_DOWNLINK_EMPTY_STORAGE;
+    if (payloadSize > 255)
+        payloadSize = 255;
+    else
+        if (payloadSize < 0)
+            payloadSize = 0;
+    ss << R"({"addr": ")" << DEVADDR2string(value.devaddr)
+        << R"(", "foptslen": )" << (int) value.f.foptslen
+        << ", \"fpending\": " << (value.f.fpending ? "true" : "false")
+        << ", \"ack\": " << (value.f.ack ? "true" : "false")
+        << ", \"rfu\": " << (int) value.f.rfu
+        << ", \"adr\": " << (value.f.adr ? "true" : "false")
+        << R"(, "optsNpayload": ")" << hexString(&value.optsNpayload, payloadSize)
+        << "\"}";
+    return ss.str();
+}
+
+std::string UPLINK_STORAGE2String(
+    const UPLINK_STORAGE &value,
+    int size
+)
+{
+    std::stringstream ss;
+    int payloadSize = size - SIZE_UPLINK_EMPTY_STORAGE;
+    if (payloadSize > 255)
+        payloadSize = 255;
+    else
+    if (payloadSize < 0)
+        payloadSize = 0;
+    ss << R"({"addr": ")" << DEVADDR2string(value.devaddr)
+       << R"(", "foptslen": )" << (int) value.f.foptslen
+       << ", \"classb\": " << (value.f.classb ? "true" : "false")
+       << ", \"ack\": " << (value.f.ack ? "true" : "false")
+       << ", \"addrackreq\": " << (int) value.f.addrackreq
+       << ", \"adr\": " << (value.f.adr ? "true" : "false")
+       << R"(, "optsNpayload": ")" << hexString(&value.optsNpayload, payloadSize)
+        << "\"}";
     return ss.str();
 }
 
@@ -279,12 +327,13 @@ std::string MODULATION2String(
     MODULATION value
 )
 {
-    switch (value)
-    {
-        case FSK:
+    switch (value) {
+        case MODULATION_LORA:
+            return "LORA";
+        case MODULATION_FSK:
             return "FSK";
         default:
-            return "LORA";
+            return "UNDEFINED";
     }
 }
 
@@ -513,9 +562,11 @@ MODULATION string2MODULATION(
 )
 {
     if (strcmp(value, "FSK") == 0)
-        return FSK;
+        return MODULATION_FSK;
     else
-        return LORA;
+        if (strcmp(value, "LORA") == 0)
+            return MODULATION_LORA;
+    return MODULATION_UNDEFINED;
 }
 
 BANDWIDTH string2BANDWIDTH(
@@ -761,4 +812,244 @@ bool string2NETWORKIDENTITY(
     }
     setIdentity(retVal, c, start, p);
     return true;
+}
+
+const std::string ERR_CODE_TX_STR[] {
+    "NONE", "TOO_LATE", "TOO_EARLY", "FULL", "EMPTY", "COLLISION_PACKET", "COLLISION_BEACON", "TX_FREQ", "TX_POWER", "GPS_UNLOCKED"
+};
+
+const std::string& ERR_CODE_TX2string(
+    ERR_CODE_TX code
+)
+{
+    if (code > JIT_TX_ERROR_INVALID)
+        code = JIT_TX_ERROR_INVALID;
+    return ERR_CODE_TX_STR[code];
+}
+
+ERR_CODE_TX string2ERR_CODE_TX(
+    const std::string &value
+)
+{
+    for (int c = 0; c <= JIT_TX_ERROR_INVALID; c++) {
+        if (ERR_CODE_TX_STR[c] == value)
+            return (ERR_CODE_TX) c;
+    }
+    return JIT_TX_ERROR_INVALID;
+}
+
+/**
+ * Parse data rate identifier e.g."SF7BW125" into bandwidth & spreading factor variables
+ * @param bandwidth return bandwidth index
+ * @param value LoRa datarate identifier e.g. "SF7BW125"
+ * @returns preading factor
+ */
+SPREADING_FACTOR string2datr(
+    BANDWIDTH &bandwidth,
+    const std::string &value
+)
+{
+    size_t sz = value.size();
+    if (sz < 3)
+        return DRLORA_SF5;
+    std::size_t p = value.find('B');
+    if (p == std::string::npos)
+        return DRLORA_SF5;
+    std::string s = value.substr(2, p - 2);
+    auto spreadingFactor = static_cast<SPREADING_FACTOR>(atoi(s.c_str()));
+    s = value.substr(p + 2);
+    int bandwidthValue = atoi(s.c_str());
+    switch (bandwidthValue) {
+        case 7:
+            bandwidth = BANDWIDTH_INDEX_7KHZ; // 7.8
+            break;
+        case 10:
+            bandwidth = BANDWIDTH_INDEX_10KHZ; // 10.4
+            break;
+        case 15:
+            bandwidth = BANDWIDTH_INDEX_15KHZ; // 15.6
+            break;
+        case 20:
+            bandwidth = BANDWIDTH_INDEX_20KHZ; // 20.8
+            break;
+        case 31:
+            bandwidth = BANDWIDTH_INDEX_31KHZ; // 31.2
+            break;
+        case 41:
+            bandwidth = BANDWIDTH_INDEX_41KHZ; // 41.6
+            break;
+        case 62:
+            bandwidth = BANDWIDTH_INDEX_62KHZ; // 62.5
+            break;
+        case 125:
+            bandwidth = BANDWIDTH_INDEX_125KHZ; // 125
+            break;
+        case 250:
+            bandwidth = BANDWIDTH_INDEX_250KHZ;
+            break;
+        case 500:
+            bandwidth = BANDWIDTH_INDEX_500KHZ;
+            break;
+        default:
+            bandwidth = BANDWIDTH_INDEX_250KHZ;
+            break;
+    }
+    return spreadingFactor;
+}
+
+/**
+ * Return data rate identifier
+ * @return LoRa datarate identifier e.g. "SF7BW125"
+ */
+std::string datr2string(
+    SPREADING_FACTOR spreadingFactor,
+    BANDWIDTH bandwidth
+)
+{
+    int bandwidthValue = 125;
+    switch (bandwidth) {
+        case BANDWIDTH_INDEX_7KHZ:
+            bandwidthValue = 7; // 7.8
+            break;
+        case BANDWIDTH_INDEX_10KHZ:
+            bandwidthValue = 10; // 10.4
+            break;
+        case BANDWIDTH_INDEX_15KHZ:
+            bandwidthValue = 15; // 15.6
+            break;
+        case BANDWIDTH_INDEX_20KHZ:
+            bandwidthValue = 20; // 20.8
+            break;
+        case BANDWIDTH_INDEX_31KHZ:
+            bandwidthValue = 31; // 31.2
+            break;
+        case BANDWIDTH_INDEX_41KHZ:
+            bandwidthValue = 41; // 41.6
+            break;
+        case BANDWIDTH_INDEX_62KHZ:
+            bandwidthValue = 62; // 62.5
+            break;
+        case BANDWIDTH_INDEX_125KHZ:
+            bandwidthValue = 125; // 125
+            break;
+        case BANDWIDTH_INDEX_250KHZ:
+            bandwidthValue = 250; // 250
+            break;
+        case BANDWIDTH_INDEX_500KHZ:
+            bandwidthValue = 500; // 500
+            break;
+        default:
+            bandwidthValue = 250;
+            break;
+    }
+    std::stringstream ss;
+    // e.g. SF7BW203
+    ss << "SF" << (int) spreadingFactor
+       << "BW" << bandwidthValue;
+    return ss.str();
+}
+
+/**
+ * @param LoRa LoRa ECC coding rate identifier e.g. "4/6"
+ */
+CODING_RATE string2codingRate(
+    const std::string &value
+)
+{
+    size_t sz = value.size();
+    switch (sz) {
+        case 3:
+            switch(value[2]) {
+                case '5':
+                    return CRLORA_4_5;
+                case '3':   // "2/3"
+                case '6':
+                    return CRLORA_4_6;
+                case '7':
+                    return CRLORA_4_7;
+                case '1':   // "1/2"
+                case '4':
+                    return CRLORA_4_8;
+            }
+            break;
+        case 5:
+            switch(value[2]) {
+                case '5':
+                    return CRLORA_LI_4_5;
+                case '6':
+                    return CRLORA_LI_4_6;
+                case '8':
+                    return CRLORA_LI_4_8;
+            }
+            break;
+    }
+    return DEF_CODING_RATE;
+}
+
+std::string codingRate2string(
+    CODING_RATE codingRate
+)
+{
+    switch (codingRate) {
+        case CRLORA_4_5:
+            return "4/5";
+        case CRLORA_4_6:
+            return "4/6";
+        case CRLORA_4_7:
+            return "4/7";
+        case CRLORA_4_8:
+            return "4/8";
+        case CRLORA_LI_4_5:
+            return "4/5LI";
+        case CRLORA_LI_4_6:
+            return "4/6LI";
+        case CRLORA_LI_4_8:
+            return "4/8LI";
+    }
+    return "4/6";
+}
+
+std::string SEMTECH_PROTOCOL_METADATA_RX2string(
+    const SEMTECH_PROTOCOL_METADATA_RX &value
+)
+{
+    std::stringstream ss;
+    ss << R"({"gatewayId": ")" << gatewayId2str(value.gatewayId)
+        << R"(", "time": ")" << time2string(value.t)
+        << R"(", "tmst": )" << value.tmst
+        << ", \"chan\": " << (int) value.chan
+        << ", \"rfch\": " << (int) value.rfch
+        << ", \"freq\": " << value.freq
+        << ", \"stat\": " << (int) value.stat
+        << R"(, "modu": ")" << MODULATION2String(value.modu)
+        << R"(", "datr": ")" <<  datr2string(value.spreadingFactor, value.bandwidth)
+        << R"(", "codr": ")" << codingRate2string(value.codingRate)
+        << R"(", "bps": )" << value.bps
+        << ", \"rssi\": " << value.rssi
+        << ", \"lsnr\": " << std::fixed << std::setprecision(2) << value.lsnr
+        << "}";
+    return ss.str();
+}
+
+std::string SEMTECH_PROTOCOL_METADATA_TX2string(
+    const SEMTECH_PROTOCOL_METADATA_TX &value
+)
+{
+    std::stringstream ss;
+    ss  << "{\"freq\": " << std::fixed << std::setprecision(6) << value.freq_hz
+        << ", \"tx_mode\": " << (int) value.tx_mode
+        << ", \"count_us\": " << value.count_us
+        << ", \"rfch\": " << (int) value.rf_chain
+        << ", \"powe\": " << (int) value.rf_power
+        << R"(, "modu": ")" << MODULATION2String((MODULATION) value.modulation)
+        << R"(", "bandwidth": )" << BANDWIDTH2String((BANDWIDTH) value.bandwidth)
+        << R"(, "codr": ")" << codingRate2string((CODING_RATE) value.coderate)
+        << R"(", "ipol": )" << (value.invert_pol? "true" : "false")
+        << ", \"fdev\": " << (int) value.f_dev
+        << ", \"prea\": " << value.preamble
+        << ", \"ncrc\": " << (value.no_crc? "true" : "false")
+        << ", \"no_header\": " << (value.no_header? "true" : "false")
+        << ", \"size\": " << value.size
+       << "}";
+    return ss.str();
 }

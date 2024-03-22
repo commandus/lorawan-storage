@@ -1,5 +1,6 @@
 #include <string>
 #include "lorawan-types.h"
+#include "lorawan-packet-storage.h"
 
 std::string replaceAll(std::string str, const std::string& from, const std::string& to);
 
@@ -38,6 +39,8 @@ std::string CFLIST2string(const CFLIST &value);
 std::string JOIN_REQUEST_FRAME2string(const JOIN_REQUEST_FRAME &value);
 std::string JOIN_ACCEPT_FRAME2string(const JOIN_ACCEPT_FRAME &value);
 std::string JOIN_ACCEPT_FRAME_CFLIST2string(const JOIN_ACCEPT_FRAME_CFLIST &value);
+std::string DOWNLINK_STORAGE2String(const DOWNLINK_STORAGE &value, int size);
+std::string UPLINK_STORAGE2String(const UPLINK_STORAGE &value, int size);
 std::string NETID2String(const NETID &value);
 std::string activation2string(ACTIVATION value);
 std::string MODULATION2String(MODULATION value);
@@ -70,4 +73,35 @@ void string2JOINNONCE(JOINNONCE &retval, const char *value);
 void string2APPNONCE(APPNONCE& retval, const std::string& value);
 uint64_t string2gatewayId(const std::string& value);
 bool string2NETWORKIDENTITY(NETWORKIDENTITY &retVal, const char *identityString);
+const std::string& ERR_CODE_TX2string(ERR_CODE_TX code);
+ERR_CODE_TX string2ERR_CODE_TX(const std::string &value);
+/**
+ * Parse data rate identifier e.g."SF7BW125" into bandwidth & spreading factor variables
+ * @param bandwidth return bandwidth index
+ * @param value LoRa datarate identifier e.g. "SF7BW125"
+ * @return spreading factor
+ */
+SPREADING_FACTOR string2datr(BANDWIDTH &bandwidth, const std::string &value);
+/**
+ * Return data rate identifier
+ * @return LoRa datarate identifier e.g. "SF7BW125"
+ */
+std::string datr2string(
+    SPREADING_FACTOR spreadingFactor,
+    BANDWIDTH bandwidth
+);
 
+/**
+ * @param LoRa LoRa ECC coding rate identifier e.g. "4/6"
+ */
+CODING_RATE string2codingRate(const std::string &value);
+
+/**
+ * Return LoRa ECC coding rate identifier e.g. "4/6"
+ * @param codingRate index
+ * @return LoRa ECC coding rate identifier e.g. "4/6"
+ */
+std::string codingRate2string(CODING_RATE codingRate);
+
+std::string SEMTECH_PROTOCOL_METADATA_RX2string(const SEMTECH_PROTOCOL_METADATA_RX &value);
+std::string SEMTECH_PROTOCOL_METADATA_TX2string(const SEMTECH_PROTOCOL_METADATA_TX &value);
