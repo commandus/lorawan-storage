@@ -48,7 +48,7 @@ else()
 		file(GLOB PO_FILES ${PO_PATH}/*.po)
 		# Generated file list
 		set(MO_FILES)
-		set(PRG lorawan-service)
+		set(PRG lorawan-identity-service)
 		set(LOCALE_INSTALL_DIR /usr/share/locale)
 		foreach(_poFile ${PO_FILES})
 			GET_FILENAME_COMPONENT(_poFileName ${_poFile} NAME)
@@ -207,40 +207,45 @@ else()
 		set_target_properties(storage-sqlite PROPERTIES SOVERSION ${VERSION_INFO})
 	endif()
 
+	add_library(storage-udp SHARED lorawan/storage/service/identity-service-udp.cpp)
+	target_link_libraries(storage-udp PRIVATE lorawan)
+	target_include_directories(storage-udp PRIVATE ".")
+	set_target_properties(storage-udp PROPERTIES SOVERSION ${VERSION_INFO})
+
 	#
-	# lorawan-service
+	# lorawan-identity-service
 	#
-	set(LORAWAN_SERVICE_SRC
+	set(LORAWAN_IDENTITY_SERVICE_SRC
 		cli-main.cpp
 		third-party/daemonize.cpp
 		${ARGTABLE}
 	)
-	add_executable(lorawan-service ${LORAWAN_SERVICE_SRC})
-	target_link_libraries(lorawan-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBINTL} ${LIBUVA} lorawan)
-	target_compile_definitions(lorawan-service PRIVATE ${GATEWAY_DEF})
-	target_include_directories(lorawan-service PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+	add_executable(lorawan-identity-service ${LORAWAN_IDENTITY_SERVICE_SRC})
+	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBINTL} ${LIBUVA} lorawan)
+	target_compile_definitions(lorawan-identity-service PRIVATE ${GATEWAY_DEF})
+	target_include_directories(lorawan-identity-service PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
 	#
-	# lorawan-query
+	# lorawan-identity-query
 	#
-	add_executable(lorawan-query cli-query-main.cpp cli-helper.cpp ${ARGTABLE})
-	target_link_libraries(lorawan-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
-	target_compile_definitions(lorawan-query PRIVATE ${GATEWAY_DEF})
-	target_include_directories(lorawan-query PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+	add_executable(lorawan-identity-query cli-query-main.cpp cli-helper.cpp ${ARGTABLE})
+	target_link_libraries(lorawan-identity-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
+	target_compile_definitions(lorawan-identity-query PRIVATE ${GATEWAY_DEF})
+	target_include_directories(lorawan-identity-query PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
 	#
-	# lorawan-query-direct
+	# lorawan-query-identity-direct
 	#
-	add_executable(lorawan-query-direct cli-query-plugin-main.cpp cli-helper.cpp ${ARGTABLE})
-	target_link_libraries(lorawan-query-direct PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
-	target_include_directories(lorawan-query-direct PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
+	add_executable(lorawan-query-identity-direct cli-query-plugin-main.cpp cli-helper.cpp ${ARGTABLE})
+	target_link_libraries(lorawan-query-identity-direct PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
+	target_include_directories(lorawan-query-identity-direct PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
 
 	#
-	# lorawan-print
+	# lorawan-identity-print
 	#
-	add_executable(lorawan-print cli-print.cpp cli-helper.cpp ${ARGTABLE})
-	target_link_libraries(lorawan-print PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
-	target_include_directories(lorawan-print PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
+	add_executable(lorawan-identity-print cli-print.cpp cli-helper.cpp ${ARGTABLE})
+	target_link_libraries(lorawan-identity-print PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
+	target_include_directories(lorawan-identity-print PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
 
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'
@@ -249,7 +254,7 @@ else()
 		set(OS_SPECIFIC_LIBS wsock32 ws2_32 Userenv)
 	endif()
 
-	install(FILES README.md LICENSE HISTORY COPYING TODO CODE_OF_CONDUCT.md CONTRIBUTING.md DESTINATION doc)
+	install(FILES README.md LICENSE HISTORY COPYING TODO CODE_OF_CONDUCT.md CONTRIBUTING.md DESTINATION systemd)
 
 	include(InstallRequiredSystemLibraries)
 

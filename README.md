@@ -187,18 +187,38 @@ sudo apt install libuv1-dev gettext
 
 Executables:
 
-- lorawan-service
-- lorawan-query
-- lorawan-query-direct
-- lorawan-print
+- lorawan-identity-service
+- lorawan-identity-query
+- lorawan-identity-query-direct
+- lorawan-identity-print
+
+Plugins in dynamically loaded shared libraries:
+
+- libstorage-gen.so key generator
+- libstorage-json.so identities stored in the JSON file
+- libstorage-mem.so identities in memory
+- libstorage-sqlite.so identities stored in SQLite embedded database
+- libstorage-udp.so get identities from UDP service
 
 Static library:
 
--liblorawan.a
+- liblorawan.a LoRaWAN dependencies
 
-### lorawan-service
+### lorawan-identity-service
 
-### lorawan-query
+LoRaWAN identity UDP service.
+
+Command line arguments:
+
+- ipaddr:port                 UDP listener Default *:4244 (all interfaces, port 4244)
+- -c, --code=<number>         Code decimal number. Default 42. 0x - hex number prefix
+- -a, --access=<hex>          Access code ("password") hexadecimal number. Default 2a (42 decimal)
+- -v, --verbose               -v - verbose, -vv - debug
+- -d, --daemonize             run as daemon
+- -p, --pidfile=<file>        Check whether a process has created the file pidfile. Default none.
+- -h, --help                  Show help screen
+
+### lorawan-identity-query
 
 Manipulate device records by commands:
 
@@ -273,7 +293,7 @@ Options:
 
 Examples:
 
-```
+``` shell
 ./lorawan-query gw-assign 11 1.2.3.4:5 12 1.2.3.4:5 13 1.2.3.4:5 14 1.2.3.4:5 15 1.2.3.4:5 16 1.2.3.4:5 17 1.2.3.4:5 18 1.2.3.4:5 19 1.2.3.4:5 20 1.2.3.4:5 21 1.2.3.4:5 22 1.2.3.4:5 23 1.2.3.4:5 24 1.2.3.4:5 25 1.2.3.4:5 26 1.2.3.4:5 27 1.2.3.4:5 28 1.2.3.4:5 29 1.2.3.4:5 30 1.2.3.4:5 -v
 ./lorawan-query gw-list
 ./lorawan-query gw-list -o 9
@@ -284,9 +304,10 @@ Examples:
 ./lorawan-query gw-identifier 1.2.3.4:5
 ```
 
-### lorawan-query-direct
+### lorawan-query-identity-direct
 
-lorawan-query-direct dynamically load shared libraries with exported function like:
+lorawan-query-identity-direct
+lorawan-query-identity-direct dynamically load shared libraries with exported function like:
 
 ```
 IdentityService* makeMemoryIdentityService();
@@ -321,11 +342,30 @@ There are same statically linked plugins:
 
 Because plugin use direct calls there no --code --accesscode options available.
 
-### lorawan-print
+### lorawan-identity-print
+
+Print 
+
+```shell
+Usage: lorawan-identity-print
+ [-tvh] <hex> [<hex>]... [-s <address:port>] [-p <plugin>] [-d <database file>] [-m <pass-phrase>] [-n <hex|hex:hex>] [-c <number>] [-a <hex>]
+Print LoRaWAN packet
+  <hex>                       payload
+  -s, --service=<address:port> 
+  -p, --plugin=<plugin>       Default json
+  -d, --db=<database file>    database file name. Default none
+  -m, --masterkey=<pass-phrase> Default masterkey
+  -n, --network-id=<hex|hex:hex> Hexadecimal <network-id> or <net-type>:<net-id>. Default 0
+  -c, --code=<number>         Default 42. 0x - hex number prefix
+  -a, --access=<hex>          Default 2a (42 decimal)
+  -t, --tcp                   use TCP protocol. Default UDP
+  -v, --verbose               -v verbose -vv debug
+  -h, --help                  Show this help
+```
 
 ```
-./lorawan-print -p json 4030034501807b000239058672800d394af6863bf99148f63bec91543c086c171be37f3953 -d identity.json
-./lorawan-print -p json 4030034501807d00029139bff7333583847518599d50e3900b53d0e64c0d9eabda8ebc2aca -d identity.json
+./lorawan-identity-print -p json 4030034501807b000239058672800d394af6863bf99148f63bec91543c086c171be37f3953 -d identity.json
+./lorawan-identity-print -p json 4030034501807d00029139bff7333583847518599d50e3900b53d0e64c0d9eabda8ebc2aca -d identity.json
 ```
 
 ### Static library usage examples

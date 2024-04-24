@@ -10,9 +10,9 @@
 #include "platform-defs.h"
 #endif
 
-MemoryIdentityService::MemoryIdentityService() = default;
+ClientUDPIdentityService::ClientUDPIdentityService() = default;
 
-MemoryIdentityService::~MemoryIdentityService() = default;
+ClientUDPIdentityService::~ClientUDPIdentityService() = default;
 
 /**
  * request device identifier by network address. Return 0 if success, retval = EUI and keys
@@ -20,7 +20,7 @@ MemoryIdentityService::~MemoryIdentityService() = default;
  * @param devaddr network address
  * @return CODE_OK- success
  */
-int MemoryIdentityService::get(
+int ClientUDPIdentityService::get(
     DEVICEID &retVal,
     const DEVADDR &request
 )
@@ -34,7 +34,7 @@ int MemoryIdentityService::get(
 }
 
 // List entries
-int MemoryIdentityService::list(
+int ClientUDPIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
     size_t offset,
     size_t size
@@ -56,7 +56,7 @@ int MemoryIdentityService::list(
 }
 
 // Entries count
-size_t MemoryIdentityService::size()
+size_t ClientUDPIdentityService::size()
 {
     return storage.size();
 }
@@ -67,7 +67,7 @@ size_t MemoryIdentityService::size()
 * @param eui device EUI
 * @return CODE_OK- success
 */
-int MemoryIdentityService::getNetworkIdentity(
+int ClientUDPIdentityService::getNetworkIdentity(
     NETWORKIDENTITY &retVal,
     const DEVEUI &eui
 )
@@ -87,7 +87,7 @@ int MemoryIdentityService::getNetworkIdentity(
  * @param request gateway identifier or address
  * @return 0- success
  */
-int MemoryIdentityService::put(
+int ClientUDPIdentityService::put(
     const DEVADDR &devAddr,
     const DEVICEID &id
 )
@@ -96,7 +96,7 @@ int MemoryIdentityService::put(
     return CODE_OK;
 }
 
-int MemoryIdentityService::rm(
+int ClientUDPIdentityService::rm(
     const DEVADDR &addr
 )
 {
@@ -109,7 +109,7 @@ int MemoryIdentityService::rm(
     return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 }
 
-int MemoryIdentityService::init(
+int ClientUDPIdentityService::init(
     const std::string &databaseName,
     void *database
 )
@@ -117,11 +117,11 @@ int MemoryIdentityService::init(
     return CODE_OK;
 }
 
-void MemoryIdentityService::flush()
+void ClientUDPIdentityService::flush()
 {
 }
 
-void MemoryIdentityService::done()
+void ClientUDPIdentityService::done()
 {
     storage.clear();
 }
@@ -130,14 +130,14 @@ void MemoryIdentityService::done()
  * Return next network address if available
  * @return 0- success, ERR_CODE_ADDR_SPACE_FULL- no address available
  */
-int MemoryIdentityService::next(
+int ClientUDPIdentityService::next(
     NETWORKIDENTITY &retval
 )
 {
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
-void MemoryIdentityService::setOption(
+void ClientUDPIdentityService::setOption(
     int option,
     void *value
 )
@@ -148,5 +148,5 @@ void MemoryIdentityService::setOption(
 
 EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService()
 {
-    return new MemoryIdentityService;
+    return new ClientUDPIdentityService;
 }

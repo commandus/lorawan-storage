@@ -21,7 +21,7 @@
 #include "lorawan/helper/ip-helper.h"
 #include "cli-helper.h"
 
-const char *programName = "lorawan-query";
+const char *programName = "lorawan-identity-query";
 #define DEF_PORT 4244
 
 // global parameters

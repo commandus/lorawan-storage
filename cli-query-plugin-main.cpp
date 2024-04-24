@@ -16,7 +16,7 @@
 #include "log.h"
 #include "lorawan/helper/ip-address.h"
 
-const char *programName = "lorawan-query-direct";
+const char *programName = "lorawan-query-identity-direct";
 
 // global parameters
 class CliQueryParams {

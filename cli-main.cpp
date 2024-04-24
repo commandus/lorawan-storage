@@ -173,7 +173,7 @@ void run() {
         new JsonIdentityService;
     identityService->init(svc.db, nullptr);
 #else
-        new MemoryIdentityService;
+        new ClientUDPIdentityService;
     identityService->init("", nullptr);
 #endif
 

@@ -68,6 +68,11 @@ public:
     // close resources
     virtual void done() = 0;
 
+    /**
+     *
+     * @param option 0- masterkey 1- code 2- accesscode
+     * @param value 0- string 1- int32_t 2- uint64_t
+     */
     virtual void setOption(int option, void *value) = 0;
 
     virtual NETID *getNetworkId();

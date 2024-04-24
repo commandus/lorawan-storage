@@ -26,7 +26,7 @@
 #include "lorawan/storage/client/service-client.h"
 #include "lorawan/helper/aes-helper.h"
 
-const char *programName = "lorawan-print";
+const char *programName = "lorawan-identity-print";
 #define DEF_PORT 4244
 
 // global parameters

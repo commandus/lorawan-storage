@@ -1,4 +1,5 @@
 /*
+ * Command line helper routines
  * @file cli-helper.h
  */
 #ifndef CLI_HELPER_H

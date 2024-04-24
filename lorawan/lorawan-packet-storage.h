@@ -66,12 +66,25 @@ PACK(
         } ) data;
         uint16_t packetSize;
         LORAWAN_MESSAGE_STORAGE();
+        LORAWAN_MESSAGE_STORAGE(const LORAWAN_MESSAGE_STORAGE& value);
         LORAWAN_MESSAGE_STORAGE(const std::string &base64string);
         std::string toString() const;
         const DEVADDR* getAddr() const;
         const JOIN_REQUEST_FRAME *getJoinRequest() const;
         bool operator==(const LORAWAN_MESSAGE_STORAGE &rhs) const;
+        LORAWAN_MESSAGE_STORAGE& operator=(const LORAWAN_MESSAGE_STORAGE &value);
     }
+);
+
+void  setLORAWAN_MESSAGE_STORAGE(
+    LORAWAN_MESSAGE_STORAGE &retVal,
+    const std::string &bin
+);
+
+void setLORAWAN_MESSAGE_STORAGE(
+    LORAWAN_MESSAGE_STORAGE &retVal,
+    void *buffer,
+    size_t size
 );
 
 bool decodeBase64ToLORAWAN_MESSAGE_STORAGE(

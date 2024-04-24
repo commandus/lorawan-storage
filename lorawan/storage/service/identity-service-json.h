@@ -5,7 +5,7 @@
 #include "identity-service-mem.h"
 #include "platform-specific.h"
 
-class JsonIdentityService: public MemoryIdentityService {
+class JsonIdentityService: public ClientUDPIdentityService {
 private:
     bool load();
     bool store();

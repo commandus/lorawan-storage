@@ -13,11 +13,39 @@ LORAWAN_MESSAGE_STORAGE::LORAWAN_MESSAGE_STORAGE()
 }
 
 LORAWAN_MESSAGE_STORAGE::LORAWAN_MESSAGE_STORAGE(
+    const LORAWAN_MESSAGE_STORAGE& value
+)
+    : mhdr(value.mhdr), data{}, packetSize(value.packetSize)
+{
+    memmove(&data, &value.data, sizeof(data));
+}
+
+LORAWAN_MESSAGE_STORAGE::LORAWAN_MESSAGE_STORAGE(
     const std::string &base64string
 )
     : data {}
 {
     decodeBase64ToLORAWAN_MESSAGE_STORAGE(*this, base64string);
+}
+
+void setLORAWAN_MESSAGE_STORAGE(
+    LORAWAN_MESSAGE_STORAGE &retVal,
+    const std::string &bin
+)
+{
+    size_t sz = bin.size();
+    memmove(&retVal.mhdr, bin.c_str(), sz);
+    retVal.packetSize = (uint16_t) sz;
+}
+
+void setLORAWAN_MESSAGE_STORAGE(
+    LORAWAN_MESSAGE_STORAGE &retVal,
+    void *buffer,
+    size_t size
+)
+{
+    memmove(&retVal.mhdr, buffer, size);
+    retVal.packetSize = (uint16_t) size;
 }
 
 bool decodeBase64ToLORAWAN_MESSAGE_STORAGE(
@@ -106,6 +134,16 @@ bool LORAWAN_MESSAGE_STORAGE::operator==(const LORAWAN_MESSAGE_STORAGE &rhs) con
         default:
             return false;
     }
+}
+
+LORAWAN_MESSAGE_STORAGE& LORAWAN_MESSAGE_STORAGE::operator=(
+    const LORAWAN_MESSAGE_STORAGE &value
+)
+{
+    mhdr = value.mhdr;
+    memmove(&data, &value.data, sizeof(data));
+    packetSize = value.packetSize;
+    return *this;
 }
 
 bool UPLINK_STORAGE::operator==(
