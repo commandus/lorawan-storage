@@ -26,7 +26,7 @@ QUERY_IDENTITY_FORCE_SAVE = 's',
 QUERY_IDENTITY_CLOSE_RESOURCES = 'e'
 */
 
-class ResponseService : public ResponseIntf {
+class ResponseService : public ResponseClient {
 public:
     ClientUDPIdentityService *svc;
     explicit ResponseService(

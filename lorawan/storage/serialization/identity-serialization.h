@@ -115,6 +115,8 @@ public:
     size_t shortenList2Fit(size_t serializedSize);
 };
 
+class IdentityService;
+
 class IdentitySerialization {
 private:
     int32_t code;

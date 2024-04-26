@@ -131,12 +131,12 @@ void PluginQueryClient::stop()
 }
 
 PluginQueryClient::PluginQueryClient(
-    const std::string &fileName,
-    const std::string &identityClassName,
-    const std::string &gatewayClassName,
-    ResponseIntf *aOnResponse,
-    int32_t aCode,
-    uint64_t aAccessCode
+        const std::string &fileName,
+        const std::string &identityClassName,
+        const std::string &gatewayClassName,
+        ResponseClient *aOnResponse,
+        int32_t aCode,
+        uint64_t aAccessCode
 )
 	: QueryClient(aOnResponse), handleSvc(0), svcIdentity(nullptr), svcGateway(nullptr),
     status(CODE_OK), query(nullptr), code(aCode), accessCode(aAccessCode)

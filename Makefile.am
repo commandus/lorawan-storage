@@ -56,6 +56,7 @@ nobase_dist_include_HEADERS = \
 	lorawan/storage/gateway-identity.h lorawan/storage/network-identity.h \
 	lorawan/storage/client/direct-client.h lorawan/storage/client/plugin-client.h \
 	lorawan/storage/client/plugin-query-client.h lorawan/storage/client/query-client.h \
+	lorawan/storage/client/response-client.h \
 	lorawan/storage/client/service-client.h lorawan/storage/client/udp-client.h \
 	lorawan/storage/client/uv-client.h \
 	lorawan/storage/listener/storage-listener.h lorawan/storage/listener/udp-listener.h \

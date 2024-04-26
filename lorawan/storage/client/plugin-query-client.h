@@ -30,12 +30,12 @@ private:
     void unload();
 public:
     explicit PluginQueryClient(
-        const std::string &fileName,
-        const std::string &identityClassName,
-        const std::string &gatewayClassName,
-        ResponseIntf *onResponse,
-        int32_t code,
-        uint64_t accessCode
+            const std::string &fileName,
+            const std::string &identityClassName,
+            const std::string &gatewayClassName,
+            ResponseClient *onResponse,
+            int32_t code,
+            uint64_t accessCode
     );
     ~PluginQueryClient() override;
 

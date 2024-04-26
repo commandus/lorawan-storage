@@ -72,7 +72,7 @@ public:
 
 static CliQueryParams params;
 
-class ResponseService : public ResponseIntf {
+class ResponseService : public ResponseClient {
 public:
     const std::vector<DeviceOrGatewayIdentity> &query;
     int verbose;

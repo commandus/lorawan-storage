@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "lorawan/lorawan-types.h"
+#include "lorawan/storage/client/response-client.h"
 
 /**
  * Identity service interface
@@ -14,15 +15,15 @@ class IdentityService {
 protected:
     // LoraWAN network identifier
     NETID netid;
+    const ResponseClient *responseClient;
 public:
     IdentityService();
-
+    IdentityService(const ResponseClient *responseClient);
     IdentityService(const IdentityService &value);
-
     virtual ~IdentityService();
 
     /**
-    * request device identifier(w/o address) by network address. Return 0 if success, retVal = EUI and keys
+    * synchronous request device identifier(w/o address) by network address. Return 0 if success, retVal = EUI and keys
     * @param retVal device identifier
     * @param devAddr network address
     * @return LORA_OK- success
@@ -30,46 +31,66 @@ public:
     virtual int get(DEVICEID &retVal, const DEVADDR &devAddr) = 0;
 
     /**
-    * request network identity(with address) by network address. Return 0 if success, retval = EUI and keys
+    * synchronous request network identity(with address) by network address. Return 0 if success, retval = EUI and keys
     * @param retval network identity(with address)
     * @param eui device EUI
     * @return CODE_OK- success
     */
     virtual int getNetworkIdentity(NETWORKIDENTITY &retval, const DEVEUI &eui) = 0;
 
-    // Add or replace Address = EUI and keys pair
+    /**
+     * synchronous add or replace Address = EUI and keys pair
+     * @param devaddr
+     * @param id
+     * @return
+     */
     virtual int put(const DEVADDR &devaddr, const DEVICEID &id) = 0;
 
-    // Remove entry
+    /**
+     * synchronous remove entry
+     * @param addr
+     * @return
+     */
     virtual int rm(const DEVADDR &addr) = 0;
 
     /**
-     * List entries
-     * @param retval return values
+     * synchronous list entries
+     * @param retVal return values
      * @param offset 0..
      * @param size 0- all
      */
-
     virtual int list(
-        std::vector<NETWORKIDENTITY> &retval,
+        std::vector<NETWORKIDENTITY> &retVal,
         size_t offset,
         size_t size
     ) = 0;
 
-    // Entries count
+    /**
+     * synchronous entries count
+     * @return
+     */
     virtual size_t size() = 0;
 
-    // force save
+    /**
+     * synchronous force save
+     */
     virtual void flush() = 0;
 
-    // reload
+    /**
+     * Initialize
+     * @param option
+     * @param data
+     * @return
+     */
     virtual int init(const std::string &option, void *data) = 0;
 
-    // close resources
+    /**
+     * Finalize. Close resources
+     */
     virtual void done() = 0;
 
     /**
-     *
+     * Set options
      * @param option 0- masterkey 1- code 2- accesscode
      * @param value 0- string 1- int32_t 2- uint64_t
      */
@@ -82,10 +103,13 @@ public:
     );
 
     /**
+     * synchronous call.
      * Return next network address if available
      * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
      */
-    virtual int next(NETWORKIDENTITY &retVal) = 0;
+    virtual int next(
+        NETWORKIDENTITY &retVal
+    ) = 0;
 
     int joinAccept(
         JOIN_ACCEPT_FRAME_HEADER &retVal,

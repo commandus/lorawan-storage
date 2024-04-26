@@ -2,11 +2,27 @@
 #include "identity-service.h"
 #include "lorawan/lorawan-conv.h"
 
-IdentityService::IdentityService() = default;
+IdentityService::IdentityService()
+    : responseClient(nullptr)
+{
+
+}
 
 IdentityService::IdentityService(
     const IdentityService &value
-) = default;
+)
+    : netid(value.netid), responseClient(value.responseClient)
+{
+
+}
+
+IdentityService::IdentityService(
+    const ResponseClient *aResponseClient
+)
+    : responseClient(aResponseClient)
+{
+
+}
 
 IdentityService::~IdentityService() = default;
 

@@ -37,9 +37,9 @@ void UDPClient::stop()
 }
 
 UDPClient::UDPClient(
-    uint32_t ipv4,
-    uint16_t aPort,
-    ResponseIntf *aOnResponse
+        uint32_t ipv4,
+        uint16_t aPort,
+        ResponseClient *aOnResponse
 )
     : sock(0), addr{}, QueryClient(aOnResponse), query(nullptr), status(CODE_OK)
 {
@@ -51,9 +51,9 @@ UDPClient::UDPClient(
 /**
  */
 UDPClient::UDPClient(
-    const std::string &aHost,
-    uint16_t aPort,
-    ResponseIntf *aOnResponse
+        const std::string &aHost,
+        uint16_t aPort,
+        ResponseClient *aOnResponse
 )
     : sock(0), addr{}, QueryClient(aOnResponse), query(nullptr), status(CODE_OK)
 {

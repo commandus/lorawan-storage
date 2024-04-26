@@ -1,7 +1,7 @@
 #include "query-client.h"
 
 QueryClient::QueryClient(
-    ResponseIntf *aOnResponse
+        ResponseClient *aOnResponse
 )
     : onResponse(aOnResponse)
 {

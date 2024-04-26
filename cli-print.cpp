@@ -114,7 +114,7 @@ static void printNetId(
 
 static std::promise<const IdentityGetResponse *> promiseResponse;
 
-class ResponseService : public ResponseIntf {
+class ResponseService : public ResponseClient {
 public:
     void onError(
         QueryClient* client,

@@ -52,7 +52,6 @@ public:
      */
     int next(NETWORKIDENTITY &retVal) override;
     void setOption(int option, void *value) override;
-
 };
 
 EXPORT_SHARED_C_FUNC IdentityService* makeClientUDPIdentityService();

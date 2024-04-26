@@ -273,10 +273,10 @@ void UvClient::finish()
 /**
  */
 UvClient::UvClient(
-    bool aUseTcp,
-    const std::string &aHost,
-    uint16_t aPort,
-	ResponseIntf *aOnResponse
+        bool aUseTcp,
+        const std::string &aHost,
+        uint16_t aPort,
+        ResponseClient *aOnResponse
 )
 	: QueryClient(aOnResponse), useTcp(aUseTcp), status(0), tcpConnected(false), query(nullptr)
 {

@@ -37,10 +37,10 @@ public:
     size_t dataSize;
 
     explicit UvClient(
-        bool useTcp,
-        const std::string &aHost,
-        uint16_t port,
-        ResponseIntf *onResponse
+            bool useTcp,
+            const std::string &aHost,
+            uint16_t port,
+            ResponseClient *onResponse
     );
     ~UvClient() override;
 
