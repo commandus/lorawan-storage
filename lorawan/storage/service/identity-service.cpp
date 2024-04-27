@@ -17,7 +17,7 @@ IdentityService::IdentityService(
 }
 
 IdentityService::IdentityService(
-    const ResponseClient *aResponseClient
+    ResponseClient *aResponseClient
 )
     : responseClient(aResponseClient)
 {

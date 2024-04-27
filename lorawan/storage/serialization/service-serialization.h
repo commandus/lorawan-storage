@@ -10,8 +10,8 @@
 class ServiceMessage {
 public:
     char tag;
-    int32_t code;  // "account#" in request
-    uint64_t accessCode;  // magic number in request, retCode in response, negative is error code
+    int32_t code;           // "account#" in request
+    uint64_t accessCode;    // magic number in request, retCode in response, negative is error code
     ServiceMessage();
     ServiceMessage(char tag, int32_t code, uint64_t accessCode);
     ServiceMessage(const unsigned char *buf, size_t sz);

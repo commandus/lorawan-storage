@@ -15,38 +15,38 @@ class GatewayListResponse;
 class ResponseClient {
 public:
     virtual void onIdentityGet(
-            QueryClient* client,
-            const IdentityGetResponse *response
+        QueryClient* client,
+        const IdentityGetResponse *response
     ) = 0;
     virtual void onIdentityOperation(
-            QueryClient* client,
-            const IdentityOperationResponse *response
+        QueryClient* client,
+        const IdentityOperationResponse *response
     ) = 0;
     virtual void onIdentityList(
-            QueryClient* client,
-            const IdentityListResponse *response
+        QueryClient* client,
+        const IdentityListResponse *response
     ) = 0;
 
     virtual void onGatewayGet(
-            QueryClient* client,
-            const GatewayGetResponse *response
+        QueryClient* client,
+        const GatewayGetResponse *response
     ) = 0;
     virtual void onGatewayOperation(
-            QueryClient* client,
-            const GatewayOperationResponse *response
+        QueryClient* client,
+        const GatewayOperationResponse *response
     ) = 0;
     virtual void onGatewayList(
-            QueryClient* client,
-            const GatewayListResponse *response
+        QueryClient* client,
+        const GatewayListResponse *response
     ) = 0;
     virtual void onError(
-            QueryClient* client,
-            int32_t code,  // 0- success, != 0- failure (error code)
-            int errorCode
+        QueryClient* client,
+        int32_t code,  // 0- success, != 0- failure (error code)
+        int errorCode
     ) = 0;
     // TCP connection lost
     virtual void onDisconnected(
-            QueryClient* client
+        QueryClient* client
     ) = 0;
 };
 

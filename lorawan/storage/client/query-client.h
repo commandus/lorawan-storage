@@ -8,8 +8,8 @@
 class QueryClient {
 public:
     ResponseClient* onResponse;
-    QueryClient(
-            ResponseClient *aOnResponse
+    explicit QueryClient(
+        ResponseClient *aOnResponse
     );
 
     virtual ~QueryClient();

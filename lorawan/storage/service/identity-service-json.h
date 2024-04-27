@@ -17,15 +17,7 @@ public:
     int get(DEVICEID &retVal, const DEVADDR &request) override;
     // List entries
     int list(std::vector<NETWORKIDENTITY> &retVal, size_t offset, size_t size) override;
-    // Entries count
     size_t size() override;
-
-    /**
-    * request network identity(with address) by network address. Return 0 if success, retval = EUI and keys
-    * @param retval network identity(with address)
-    * @param eui device EUI
-    * @return LORA_OK- success
-    */
     int getNetworkIdentity(NETWORKIDENTITY &retVal, const DEVEUI &eui) override;
 
     int put(const DEVADDR &devAddr, const DEVICEID &id) override;

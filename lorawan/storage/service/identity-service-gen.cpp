@@ -4,6 +4,7 @@
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/key128gen.h"
+#include "lorawan/storage/serialization/identity-serialization.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
@@ -181,6 +182,73 @@ void GenIdentityService::setOption(
         return;
     if (option == 0)
         setMasterKey(*(std::string *) value);
+}
+
+// ------------------- asynchronous imitations -------------------
+
+int GenIdentityService::cGet(const DEVADDR &request)
+{
+    IdentityGetResponse r;
+    r.response.devaddr = request;
+    get(r.response.devid, request);
+    if (responseClient)
+        responseClient->onIdentityGet(nullptr, &r);
+    return CODE_OK;
+}
+
+int GenIdentityService::cGetNetworkIdentity(const DEVEUI &eui)
+{
+    IdentityGetResponse r;
+    getNetworkIdentity(r.response, eui);
+    if (responseClient)
+        responseClient->onIdentityGet(nullptr, &r);
+    return CODE_OK;
+}
+
+int GenIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &id)
+{
+    IdentityOperationResponse r;
+    r.response = put(devAddr, id);
+    if (responseClient)
+        responseClient->onIdentityOperation(nullptr, &r);
+    return CODE_OK;
+}
+
+int GenIdentityService::cRm(const DEVADDR &devAddr)
+{
+    IdentityOperationResponse r;
+    r.response = rm(devAddr);
+    if (responseClient)
+        responseClient->onIdentityOperation(nullptr, &r);
+    return CODE_OK;
+}
+
+int GenIdentityService::cList(size_t offset, size_t size)
+{
+    IdentityListResponse r;
+    r.response = list(r.identities, offset, size);
+    r.size = r.identities.size();
+    if (responseClient)
+        responseClient->onIdentityList(nullptr, &r);
+    return CODE_OK;
+}
+
+int GenIdentityService::cSize()
+{
+    IdentityOperationResponse r;
+    r.size = size();
+    if (responseClient)
+        responseClient->onIdentityOperation(nullptr, &r);
+    return CODE_OK;
+}
+
+int GenIdentityService::cNext()
+{
+    IdentityGetResponse r;
+    next(r.response);
+    if (responseClient)
+        responseClient->onIdentityGet(nullptr, &r);
+    return CODE_OK;
 }
 
 EXPORT_SHARED_C_FUNC IdentityService* makeGenIdentityService()

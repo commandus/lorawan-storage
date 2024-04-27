@@ -308,6 +308,73 @@ void ClientUDPIdentityService::setOption(
     }
 }
 
+// ------------------- asynchronous calls -------------------
+
+int ClientUDPIdentityService::cGet(const DEVADDR &request)
+{
+    IdentityGetResponse r;
+    r.response.devaddr = request;
+    get(r.response.devid, request);
+    if (responseClient)
+        responseClient->onIdentityGet(nullptr, &r);
+    return CODE_OK;
+}
+
+int ClientUDPIdentityService::cGetNetworkIdentity(const DEVEUI &eui)
+{
+    IdentityGetResponse r;
+    getNetworkIdentity(r.response, eui);
+    if (responseClient)
+        responseClient->onIdentityGet(nullptr, &r);
+    return CODE_OK;
+}
+
+int ClientUDPIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &id)
+{
+    IdentityOperationResponse r;
+    r.response = put(devAddr, id);
+    if (responseClient)
+        responseClient->onIdentityOperation(nullptr, &r);
+    return CODE_OK;
+}
+
+int ClientUDPIdentityService::cRm(const DEVADDR &devAddr)
+{
+    IdentityOperationResponse r;
+    r.response = rm(devAddr);
+    if (responseClient)
+        responseClient->onIdentityOperation(nullptr, &r);
+    return CODE_OK;
+}
+
+int ClientUDPIdentityService::cList(size_t offset, size_t size)
+{
+    IdentityListResponse r;
+    r.response = list(r.identities, offset, size);
+    r.size = r.identities.size();
+    if (responseClient)
+        responseClient->onIdentityList(nullptr, &r);
+    return CODE_OK;
+}
+
+int ClientUDPIdentityService::cSize()
+{
+    IdentityOperationResponse r;
+    r.size = size();
+    if (responseClient)
+        responseClient->onIdentityOperation(nullptr, &r);
+    return CODE_OK;
+}
+
+int ClientUDPIdentityService::cNext()
+{
+    IdentityGetResponse r;
+    next(r.response);
+    if (responseClient)
+        responseClient->onIdentityGet(nullptr, &r);
+    return CODE_OK;
+}
+
 EXPORT_SHARED_C_FUNC IdentityService* makeClientUDPIdentityService()
 {
     return new ClientUDPIdentityService;
