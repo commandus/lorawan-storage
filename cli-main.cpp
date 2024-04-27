@@ -29,6 +29,7 @@
 
 #ifdef ENABLE_GEN
 #include "lorawan/storage/service/identity-service-gen.h"
+#define DEF_DB  "gen"
 #endif
 
 #ifdef ENABLE_JSON
@@ -38,6 +39,10 @@
 #else
 #include "lorawan/storage/service/identity-service-mem.h"
 #include "lorawan/storage/service/gateway-service-mem.h"
+#endif
+
+#ifndef DEF_DB
+#define DEF_DB  "none"
 #endif
 
 #include "lorawan/lorawan-error.h"
