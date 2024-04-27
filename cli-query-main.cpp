@@ -250,6 +250,9 @@ public:
                 case QUERY_IDENTITY_COUNT:
                     req = new IdentityOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
                     break;
+                case QUERY_IDENTITY_NEXT:
+                    req = new IdentityOperationRequest(params.tag, params.offset, params.size, params.code, params.accessCode);
+                    break;
                 case QUERY_IDENTITY_ASSIGN:
                     req = new IdentityAssignRequest(params.tag, id.nid, params.code, params.accessCode);
                     break;

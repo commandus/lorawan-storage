@@ -16,6 +16,7 @@ enum IdentityQueryTag {
     QUERY_IDENTITY_EUI = 'i',
     QUERY_IDENTITY_LIST = 'l',
     QUERY_IDENTITY_COUNT = 'c',
+    QUERY_IDENTITY_NEXT = 'n',
     QUERY_IDENTITY_ASSIGN = 'p',
     QUERY_IDENTITY_RM = 'r',
     QUERY_IDENTITY_FORCE_SAVE = 's',
@@ -81,6 +82,18 @@ public:
     explicit IdentityGetResponse(const IdentityEUIRequest &request);
     IdentityGetResponse(const unsigned char *buf, size_t sz);
     ~IdentityGetResponse() override = default;
+    void ntoh() override;
+    size_t serialize(unsigned char *retBuf) const override;
+    std::string toJsonString() const override;
+};
+
+class IdentityNextResponse : public ServiceMessage {
+public:
+    NETWORKIDENTITY response;
+
+    IdentityNextResponse() = default;
+    IdentityNextResponse(const unsigned char *buf, size_t sz);
+    ~IdentityNextResponse() override = default;
     void ntoh() override;
     size_t serialize(unsigned char *retBuf) const override;
     std::string toJsonString() const override;

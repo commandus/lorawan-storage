@@ -359,6 +359,38 @@ size_t IdentityGetResponse::serialize(
     return SIZE_GET_RESPONSE;                           // 13 + 95 = 108
 }
 
+IdentityNextResponse::IdentityNextResponse(
+    const unsigned char* buf,
+    size_t sz
+)
+    : ServiceMessage(buf, sz)   // 13
+{
+    if (sz >= SIZE_GET_RESPONSE) {
+        deserializeNETWORKIDENTITY(response, buf + 13);
+    }
+}
+
+std::string IdentityNextResponse::toJsonString() const {
+    std::stringstream ss;
+    ss << response.toJsonString();
+    return ss.str();
+}
+
+void IdentityNextResponse::ntoh()
+{
+    ServiceMessage::ntoh();
+    ntohNETWORKIDENTITY(response);
+}
+
+size_t IdentityNextResponse::serialize(
+    unsigned char *retBuf
+) const
+{
+    ServiceMessage::serialize(retBuf);                   // 13
+    serializeNETWORKIDENTITY(retBuf + SIZE_SERVICE_MESSAGE, this->response);
+    return SIZE_GET_RESPONSE;                           // 13 + 95 = 108
+}
+
 IdentityOperationResponse::IdentityOperationResponse()
     : IdentityOperationRequest(), response(0)
 {
@@ -640,6 +672,18 @@ size_t IdentitySerialization::query(
             ((IdentityOperationResponse *) r)->response = (uint8_t) svc->size();
             break;
         }
+        case QUERY_IDENTITY_NEXT:   // next
+        {
+            auto gr = (IdentityOperationRequest *) pMsg;
+            r = new IdentityNextResponse;
+            r->tag = gr->tag;
+            r->code = CODE_OK;
+            r->accessCode = gr->accessCode;
+            NETWORKIDENTITY ni;
+            svc->next(ni);
+            ((IdentityNextResponse *) r)->response = ni;
+            break;
+        }
         case QUERY_IDENTITY_FORCE_SAVE:   // force save
             break;
         case QUERY_IDENTITY_CLOSE_RESOURCES:   // close resources
@@ -691,10 +735,14 @@ enum IdentityQueryTag validateIdentityQuery(
             if (size < SIZE_OPERATION_REQUEST)
                 return QUERY_IDENTITY_NONE;
             return QUERY_IDENTITY_LIST;
-        case QUERY_IDENTITY_COUNT:   // list count
+        case QUERY_IDENTITY_COUNT:   // count
             if (size < SIZE_OPERATION_REQUEST)
                 return QUERY_IDENTITY_NONE;
             return QUERY_IDENTITY_COUNT;
+        case QUERY_IDENTITY_NEXT:   // next
+            if (size < SIZE_OPERATION_REQUEST)
+                return QUERY_IDENTITY_NONE;
+            return QUERY_IDENTITY_NEXT;
         case QUERY_IDENTITY_FORCE_SAVE:   // force save
             if (size < SIZE_OPERATION_REQUEST)
                 return QUERY_IDENTITY_NONE;
@@ -781,6 +829,11 @@ ServiceMessage* deserializeIdentity(
                 return nullptr;
             r = new IdentityOperationRequest(buf, sz);
             break;
+        case QUERY_IDENTITY_NEXT:   // next
+            if (sz < SIZE_OPERATION_REQUEST)
+                return nullptr;
+            r = new IdentityOperationRequest(buf, sz);
+            break;
         case QUERY_IDENTITY_FORCE_SAVE:   // force save
             if (sz < SIZE_OPERATION_REQUEST)
                 return nullptr;
@@ -812,6 +865,8 @@ const char* identityTag2string(
             return "list";
         case QUERY_IDENTITY_COUNT:
             return "count";
+        case QUERY_IDENTITY_NEXT:
+            return "next";
         case QUERY_IDENTITY_ASSIGN:
             return "assign";
         case QUERY_IDENTITY_RM:

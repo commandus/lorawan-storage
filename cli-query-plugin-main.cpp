@@ -115,6 +115,12 @@ static void run()
         case QUERY_IDENTITY_COUNT:
             std::cout << c->svcIdentity->size() << std::endl;
             break;
+        case QUERY_IDENTITY_NEXT: {
+            NETWORKIDENTITY ni;
+            c->svcIdentity->next(ni);
+            std::cout << DEVADDR2string(ni.devaddr) << std::endl;
+        }
+            break;
         case QUERY_IDENTITY_ASSIGN:
             for (auto &it: params.query) {
                 c->svcIdentity->put(it.nid.devaddr, it.nid.devid);

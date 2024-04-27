@@ -286,7 +286,9 @@ int ClientUDPIdentityService::next(
     NETWORKIDENTITY &retval
 )
 {
-    return ERR_CODE_ADDR_SPACE_FULL;
+    IdentityOperationRequest req(QUERY_IDENTITY_NEXT, 0, 0, code, accessCode);
+    client->request(&req);
+    return CODE_OK;
 }
 
 void ClientUDPIdentityService::setOption(
@@ -312,66 +314,50 @@ void ClientUDPIdentityService::setOption(
 
 int ClientUDPIdentityService::cGet(const DEVADDR &request)
 {
-    IdentityGetResponse r;
-    r.response.devaddr = request;
-    get(r.response.devid, request);
-    if (responseClient)
-        responseClient->onIdentityGet(nullptr, &r);
+    IdentityAddrRequest req(QUERY_IDENTITY_EUI, addr, code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cGetNetworkIdentity(const DEVEUI &eui)
+int ClientUDPIdentityService::cGetNetworkIdentity(const DEVEUI &devEUI)
 {
-    IdentityGetResponse r;
-    getNetworkIdentity(r.response, eui);
-    if (responseClient)
-        responseClient->onIdentityGet(nullptr, &r);
+    IdentityEUIRequest req(QUERY_IDENTITY_ADDR, devEUI, code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &id)
+int ClientUDPIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &devId)
 {
-    IdentityOperationResponse r;
-    r.response = put(devAddr, id);
-    if (responseClient)
-        responseClient->onIdentityOperation(nullptr, &r);
+    IdentityAssignRequest req(QUERY_IDENTITY_ASSIGN, NETWORKIDENTITY(devAddr, devId), code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
 int ClientUDPIdentityService::cRm(const DEVADDR &devAddr)
 {
-    IdentityOperationResponse r;
-    r.response = rm(devAddr);
-    if (responseClient)
-        responseClient->onIdentityOperation(nullptr, &r);
+    IdentityAddrRequest req(QUERY_IDENTITY_RM, devAddr, code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
 int ClientUDPIdentityService::cList(size_t offset, size_t size)
 {
-    IdentityListResponse r;
-    r.response = list(r.identities, offset, size);
-    r.size = r.identities.size();
-    if (responseClient)
-        responseClient->onIdentityList(nullptr, &r);
+    IdentityOperationRequest req(QUERY_IDENTITY_LIST, offset, size, code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
 int ClientUDPIdentityService::cSize()
 {
-    IdentityOperationResponse r;
-    r.size = size();
-    if (responseClient)
-        responseClient->onIdentityOperation(nullptr, &r);
+    IdentityOperationRequest req(QUERY_IDENTITY_COUNT, 0, 0, code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
 int ClientUDPIdentityService::cNext()
 {
-    IdentityGetResponse r;
-    next(r.response);
-    if (responseClient)
-        responseClient->onIdentityGet(nullptr, &r);
+    IdentityOperationRequest req(QUERY_IDENTITY_NEXT, 0, 0, code, accessCode);
+    client->request(&req);
     return CODE_OK;
 }
 
