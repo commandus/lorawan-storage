@@ -5,6 +5,10 @@
 #include "lorawan/storage/serialization/gateway-serialization.h"
 #include "lorawan/storage/client/response-client.h"
 
+/**
+ * Abstract class
+ *
+ */
 class QueryClient {
 public:
     ResponseClient* onResponse;

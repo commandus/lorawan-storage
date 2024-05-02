@@ -117,6 +117,7 @@ else()
 		lorawan/storage/client/plugin-query-client.cpp
 		lorawan/storage/client/query-client.cpp lorawan/storage/client/service-client.cpp
 		lorawan/storage/client/udp-client.cpp lorawan/storage/client/uv-client.cpp
+		lorawan/storage/client/sync-query-client.cpp lorawan/storage/client/sync-response-client.cpp
 		lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
 		lorawan/storage/listener/uv-listener.cpp
 		lorawan/storage/serialization/gateway-serialization.cpp lorawan/storage/serialization/identity-serialization.cpp

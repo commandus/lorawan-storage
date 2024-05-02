@@ -172,6 +172,7 @@ ClientUDPIdentityService::~ClientUDPIdentityService()
     }
 }
 
+// synchronous calls
 /**
  * request device identifier by network address. Return 0 if success, retval = EUI and keys
  * @param retval device identifier
@@ -184,7 +185,7 @@ int ClientUDPIdentityService::get(
 )
 {
     IdentityAddrRequest req(QUERY_IDENTITY_EUI, addr, code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 
@@ -195,7 +196,7 @@ int ClientUDPIdentityService::list(
     size_t size
 ) {
     IdentityOperationRequest req(QUERY_IDENTITY_LIST, offset, size, code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 
@@ -203,7 +204,7 @@ int ClientUDPIdentityService::list(
 size_t ClientUDPIdentityService::size()
 {
     IdentityOperationRequest req(QUERY_IDENTITY_COUNT, 0, 0, code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 
@@ -219,7 +220,7 @@ int ClientUDPIdentityService::getNetworkIdentity(
 )
 {
     IdentityEUIRequest req(QUERY_IDENTITY_ADDR, devEUI, code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 
@@ -234,7 +235,7 @@ int ClientUDPIdentityService::put(
 )
 {
     IdentityAssignRequest req(QUERY_IDENTITY_ASSIGN, NETWORKIDENTITY(devAddr, devId), code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 
@@ -243,7 +244,7 @@ int ClientUDPIdentityService::rm(
 )
 {
     IdentityAddrRequest req(QUERY_IDENTITY_RM, devAddr, code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 
@@ -254,7 +255,6 @@ int ClientUDPIdentityService::init(
 {
     splitAddress(addr, port, addrPort);
     ResponseService onResp(this);
-    QueryClient *client;
 
 #ifdef ENABLE_LIBUV
     client = new UvClient(params.useTcp, params.address, params.port, &onResp);
@@ -287,7 +287,7 @@ int ClientUDPIdentityService::next(
 )
 {
     IdentityOperationRequest req(QUERY_IDENTITY_NEXT, 0, 0, code, accessCode);
-    client->request(&req);
+    syncClient.request(&req);
     return CODE_OK;
 }
 

@@ -6,6 +6,7 @@
 #include "lorawan/storage/client/query-client.h"
 #include "cli-helper.h"
 #include "lorawan/lorawan-msg.h"
+#include "lorawan/storage/client/sync-query-client.h"
 
 class ClientUDPIdentityService: public IdentityService {
 public:
@@ -14,6 +15,7 @@ public:
     int32_t code;  // "account#" in request
     uint64_t accessCode;  // magic number in request, retCode in response, negative is error code
     QueryClient *client;
+    SyncQueryClient syncClient;
     int verbose;
     int32_t retCode;
 

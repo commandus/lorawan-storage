@@ -1,6 +1,8 @@
 #ifndef RESPONSE_CLIENT_H
 #define RESPONSE_CLIENT_H
 
+#include <inttypes.h>
+
 class QueryClient;
 class IdentityGetResponse;
 class IdentityOperationResponse;
@@ -10,7 +12,7 @@ class GatewayOperationResponse;
 class GatewayListResponse;
 
 /**
- * Asynchronous response interface
+ * Asynchronous response abstract class
  */
 class ResponseClient {
 public:

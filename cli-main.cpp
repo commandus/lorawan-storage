@@ -214,7 +214,7 @@ void run() {
 
 int main(int argc, char **argv) {
 	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, _("ipaddr:port"), _("Default *:4244"));
-    struct arg_str *a_db = arg_str0("d", "db", _("<database file>"), _("database file name. Default " DEF_DB));
+    struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
     struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));
 #ifdef ENABLE_GEN
     struct arg_str *a_pass_phrase = arg_str0("m", _("master-key"), _("<pass-phrase>"), _("Default " DEF_PASSPHRASE));
@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_GEN
         a_pass_phrase, a_net_id,
 #endif
-#ifdef ENABLE_SQLITE
+#if defined ENABLE_SQLITE or defined ENABLE_JSON
         a_db,
 #endif
         a_code, a_access_code, a_verbose, a_daemonize, a_pidfile,
@@ -307,8 +307,8 @@ int main(int argc, char **argv) {
 		std::string programPath = getcwd(workDir, PATH_MAX);
 		if (svc.verbose)
 			std::cerr << MSG_LISTENER_DAEMON_RUN
-                      << "(" << programPath << "/" << programName << "). "
-                      << MSG_CHECK_SYSLOG << std::endl;
+              << "(" << programPath << "/" << programName << "). "
+              << MSG_CHECK_SYSLOG << std::endl;
 		OPEN_SYSLOG(programName)
         Daemonize daemon(programName, programPath, run, stop, done, 0, svc.pidfile);
 		// CLOSESYSLOG()

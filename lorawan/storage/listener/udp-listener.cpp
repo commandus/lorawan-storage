@@ -176,8 +176,7 @@ int UDPListener::run()
         socklen_t socklen = sizeof(source_addr);
 
         // 307 bytes for IPv4 up to 18, IPv6 up to 10
-        unsigned char rBuf[307];
-
+        unsigned char rBuf[2048];
         while (status != ERR_CODE_STOPPED) {
             ssize_t len = recvfrom(sock, (char*) rxBuf, sizeof(rxBuf) - 1, 0, (struct sockaddr*)&source_addr, & socklen);
             // Error occurred during receiving
