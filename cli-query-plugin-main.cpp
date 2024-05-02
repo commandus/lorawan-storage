@@ -16,6 +16,11 @@
 #include "log.h"
 #include "lorawan/helper/ip-address.h"
 
+// i18n
+// #include <libintl.h>
+// #define _(String) gettext (String)
+#define _(String) (String)
+
 const char *programName = "lorawan-query-identity-direct";
 
 // global parameters
@@ -47,14 +52,14 @@ public:
     std::string toString() {
         std::stringstream ss;
         if (svcName.empty()) {
-            ss << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName;
+            ss << _("Plugin: ") << pluginFilePath << ":" << pluginIdentityClassName;
         } else
-            ss << "Direct service: " << svcName;
+            ss << _("Direct service: ") << svcName;
         if (!db.empty())
-            ss << ". Database file name: " << db;
+            ss << _(". Database file name: ") << db;
         ss << " "
-            << "command: " << commandLongName(tag)
-            << ", offset: " << std::dec << offset << ", size: "  << size << "\n";
+            << _("command: ") << commandLongName(tag)
+            << _(", offset: ") << std::dec << offset << _(", size: ")  << size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
                 if (!it.nid.devaddr.empty())
@@ -194,16 +199,16 @@ static void run()
 
 int main(int argc, char **argv) {
     std::string shortCL = shortCommandList('|');
-    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address", 1, 100,
+    struct arg_str *a_query = arg_strn(nullptr, nullptr, _("<command | id | address"), 1, 100,
         shortCL.c_str());
-    struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", "<plugin>", "Default " DEF_PLUGIN);
-    struct arg_str *a_db = arg_str0("d", "db", "<database file>", "database file name. Default none");
-	struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
-    struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
-    struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", "<pass-phrase>", "Default " DEF_MASTERKEY);
-    struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
-    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
-    struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
+    struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", _("<plugin>"), _("Default " DEF_PLUGIN));
+    struct arg_str *a_db = arg_str0("d", "db", _("<database file>"), _("database file name. Default none"));
+	struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. "));
+    struct arg_int *a_size = arg_int0("z", "size", "<number>", _("list size limit. Default 10. "));
+    struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", _("<pass-phrase>"), _("Default " DEF_MASTERKEY));
+    struct arg_str *a_net_id = arg_str0("n", "network-id", _("<hex|hex:hex>"), _("Hexadecimal <network-id> or <net-type>:<net-id>. Default 0"));
+    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
+    struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
@@ -320,12 +325,12 @@ int main(int argc, char **argv) {
 	if ((a_help->count) || errorCount) {
 		if (errorCount)
 			arg_print_errors(stderr, a_end, programName);
-		std::cerr << "Usage: " << programName << std::endl;
+		std::cerr << _("Usage: ") << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "LoRaWAN storage query" << std::endl;
+		std::cerr << _("LoRaWAN storage query") << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
-        std::cerr << "Commands:\n" << listCommands() << std::endl;
-        std::cerr << "Plugins:\n" << listPlugins() << std::endl;
+        std::cerr << _("Commands:\n") << listCommands() << std::endl;
+        std::cerr << _("Plugins:\n") << listPlugins() << std::endl;
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
 	}

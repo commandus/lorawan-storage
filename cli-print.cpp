@@ -29,6 +29,11 @@
 const char *programName = "lorawan-identity-print";
 #define DEF_PORT 4244
 
+// i18n
+// #include <libintl.h>
+// #define _(String) gettext (String)
+#define _(String) (String)
+
 // global parameters
 class CliPrintParams {
 public:
@@ -60,18 +65,18 @@ public:
         std::stringstream ss;
         switch (svcOrPlugin) {
             case 0:
-                ss << "Service: " << address << ":" << port << " " << (useTcp ? "TCP" : "UDP")
-                    << " code: " << std::hex << code << " access code: "  << accessCode;
+                ss << _("Service: ") << address << ":" << port << " " << (useTcp ? "TCP" : "UDP")
+                    << _(" code: ") << std::hex << code << _(" access code: ")  << accessCode;
                 break;
             case 1:
-                ss << "Plugin: " << pluginFilePath << ":" << pluginIdentityClassName << ":" << pluginGatewayClassName;
+                ss << _("Plugin: ") << pluginFilePath << ":" << pluginIdentityClassName << ":" << pluginGatewayClassName;
                 break;
             default:
-                ss << "Identity source: " << pluginName;
+                ss << _("Identity source: ") << pluginName;
         }
         if (!db.empty())
-            ss << ". Database file name: " << db;
-        ss << ". Pass-phrase: " << passPhrase << ". Verbose: " << verbose << "\n";
+            ss << _(". Database file name: ") << db;
+        ss << _(". Pass-phrase: ") << passPhrase << _(". Verbose: ") << verbose << "\n";
         // for (auto & it : payload) ss << hexString(it) << "\n";
         return ss.str();
     }
@@ -93,12 +98,12 @@ static void printNetId(
     if (verbosity > 0) {
         // print header
         strm
-            << "NetId" << TAB_DELIMITER
-            << "Type" << TAB_DELIMITER
-            << "Id" << TAB_DELIMITER
-            << "NwkId" << TAB_DELIMITER
-            << "DEVADDR min" << TAB_DELIMITER
-            << "DEVADDR max"
+            << _("NetId") << TAB_DELIMITER
+            << _("Type") << TAB_DELIMITER
+            << _("Id") << TAB_DELIMITER
+            << _("NwkId") << TAB_DELIMITER
+            << _("DEVADDR min") << TAB_DELIMITER
+            << _("DEVADDR max")
             << std::endl;
     }
     strm
@@ -121,7 +126,7 @@ public:
         const int32_t code,
         const int errorCode
     ) override {
-        std::cerr << ERR_MESSAGE << code << ", errno: " << errorCode << "\n";
+        std::cerr << ERR_MESSAGE << code << _(", errno: ") << errorCode << "\n";
         params.retCode = code;
         promiseResponse.set_value(nullptr);
         client->stop();
@@ -277,21 +282,21 @@ static void printPacket(
             strm << DLMT << (int) getFPort((void *) payload.c_str());
             char *pl = hasPayload((void *) payload.c_str(), sz);
             if (!pl)
-                strm << DLMT << "n/a";
+                strm << DLMT << _("n/a");
             else {
                 DEVICEID deviceId;
                 std::string payload (pl, sz - (pl - (char *) rfm) - SIZE_MIC);
                 if (getDeviceByAddr(deviceId, rfm->devaddr)) {
                     strm
-                        << DLMT << "fcnt: " << (int) rfm->fcnt
-                        << DLMT << "direction: " << (int) (rfm->macheader.f.mtype & 1)
-                        << DLMT << "devAddr: " << DEVADDR2string(rfm->devaddr)
-                        << DLMT << "appSKey: " << KEY2string(deviceId.appSKey);
+                        << DLMT << _("fcnt: ") << (int) rfm->fcnt
+                        << DLMT << _("direction: ") << (int) (rfm->macheader.f.mtype & 1)
+                        << DLMT << _("devAddr: ") << DEVADDR2string(rfm->devaddr)
+                        << DLMT << _("appSKey: ") << KEY2string(deviceId.appSKey);
                     decryptPayload(payload, rfm->fcnt, rfm->macheader.f.mtype & 1, rfm->devaddr, deviceId.appSKey);
                     strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
                          << hexString(payload);
                 } else
-                    strm << DLMT << "n/a" << DLMT << hexString(payload);
+                    strm << DLMT << _("n/a") << DLMT << hexString(payload);
             }
         }
         strm << std::endl;
@@ -303,18 +308,18 @@ static void printPacket(
         strm << mtype2string((MTYPE) rfm->macheader.f.mtype)
              << DLMT << DEVADDR2string(rfm->devaddr);
         if (rfm->fctrl.f.foptslen == 0)
-            strm << DLMT << "n/a";
+            strm << DLMT << _("n/a");
         else
             strm << DLMT
                  << mac2string((void *) (payload.c_str() + SIZE_RFM_HEADER), rfm->fctrl.f.foptslen, sz - SIZE_RFM_HEADER);
 
         if (!hasFPort((void *) payload.c_str(), sz))
-            strm << DLMT << "n/a";
+            strm << DLMT << _("n/a");
         else
             strm << DLMT << (int) getFPort((void *) payload.c_str());
         char *pl = hasPayload((void *) payload.c_str(), sz);
         if (!pl)
-            strm << DLMT << "n/a";
+            strm << DLMT << _("n/a");
         else {
             DEVICEID deviceId;
             std::string payload(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
@@ -323,7 +328,7 @@ static void printPacket(
                 strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
                      << hexString(payload);
             } else
-                strm << DLMT << "n/a" << DLMT << hexString(payload);
+                strm << DLMT << _("n/a") << DLMT << hexString(payload);
         }
     }
 }
@@ -341,17 +346,17 @@ static void run()
 #define DEF_MASTERKEY   "masterkey"
 
 int main(int argc, char **argv) {
-    struct arg_str *a_hex = arg_strn(nullptr, nullptr, "<hex>",  1, 100, "payload");
-    struct arg_str *a_service_n_port = arg_str0("s", "service", "<address:port>", "");
-    struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", "<plugin>", "Default " DEF_PLUGIN);
-    struct arg_str *a_db = arg_str0("d", "db", "<database file>", "database file name. Default none");
-    struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", "<pass-phrase>", "Default " DEF_MASTERKEY);
-    struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
-    struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
-    struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
-    struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
-    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
-    struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
+    struct arg_str *a_hex = arg_strn(nullptr, nullptr, _("<hex>"),  1, 100, _("payload"));
+    struct arg_str *a_service_n_port = arg_str0("s", "service", _("<address:port>"), "");
+    struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", _("<plugin>"), _("Default " DEF_PLUGIN));
+    struct arg_str *a_db = arg_str0("d", "db", _("<database file>"), _("database file name. Default none"));
+    struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", _("<pass-phrase>"), _("Default " DEF_MASTERKEY));
+    struct arg_str *a_net_id = arg_str0("n", "network-id", _("<hex|hex:hex>"), _("Hexadecimal <network-id> or <net-type>:<net-id>. Default 0"));
+    struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));
+    struct arg_str *a_access_code = arg_str0("a", "access", _("<hex>"), _("Default 2a (42 decimal)"));
+    struct arg_lit *a_tcp = arg_lit0("t", "tcp", _("use TCP protocol. Default UDP"));
+    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
+    struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = {
@@ -382,7 +387,7 @@ int main(int argc, char **argv) {
 
         if (a_service_n_port->count) {
             if (!splitAddress(params.address, params.port, std::string(*a_service_n_port->sval))) {
-                std::cerr << "Invalid service address:port " << *a_service_n_port->sval << std::endl;
+                std::cerr << _("Invalid service address:port ") << *a_service_n_port->sval << std::endl;
                 errorCount++;
             }
             params.useTcp = a_tcp->count > 0;
@@ -397,7 +402,7 @@ int main(int argc, char **argv) {
                     params.pluginName = *a_plugin_file_n_class->sval;
                 } else {
                     if (a_plugin_file_n_class->count) {
-                        std::cerr << "Invalid \"static\" plugin \"" << *a_plugin_file_n_class->sval << "\"" << std::endl;
+                        std::cerr << _("Invalid \"static\" plugin \"") << *a_plugin_file_n_class->sval << "\"" << std::endl;
                         errorCount++;
                     }
                     params.pluginName = DEF_PLUGIN;
@@ -426,9 +431,9 @@ int main(int argc, char **argv) {
 	if ((a_help->count) || errorCount) {
 		if (errorCount)
 			arg_print_errors(stderr, a_end, programName);
-		std::cerr << "Usage: " << programName << std::endl;
+		std::cerr << _("Usage: ") << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "Print LoRaWAN packet" << std::endl;
+		std::cerr << _("Print LoRaWAN packet") << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;

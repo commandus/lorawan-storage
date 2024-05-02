@@ -21,6 +21,11 @@
 #include "lorawan/helper/ip-helper.h"
 #include "cli-helper.h"
 
+// i18n
+// #include <libintl.h>
+// #define _(String) gettext (String)
+#define _(String) (String)
+
 const char *programName = "lorawan-identity-query";
 #define DEF_PORT 4244
 
@@ -51,9 +56,9 @@ public:
     std::string toString() {
         std::stringstream ss;
         ss
-            << "Service: " << intf << ":" << port << " " << (useTcp ? "TCP" : "UDP") << " "
-            << "command: " << commandLongName(tag) << ", code: " << std::hex << code << ", access code: "  << accessCode << " "
-            << "offset: " << std::dec << offset << ", size: "  << size << "\n";
+            << _("Service: ") << intf << ":" << port << " " << (useTcp ? "TCP" : "UDP") << " "
+            << _("command: ") << commandLongName(tag) << _(", code: ") << std::hex << code << _(", access code: ")  << accessCode << " "
+            << _("offset: ") << std::dec << offset << _(", size: ")  << size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
                 if (!it.nid.devaddr.empty())
@@ -89,7 +94,7 @@ public:
         const int32_t code,
         const int errorCode
     ) override {
-        std::cerr << ERR_MESSAGE << code << ", errno: " << errorCode << "\n";
+        std::cerr << ERR_MESSAGE << code << _(", errno: ") << errorCode << "\n";
         client->stop();
         params.retCode = code;
     }
@@ -124,7 +129,7 @@ public:
                 else {
                     std::cerr << identityTag2string((IdentityQueryTag) response->tag)
                       // << " " << (int) response->size
-                      << " completed\n";
+                      << _(" completed\n");
                 }
             } else {
                 if (response->response != 0) {
@@ -170,7 +175,7 @@ public:
                 else {
                     std::cerr << gatewayTag2string((GatewayQueryTag) response->tag)
                     // << " " << (int) response->size
-                    << " completed\n";
+                    << _(" completed\n");
                 }
             } else {
                 if (response->response != 0) {
@@ -232,7 +237,7 @@ public:
             QueryClient* client
     ) override {
         if (verbose) {
-            std::cerr << "disconnected \n";
+            std::cerr << _("disconnected\n");
         }
     }
 
@@ -327,16 +332,16 @@ static void run()
 
 int main(int argc, char **argv) {
     std::string shortCL = shortCommandList('|');
-    struct arg_str *a_query = arg_strn(nullptr, nullptr, "<command | id | address:port>", 1, 100,
+    struct arg_str *a_query = arg_strn(nullptr, nullptr, _("<command | id | address:port>"), 1, 100,
         shortCL.c_str());
-    struct arg_str *a_interface_n_port = arg_str0("s", "service", "<ipaddr:port>", "Default localhost:4244");
-    struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
-    struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
-	struct arg_lit *a_tcp = arg_lit0("t", "tcp", "use TCP protocol. Default UDP");
-    struct arg_int *a_offset = arg_int0("o", "offset", "<0..>", "list offset. Default 0. ");
-    struct arg_int *a_size = arg_int0("z", "size", "<number>", "list size limit. Default 10. ");
-    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v verbose -vv debug");
-    struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
+    struct arg_str *a_interface_n_port = arg_str0("s", "service", _("<ipaddr:port>"), _("Default localhost:4244"));
+    struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));
+    struct arg_str *a_access_code = arg_str0("a", "access", _("<hex>"), _("Default 2a (42 decimal)"));
+	struct arg_lit *a_tcp = arg_lit0("t", "tcp", _("use TCP protocol. Default UDP"));
+    struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. "));
+    struct arg_int *a_size = arg_int0("z", "size", _("<number>"), _("list size limit. Default 10. "));
+    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
+    struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = { 
@@ -452,11 +457,11 @@ int main(int argc, char **argv) {
 	if ((a_help->count) || errorCount) {
 		if (errorCount)
 			arg_print_errors(stderr, a_end, programName);
-		std::cerr << "Usage: " << programName << std::endl;
+		std::cerr << _("Usage: ") << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "LoRaWAN storage query" << std::endl;
+		std::cerr << _("LoRaWAN storage query") << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
-        std::cerr << "Commands:\n" << listCommands() << std::endl;
+        std::cerr << _("Commands:\n") << listCommands() << std::endl;
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
 	}

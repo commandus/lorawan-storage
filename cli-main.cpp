@@ -51,6 +51,11 @@
 #include "daemonize.h"
 #include "lorawan/helper/ip-address.h"
 
+// i18n
+// #include <libintl.h>
+// #define _(String) gettext (String)
+#define _(String) (String)
+
 const char *programName = "lorawan-storage";
 #define DEF_PASSPHRASE  "masterkey"
 
@@ -107,10 +112,10 @@ public:
     std::string toString() const {
         std::stringstream ss;
         ss
-            << "Service: " << intf << ":" << port << " " << IP_PROTO2string(proto) << ".\n"
-            << "Code: " << std::hex << code << ", access code: "  << accessCode << " " << "\n";
+            << _("Service: ") << intf << ":" << port << " " << IP_PROTO2string(proto) << ".\n"
+            << _("Code: ") << std::hex << code << _(", access code: ")  << accessCode << " " << "\n";
         if (!db.empty())
-            ss << "database file name: " << db << "\n";
+            ss << _("database file name: ") << db << "\n";
         return ss.str();
     }
 
@@ -200,7 +205,7 @@ void run() {
     svc.server->setAddress(svc.intf, svc.port);
     svc.server->setLog(svc.verbose, &svc);
     if (svc.verbose)
-        std::cout << "Identities: " << svc.server->identitySerialization->svc->size() << std::endl;
+        std::cout << _("Identities: ") << svc.server->identitySerialization->svc->size() << std::endl;
 
     svc.retCode = svc.server->run();
     if (svc.retCode)
@@ -208,19 +213,19 @@ void run() {
 }
 
 int main(int argc, char **argv) {
-	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, "ipaddr:port", "Default *:4244");
-    struct arg_str *a_db = arg_str0("d", "db", "<database file>", "database file name. Default " DEF_DB);
-    struct arg_int *a_code = arg_int0("c", "code", "<number>", "Default 42. 0x - hex number prefix");
+	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, _("ipaddr:port"), _("Default *:4244"));
+    struct arg_str *a_db = arg_str0("d", "db", _("<database file>"), _("database file name. Default " DEF_DB));
+    struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));
 #ifdef ENABLE_GEN
-    struct arg_str *a_pass_phrase = arg_str0("m", "master-key", "<pass-phrase>", "Default " DEF_PASSPHRASE);
-    struct arg_str *a_net_id = arg_str0("n", "network-id", "<hex|hex:hex>", "Hexadecimal <network-id> or <net-type>:<net-id>. Default 0");
+    struct arg_str *a_pass_phrase = arg_str0("m", _("master-key"), _("<pass-phrase>"), _("Default " DEF_PASSPHRASE));
+    struct arg_str *a_net_id = arg_str0("n", "network-id", _("<hex|hex:hex>"), _("Hexadecimal <network-id> or <net-type>:<net-id>. Default 0"));
 #endif
 
-    struct arg_str *a_access_code = arg_str0("a", "access", "<hex>", "Default 2a (42 decimal)");
-	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", "run daemon");
-    struct arg_str *a_pidfile = arg_str0("p", "pidfile", "<file>", "Check whether a process has created the file pidfile");
-    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2,"-v - verbose, -vv - debug");
-	struct arg_lit *a_help = arg_lit0("h", "help", "Show this help");
+    struct arg_str *a_access_code = arg_str0("a", "access", _("<hex>"), _("Default 2a (42 decimal)"));
+	struct arg_lit *a_daemonize = arg_lit0("d", "daemonize", _("run daemon"));
+    struct arg_str *a_pidfile = arg_str0("p", "pidfile", _("<file>"), _("Check whether a process has created the file pidfile"));
+    struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v - verbose, -vv - debug"));
+	struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
 
 	void* argtable[] = { 
@@ -283,9 +288,9 @@ int main(int argc, char **argv) {
 	if ((a_help->count) || nerrors) {
 		if (nerrors)
 			arg_print_errors(stderr, a_end, programName);
-		std::cerr << "Usage: " << programName << std::endl;
+		std::cerr << _("Usage: ") << programName << std::endl;
 		arg_print_syntax(stderr, argtable, "\n");
-		std::cerr << "LoRaWAN gateway storage service" << std::endl;
+		std::cerr << _("LoRaWAN gateway storage service") << std::endl;
 		arg_print_glossary(stderr, argtable, "  %-27s %s\n");
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
