@@ -21,6 +21,8 @@
 #include "lorawan/storage/listener/udp-listener.h"
 #endif
 
+#define DEF_DB_GATEWAY_JSON  "gateway.json"
+
 #ifdef ENABLE_SQLITE
 #include "lorawan/storage/service/identity-service-sqlite.h"
 #include "lorawan/storage/service/gateway-service-sqlite.h"
@@ -94,6 +96,7 @@ public:
     std::string pidfile;
     int verbose;
     std::string db;
+    std::string dbGatewayJson;
     int32_t retCode;
 #ifdef ENABLE_GEN
     std::string passPhrase;
@@ -116,6 +119,10 @@ public:
             << _("Code: ") << std::hex << code << _(", access code: ")  << accessCode << " " << "\n";
         if (!db.empty())
             ss << _("database file name: ") << db << "\n";
+#ifdef ENABLE_JSON
+        if (!db.empty())
+            ss << _("gateway database file name: ") << dbGatewayJson << "\n";
+#endif
         return ss.str();
     }
 
@@ -174,7 +181,6 @@ void run() {
         new SqliteIdentityService;
     identityService->init(svc.db, nullptr);
 #endif
-
 #ifdef ENABLE_GEN
         new GenIdentityService;
     identityService->init(svc.passPhrase, &svc.netid);
@@ -192,9 +198,15 @@ void run() {
         new SqliteGatewayService;
     gatewayService->init(svc.db, nullptr);
 #else
+#ifdef ENABLE_JSON
+        new JsonGatewayService;
+    gatewayService->init(svc.dbGatewayJson, nullptr);
+#else
         new MemoryGatewayService;
     gatewayService->init("", nullptr);
 #endif
+#endif
+
     auto identitySerialization = new IdentitySerialization(identityService, svc.code, svc.accessCode);
     auto gatewaySerialization = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
@@ -215,6 +227,9 @@ void run() {
 int main(int argc, char **argv) {
 	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, _("ipaddr:port"), _("Default *:4244"));
     struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
+#ifdef ENABLE_JSON
+    struct arg_str *a_gateway_json_db = arg_str0("g", "gateway-db", _("<database file>"), _("database file name. Default " DEF_DB_GATEWAY_JSON));
+#endif
     struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));
 #ifdef ENABLE_GEN
     struct arg_str *a_pass_phrase = arg_str0("m", _("master-key"), _("<pass-phrase>"), _("Default " DEF_PASSPHRASE));
@@ -235,6 +250,9 @@ int main(int argc, char **argv) {
 #endif
 #if defined ENABLE_SQLITE or defined ENABLE_JSON
         a_db,
+#endif
+#ifdef ENABLE_JSON
+        a_gateway_json_db,
 #endif
         a_code, a_access_code, a_verbose, a_daemonize, a_pidfile,
 		a_help, a_end 
@@ -275,6 +293,13 @@ int main(int argc, char **argv) {
         svc.db = *a_db->sval;
     else
         svc.db = DEF_DB;
+#ifdef ENABLE_JSON
+    if (a_gateway_json_db->count)
+        svc.dbGatewayJson = *a_gateway_json_db->sval;
+    else
+        svc.dbGatewayJson = DEF_DB_GATEWAY_JSON;
+#endif
+
     if (a_code->count)
         svc.code = *a_code->ival;
     else
