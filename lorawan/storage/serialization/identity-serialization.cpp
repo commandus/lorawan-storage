@@ -568,7 +568,7 @@ static size_t getMaxIdentityListResponseSize(
     size_t sz
 )
 {
-    return SIZE_OPERATION_RESPONSE + sz * (sizeof(uint64_t) + 19);
+    return SIZE_OPERATION_RESPONSE + sz * SIZE_NETWORK_IDENTITY;
 }
 
 size_t IdentitySerialization::query(

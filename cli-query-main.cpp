@@ -58,7 +58,7 @@ public:
         ss
             << _("Service: ") << intf << ":" << port << " " << (useTcp ? "TCP" : "UDP") << " "
             << _("command: ") << commandLongName(tag) << _(", code: ") << std::hex << code << _(", access code: ")  << accessCode << " "
-            << _("offset: ") << std::dec << offset << _(", size: ")  << size << "\n";
+            << _("offset: ") << std::dec << offset << _(", size: ")  << (int) size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
                 if (!it.nid.devaddr.empty())
