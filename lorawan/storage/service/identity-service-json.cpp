@@ -37,8 +37,8 @@ int JsonIdentityService::get(
 // List entries
 int JsonIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
-    size_t offset,
-    size_t size
+    uint32_t offset,
+    uint8_t size
 ) {
     size_t o = 0;
     size_t sz = 0;

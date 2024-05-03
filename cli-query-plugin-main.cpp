@@ -59,7 +59,7 @@ public:
             ss << _(". Database file name: ") << db;
         ss << " "
             << _("command: ") << commandLongName(tag)
-            << _(", offset: ") << std::dec << offset << _(", size: ")  << size << "\n";
+            << _(", offset: ") << std::dec << offset << _(", size: ")  << (int) size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
                 if (!it.nid.devaddr.empty())
@@ -202,9 +202,9 @@ int main(int argc, char **argv) {
     struct arg_str *a_query = arg_strn(nullptr, nullptr, _("<command | id | address"), 1, 100,
         shortCL.c_str());
     struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", _("<plugin>"), _("Default " DEF_PLUGIN));
-    struct arg_str *a_db = arg_str0("d", "db", _("<database file>"), _("database file name. Default none"));
-	struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. "));
-    struct arg_int *a_size = arg_int0("z", "size", "<number>", _("list size limit. Default 10. "));
+    struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default none"));
+	struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. Max 4294967295"));
+    struct arg_int *a_size = arg_int0("z", "size", "<number>", _("list size limit. Default 10. Max 255"));
     struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", _("<pass-phrase>"), _("Default " DEF_MASTERKEY));
     struct arg_str *a_net_id = arg_str0("n", "network-id", _("<hex|hex:hex>"), _("Hexadecimal <network-id> or <net-type>:<net-id>. Default 0"));
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
@@ -310,8 +310,14 @@ int main(int argc, char **argv) {
         if (a_offset->count) {
             params.offset = (size_t) *a_offset->ival;
         }
-        if (a_size->count)
-            params.size = (size_t) *a_size->ival;
+        if (a_size->count) {
+            auto v = *a_size->ival;
+            if (v < 0)
+                v = 10;
+            if (v > 255)
+                v = 255;
+            params.size = v;
+        }
         else
             params.size = 10;
     }

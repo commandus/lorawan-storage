@@ -78,8 +78,8 @@ int SqliteIdentityService::get(
 // List entries
 int SqliteIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
-    size_t offset,
-    size_t size
+    uint32_t offset,
+    uint8_t size
 ) {
     if (!db)
         return ERR_CODE_DB_DATABASE_NOT_FOUND;
@@ -338,7 +338,10 @@ int SqliteIdentityService::cRm(const DEVADDR &devAddr)
     return CODE_OK;
 }
 
-int SqliteIdentityService::cList(size_t offset, size_t size)
+int SqliteIdentityService::cList(
+    uint32_t offset,
+    uint8_t size
+)
 {
     IdentityListResponse r;
     r.response = list(r.identities, offset, size);

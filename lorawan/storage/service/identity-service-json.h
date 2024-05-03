@@ -16,7 +16,7 @@ public:
     ~JsonIdentityService() override;
     int get(DEVICEID &retVal, const DEVADDR &request) override;
     // List entries
-    int list(std::vector<NETWORKIDENTITY> &retVal, size_t offset, size_t size) override;
+    int list(std::vector<NETWORKIDENTITY> &retVal, uint32_t offset, uint8_t size) override;
     size_t size() override;
     int getNetworkIdentity(NETWORKIDENTITY &retVal, const DEVEUI &eui) override;
 

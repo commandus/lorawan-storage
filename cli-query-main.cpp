@@ -34,15 +34,15 @@ class CliQueryParams {
 public:
     char tag;
     std::vector<DeviceOrGatewayIdentity> query;
-    size_t queryPos;
+    uint32_t queryPos;
     bool useTcp;
     int verbose;
     std::string intf;
     uint16_t port;
     int32_t code;
     uint64_t accessCode;
-    size_t offset;
-    size_t size;
+    uint32_t offset;
+    uint8_t size;
 
     int32_t retCode;
 
@@ -242,7 +242,7 @@ public:
     }
 
     bool next(
-            QueryClient *client
+        QueryClient *client
     ) {
         bool hasNext = params.queryPos < query.size();
         ServiceMessage *req = nullptr;
@@ -338,8 +338,8 @@ int main(int argc, char **argv) {
     struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));
     struct arg_str *a_access_code = arg_str0("a", "access", _("<hex>"), _("Default 2a (42 decimal)"));
 	struct arg_lit *a_tcp = arg_lit0("t", "tcp", _("use TCP protocol. Default UDP"));
-    struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. "));
-    struct arg_int *a_size = arg_int0("z", "size", _("<number>"), _("list size limit. Default 10. "));
+    struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. Max 4294967295"));
+    struct arg_int *a_size = arg_int0("z", "size", _("<number>"), _("list size limit. Default 10. Max 256"));
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
     struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
@@ -432,8 +432,14 @@ int main(int argc, char **argv) {
         if (a_offset->count) {
             params.offset = (size_t) *a_offset->ival;
         }
-        if (a_size->count)
-            params.size = (size_t) *a_size->ival;
+        if (a_size->count) {
+            auto v = *a_size->ival;
+            if (v < 0)
+                v = 10;
+            if (v > 255)
+                v = 255;
+            params.size = v;
+        }
         else
             params.size = 10;
     }

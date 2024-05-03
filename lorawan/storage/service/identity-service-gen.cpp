@@ -86,8 +86,8 @@ int GenIdentityService::getNetworkIdentity(
 // List entries
 int GenIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
-    size_t offset,
-    size_t size
+    uint32_t offset,
+    uint8_t size
 ) {
     uint32_t a = offset;
     size_t sz = netid.size();
@@ -223,7 +223,7 @@ int GenIdentityService::cRm(const DEVADDR &devAddr)
     return CODE_OK;
 }
 
-int GenIdentityService::cList(size_t offset, size_t size)
+int GenIdentityService::cList(uint32_t offset, uint8_t size)
 {
     IdentityListResponse r;
     r.response = list(r.identities, offset, size);

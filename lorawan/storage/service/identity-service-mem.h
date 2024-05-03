@@ -16,7 +16,7 @@ public:
     int getNetworkIdentity(NETWORKIDENTITY &retVal, const DEVEUI &eui) override;
     int put(const DEVADDR &devAddr, const DEVICEID &id) override;
     int rm(const DEVADDR &devAddr) override;
-    int list(std::vector<NETWORKIDENTITY> &retVal, size_t offset, size_t size) override;
+    int list(std::vector<NETWORKIDENTITY> &retVal, uint32_t offset, uint8_t size) override;
     size_t size() override;
     int next(NETWORKIDENTITY &retVal) override;
     // asynchronous imitation
@@ -24,7 +24,7 @@ public:
     int cGetNetworkIdentity(const DEVEUI &eui) override;
     int cPut(const DEVADDR &devAddr, const DEVICEID &id) override;
     int cRm(const DEVADDR &devAddr) override;
-    int cList(size_t offset, size_t size) override;
+    int cList(uint32_t offset, uint8_t size) override;
     int cSize() override;
     int cNext() override;
 

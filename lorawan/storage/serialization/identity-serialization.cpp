@@ -253,8 +253,8 @@ IdentityOperationRequest::IdentityOperationRequest()
 
 IdentityOperationRequest::IdentityOperationRequest(
     char tag,
-    size_t aOffset,
-    size_t aSize,
+    uint32_t aOffset,
+    uint8_t aSize,
     int32_t code,
     uint64_t accessCode
 )
@@ -525,7 +525,7 @@ size_t IdentityListResponse::serialize(
 std::string IdentityListResponse::toJsonString() const {
     std::stringstream ss;
     ss << R"({"result": )" << IdentityOperationResponse::toJsonString()
-       << ", \"gateways\": [";
+       << ", \"identities\": [";
     bool isFirst = true;
     for (auto i = 0; i < response; i++) {
         if (isFirst)

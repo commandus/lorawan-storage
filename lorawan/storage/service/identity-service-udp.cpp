@@ -192,8 +192,8 @@ int ClientUDPIdentityService::get(
 // List entries
 int ClientUDPIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
-    size_t offset,
-    size_t size
+    uint32_t offset,
+    uint8_t size
 ) {
     IdentityOperationRequest req(QUERY_IDENTITY_LIST, offset, size, code, accessCode);
     syncClient.request(&req);
@@ -340,7 +340,10 @@ int ClientUDPIdentityService::cRm(const DEVADDR &devAddr)
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cList(size_t offset, size_t size)
+int ClientUDPIdentityService::cList(
+    uint32_t offset,
+    uint8_t size
+)
 {
     IdentityOperationRequest req(QUERY_IDENTITY_LIST, offset, size, code, accessCode);
     client->request(&req);

@@ -37,8 +37,8 @@ int ClientUDPIdentityService::get(
 // List entries
 int ClientUDPIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
-    size_t offset,
-    size_t size
+    uint32_t offset,
+    uint8_t size
 ) {
     size_t o = 0;
     size_t sz = 0;
@@ -190,7 +190,10 @@ int ClientUDPIdentityService::cRm(const DEVADDR &devAddr)
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cList(size_t offset, size_t size)
+int ClientUDPIdentityService::cList(
+    uint32_t offset,
+    uint8_t size
+)
 {
     IdentityListResponse r;
     r.response = list(r.identities, offset, size);

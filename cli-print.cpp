@@ -349,7 +349,7 @@ int main(int argc, char **argv) {
     struct arg_str *a_hex = arg_strn(nullptr, nullptr, _("<hex>"),  1, 100, _("payload"));
     struct arg_str *a_service_n_port = arg_str0("s", "service", _("<address:port>"), "");
     struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", _("<plugin>"), _("Default " DEF_PLUGIN));
-    struct arg_str *a_db = arg_str0("d", "db", _("<database file>"), _("database file name. Default none"));
+    struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default none"));
     struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", _("<pass-phrase>"), _("Default " DEF_MASTERKEY));
     struct arg_str *a_net_id = arg_str0("n", "network-id", _("<hex|hex:hex>"), _("Hexadecimal <network-id> or <net-type>:<net-id>. Default 0"));
     struct arg_int *a_code = arg_int0("c", "code", _("<number>"), _("Default 42. 0x - hex number prefix"));

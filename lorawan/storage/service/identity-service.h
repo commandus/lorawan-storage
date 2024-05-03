@@ -111,8 +111,8 @@ public:
      */
     virtual int list(
         std::vector<NETWORKIDENTITY> &retVal,
-        size_t offset,
-        size_t size
+        uint32_t offset,
+        uint8_t size
     ) = 0;
 
     /**
@@ -121,8 +121,8 @@ public:
      * @param size 0- all
      */
     virtual int cList(
-        size_t offset,
-        size_t size
+        uint32_t offset,
+        uint8_t size
     ) = 0;
 
     /**
