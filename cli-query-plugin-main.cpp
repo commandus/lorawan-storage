@@ -121,12 +121,26 @@ static void run()
         case QUERY_IDENTITY_LIST: {
             std::vector<NETWORKIDENTITY> nids;
             c->svcIdentity->list(nids, params.offset, params.size);
+            if (params.verbose > 0)
+                std::cout << "[\n";
+            bool isFirst = true;
             for (auto &it: nids) {
-                std::cout
-                    << DEVADDR2string(it.devaddr) << "\t"
-                    << it.devid.toString()
-                    << std::endl;
+                if (isFirst)
+                    isFirst = false;
+                else
+                    if (params.verbose > 0)
+                        std::cout << ", \n";
+                if (params.verbose > 0)
+                    std::cout << it.toJsonString();
+                else
+                    std::cout
+                        << DEVADDR2string(it.devaddr) << "\t"
+                        << it.devid.toString()
+                        << "\n";
             }
+            if (params.verbose > 0)
+                std::cout << "]";
+            std::cout << std::endl;
         }
             break;
         case QUERY_IDENTITY_COUNT:
