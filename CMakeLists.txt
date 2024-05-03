@@ -239,6 +239,7 @@ else()
 	#
 	add_executable(lorawan-query-identity-direct cli-query-plugin-main.cpp cli-helper.cpp ${ARGTABLE})
 	target_link_libraries(lorawan-query-identity-direct PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
+	target_compile_definitions(lorawan-query-identity-direct PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-query-identity-direct PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
 
 	#

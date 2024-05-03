@@ -41,6 +41,7 @@ public:
     std::string passPhrase;
     NETID netid;
     std::string db;
+    std::string dbGatewayJson;
 
     CliQueryParams()
         : tag(QUERY_GATEWAY_NONE), queryPos(0), verbose(0), offset(0), size(0),
@@ -57,6 +58,10 @@ public:
             ss << _("Direct service: ") << svcName;
         if (!db.empty())
             ss << _(". Database file name: ") << db;
+#ifdef ENABLE_JSON
+        if (!dbGatewayJson.empty())
+            ss << _(". gateway database file name: ") << dbGatewayJson;
+#endif
         ss << " "
             << _("command: ") << commandLongName(tag)
             << _(", offset: ") << std::dec << offset << _(", size: ")  << (int) size << "\n";
@@ -84,15 +89,22 @@ static CliQueryParams params;
 
 static void run()
 {
-    DirectClient *c;
+    DirectClient *c = nullptr;
     if (params.svcName.empty())
         c = new PluginClient(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
     else
         c = new ServiceClient(params.svcName);
+    if (!c || !c->svcIdentity ) {
+        params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
+        return;
+    }
     if (!params.db.empty())
         c->svcIdentity->init(params.db, nullptr);
     else
         c->svcIdentity->init(params.passPhrase, &params.netid);
+
+    if (!params.dbGatewayJson.empty())
+        c->svcGateway->init(params.dbGatewayJson, nullptr);
 
     if (!c->svcIdentity || !c->svcGateway) {
         std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
@@ -203,7 +215,10 @@ int main(int argc, char **argv) {
         shortCL.c_str());
     struct arg_str *a_plugin_file_n_class = arg_str0("p", "plugin", _("<plugin>"), _("Default " DEF_PLUGIN));
     struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default none"));
-	struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. Max 4294967295"));
+#ifdef ENABLE_JSON
+    struct arg_str *a_gateway_json_db = arg_str0("g", "gateway-db", _("<database file>"), _("database file name. Default none"));
+#endif
+    struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. Max 4294967295"));
     struct arg_int *a_size = arg_int0("z", "size", "<number>", _("list size limit. Default 10. Max 255"));
     struct arg_str* a_pass_phrase = arg_str0("m", "masterkey", _("<pass-phrase>"), _("Default " DEF_MASTERKEY));
     struct arg_str *a_net_id = arg_str0("n", "network-id", _("<hex|hex:hex>"), _("Hexadecimal <network-id> or <net-type>:<net-id>. Default 0"));
@@ -213,6 +228,9 @@ int main(int argc, char **argv) {
 
 	void* argtable[] = {
         a_query, a_plugin_file_n_class, a_db,
+#ifdef ENABLE_JSON
+        a_gateway_json_db,
+#endif
         a_offset, a_size, a_pass_phrase, a_net_id,
         a_verbose,
         a_help, a_end
@@ -230,13 +248,17 @@ int main(int argc, char **argv) {
 
     if (a_db->count)
         params.db = *a_db->sval;
+#ifdef ENABLE_JSON
+    if (a_gateway_json_db->count)
+        params.dbGatewayJson = *a_gateway_json_db->sval;
+#endif
 
     // try load shared library
     std::string s(a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN);
     if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName, s)) {
         if (ServiceClient::hasStaticPlugin(s)) {
             // "load" from static by name: "json", "gen", "mem", "sqlite"
-            params.svcName = *a_plugin_file_n_class->sval;
+            params.svcName = s;
         } else {
             std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": " << ERR_LOAD_PLUGINS_FAILED << std::endl;
             errorCount++;

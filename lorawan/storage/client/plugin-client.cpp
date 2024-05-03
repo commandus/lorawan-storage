@@ -37,6 +37,8 @@ int PluginClient::load(
     const std::string &classGatewayName
 )
 {
+    if (fileName.empty())
+        return ERR_CODE_LOAD_PLUGINS_FAILED;
     std::string fn(fileName);
     if (!file::fileExists(fn)) {
         if (fn.rfind(PLUGIN_FILE_NAME_SUFFIX) == std::string::npos) {

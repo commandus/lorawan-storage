@@ -120,7 +120,7 @@ public:
         if (!db.empty())
             ss << _("database file name: ") << db << "\n";
 #ifdef ENABLE_JSON
-        if (!db.empty())
+        if (!dbGatewayJson.empty())
             ss << _("gateway database file name: ") << dbGatewayJson << "\n";
 #endif
         return ss.str();
