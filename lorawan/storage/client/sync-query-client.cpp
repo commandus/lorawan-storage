@@ -11,7 +11,7 @@ ServiceMessage* SyncQueryClient::request(
     ServiceMessage* value
 )
 {
-
+    return nullptr;
 }
 
 void SyncQueryClient::start()

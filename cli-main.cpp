@@ -324,7 +324,11 @@ int main(int argc, char **argv) {
 
 #ifdef _MSC_VER
     WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
+    int r = WSAStartup(MAKEWORD(2, 2), &wsaData);
+    if (r) {
+        std::cerr << ERR_SOCKET_CREATE << std::endl;
+        exit(r);
+    }
 #endif
 
     if (svc.runAsDaemon) {
