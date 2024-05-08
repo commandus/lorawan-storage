@@ -17,8 +17,10 @@
 
 #ifdef ENABLE_LIBUV
 #include "lorawan/storage/listener/uv-listener.h"
+#define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK false
 #else
 #include "lorawan/storage/listener/udp-listener.h"
+#define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK true
 #endif
 
 #define DEF_DB_GATEWAY_JSON  "gateway.json"
@@ -339,7 +341,7 @@ int main(int argc, char **argv) {
               << "(" << programPath << "/" << programName << "). "
               << MSG_CHECK_SYSLOG << std::endl;
 		OPEN_SYSLOG(programName)
-        Daemonize daemon(programName, programPath, run, stop, done, 0, svc.pidfile);
+        Daemonize daemon(programName, programPath, run, stop, done, 0, svc.pidfile, DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK);
 		// CLOSESYSLOG()
 	} else {
 		setSignalHandler();
