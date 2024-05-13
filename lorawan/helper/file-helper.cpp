@@ -1,4 +1,4 @@
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <io.h>
@@ -43,7 +43,7 @@
 
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 bool file::rmAllDir(const char *path)
 {
 	if (&path == NULL)
@@ -317,7 +317,7 @@ bool file::rmFile(const std::string &fn)
 	return std::remove((const char*) fn.c_str()) == 0;
 }
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 /**
  * @see https://www.gamedev.net/forums/topic/565693-converting-filetime-to-time_t-on-windows/#:~:text=A%20FILETIME%20is%20the%20number,intervals%20since%20January%201%2C%201970.
  * A FILETIME is the number of 100-nanosecond intervals since January 1, 1601.
@@ -342,7 +342,7 @@ time_t fileModificationTime(
 	const std::string &fileName
 )
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 	WIN32_FILE_ATTRIBUTE_DATA fileInfo;
 	GetFileAttributesEx(fileName.c_str(), GetFileExInfoStandard, (void *)&fileInfo);
 	return filetime2time_t(fileInfo.ftLastWriteTime);
@@ -435,7 +435,7 @@ int URL::getInt(
 
 std::string getCurrentDir()
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
     TCHAR buffer[MAX_PATH];
     GetCurrentDirectory(MAX_PATH - 1, buffer);
     return std::string((char *) buffer);

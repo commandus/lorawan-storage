@@ -3,11 +3,13 @@
 #include <csignal>
 #include <climits>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <direct.h>
 #include <sstream>
 
+#ifndef PATH_MAX
 #define PATH_MAX MAX_PATH
+#endif
 #define getcwd _getcwd
 #else
 #include <unistd.h>
@@ -54,6 +56,7 @@
 #include "log.h"
 #include "daemonize.h"
 #include "lorawan/helper/ip-address.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 // i18n
 // #include <libintl.h>
@@ -168,7 +171,7 @@ void signalHandler(int signal)
 
 void setSignalHandler()
 {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #else
 	struct sigaction action = {};
 	action.sa_handler = &signalHandler;
@@ -209,7 +212,7 @@ void run() {
 #endif
 #endif
 
-    auto identitySerialization = new IdentitySerialization(identityService, svc.code, svc.accessCode);
+    auto identitySerialization = new IdentityBinarySerialization(identityService, svc.code, svc.accessCode);
     auto gatewaySerialization = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
     svc.server = new UVListener(identitySerialization, gatewaySerialization);
@@ -250,7 +253,7 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_GEN
         a_pass_phrase, a_net_id,
 #endif
-#if defined ENABLE_SQLITE or defined ENABLE_JSON
+#if defined ENABLE_SQLITE || defined ENABLE_JSON
         a_db,
 #endif
 #ifdef ENABLE_JSON
@@ -324,7 +327,7 @@ int main(int argc, char **argv) {
 	}
 	arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
     WSADATA wsaData;
     int r = WSAStartup(MAKEWORD(2, 2), &wsaData);
     if (r) {

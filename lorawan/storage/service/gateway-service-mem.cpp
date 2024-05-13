@@ -57,9 +57,10 @@ int MemoryGatewayService::get(
 // List entries
 int  MemoryGatewayService::list(
     std::vector<GatewayIdentity> &retVal,
-    size_t offset,
-    size_t size
-) {
+    uint32_t offset,
+    uint8_t size
+)
+{
     size_t o = 0;
     size_t sz = 0;
     for (auto & it : storage) {

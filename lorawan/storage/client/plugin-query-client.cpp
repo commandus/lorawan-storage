@@ -4,7 +4,7 @@
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-msg.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define dlopen(fileName, opt) LoadLibraryA(fileName)
 #define dlclose FreeLibrary
 #define dlsym GetProcAddress
@@ -13,6 +13,7 @@
 #include <algorithm>
 #endif
 
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -160,7 +161,7 @@ ServiceMessage* PluginQueryClient::request(
 }
 
 void PluginQueryClient::start() {
-    IdentitySerialization identitySerialization(svcIdentity, code, accessCode);
+    IdentityBinarySerialization identitySerialization(svcIdentity, code, accessCode);
     GatewaySerialization gatewaySerialization(svcGateway, code, accessCode);
     while (status != ERR_CODE_STOPPED) {
         if (!query) {

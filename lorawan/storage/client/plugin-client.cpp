@@ -7,7 +7,7 @@
 
 #define PLUGIN_FILE_NAME_PREFIX "lib"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #define dlopen(fileName, opt) LoadLibraryA(fileName)
 #define dlclose FreeLibrary
 #define dlsym GetProcAddress

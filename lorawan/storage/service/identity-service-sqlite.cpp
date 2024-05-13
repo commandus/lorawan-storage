@@ -12,7 +12,7 @@
 #endif
 
 #include "platform-specific.h"
-#include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #define FIELD_LIST "activation, deviceclass, deveui, nwkskey, appskey, version, appeui, appkey, nwkkey, devnonce, joinnonce, name, addr"
 
@@ -345,7 +345,7 @@ int SqliteIdentityService::cList(
 {
     IdentityListResponse r;
     r.response = list(r.identities, offset, size);
-    r.size = r.identities.size();
+    r.size = (uint8_t) r.identities.size();
     if (responseClient)
         responseClient->onIdentityList(nullptr, &r);
     return CODE_OK;
@@ -354,7 +354,7 @@ int SqliteIdentityService::cList(
 int SqliteIdentityService::cSize()
 {
     IdentityOperationResponse r;
-    r.size = size();
+    r.size = (uint8_t) size();
     if (responseClient)
         responseClient->onIdentityOperation(nullptr, &r);
     return CODE_OK;

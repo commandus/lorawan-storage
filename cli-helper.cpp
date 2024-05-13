@@ -1,6 +1,7 @@
 #include <sstream>
 #include <cstring>
 #include "cli-helper.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 std::string listCommands() {
     std::stringstream ss;
@@ -146,8 +147,8 @@ bool readNetId(
     auto p = value.find(':');
     if (p != std::string::npos) {
         retVal.set(
-            strtoul(value.substr(0, p - 1).c_str(), nullptr, 16),
-            strtoul(value.substr(p + 1).c_str(), nullptr, 16)
+            (uint8_t) strtoul(value.substr(0, p - 1).c_str(), nullptr, 16),
+            (uint32_t) strtoul(value.substr(p + 1).c_str(), nullptr, 16)
         );
     } else
         retVal.set(strtoul(value.c_str(), nullptr, 16));

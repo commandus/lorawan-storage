@@ -2,7 +2,7 @@
 #define LORAWAN_ERROR_H_	1
 
 // syslog
-#if defined(_MSC_VER) or defined(ESP_PLATFORM)
+#if defined(_MSC_VER) || defined(__MINGW32__) || defined(ESP_PLATFORM)
 #define	LOG_EMERG	0	/* system is unusable */
 #define	LOG_ALERT	1	/* action must be taken immediately */
 #define	LOG_CRIT	2	/* critical conditions */

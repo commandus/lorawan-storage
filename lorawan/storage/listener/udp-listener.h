@@ -2,7 +2,7 @@
 #define UDP_LISTENER_H_	1
 
 #include <string>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WinSock2.h>
 #else
 #include <sys/socket.h>

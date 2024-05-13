@@ -8,7 +8,7 @@ void allocBuffer(
 )
 {
 	buf->base = (char *) malloc(suggested_size);
-	buf->len = suggested_size;
+	buf->len = (unsigned long) suggested_size;
 }
 
 void freeBuffer(

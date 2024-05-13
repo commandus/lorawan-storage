@@ -7,7 +7,7 @@ typedef SSIZE_T ssize_t;
 #endif
 
 #include <string>
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #else
 #include <arpa/inet.h>
 #endif

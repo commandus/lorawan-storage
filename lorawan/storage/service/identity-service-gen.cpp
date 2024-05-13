@@ -4,7 +4,7 @@
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/key128gen.h"
-#include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
@@ -227,7 +227,7 @@ int GenIdentityService::cList(uint32_t offset, uint8_t size)
 {
     IdentityListResponse r;
     r.response = list(r.identities, offset, size);
-    r.size = r.identities.size();
+    r.size = (uint8_t) r.identities.size();
     if (responseClient)
         responseClient->onIdentityList(nullptr, &r);
     return CODE_OK;
@@ -236,7 +236,7 @@ int GenIdentityService::cList(uint32_t offset, uint8_t size)
 int GenIdentityService::cSize()
 {
     IdentityOperationResponse r;
-    r.size = size();
+    r.size = (uint8_t) size();
     if (responseClient)
         responseClient->onIdentityOperation(nullptr, &r);
     return CODE_OK;

@@ -120,7 +120,7 @@ static void run()
     switch (params.tag) {
         case QUERY_IDENTITY_LIST: {
             std::vector<NETWORKIDENTITY> nids;
-            c->svcIdentity->list(nids, params.offset, params.size);
+            c->svcIdentity->list(nids, (uint32_t) params.offset, (uint8_t) params.size);
             if (params.verbose > 0)
                 std::cout << "[\n";
             bool isFirst = true;
@@ -170,7 +170,7 @@ static void run()
             break;
         case QUERY_GATEWAY_LIST: {
             std::vector <GatewayIdentity> gids;
-            c->svcGateway->list(gids, params.offset, params.size);
+            c->svcGateway->list(gids, (uint32_t) params.offset, (uint8_t) params.size);
             for (auto &it: gids) {
                 std::cout
                     << sockaddr2string(&it.sockaddr) << "\t"

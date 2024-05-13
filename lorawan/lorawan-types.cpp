@@ -7,6 +7,10 @@
 
 const char *LIST_SEPARATOR = ",";
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4996)
+#endif
+
 LORAWAN_VERSION::LORAWAN_VERSION()
     : c(1)
 {

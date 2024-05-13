@@ -1,7 +1,7 @@
 #ifndef UDP_CLIENT_H_
 #define UDP_CLIENT_H_	1
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <BaseTsd.h>
 #include <Winsock2.h>
 typedef SSIZE_T ssize_t;

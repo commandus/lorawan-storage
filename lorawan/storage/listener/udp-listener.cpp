@@ -10,7 +10,7 @@
 #ifdef ENABLE_DEBUG
 #include <iostream>
 #endif
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <iostream>
     #include <ws2tcpip.h>
     #include <io.h>

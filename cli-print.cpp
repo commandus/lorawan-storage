@@ -18,6 +18,7 @@
 #include "lorawan/lorawan-string.h"
 #include "log.h"
 #include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 #include "lorawan/helper/ip-address.h"
 #include "cli-helper.h"
 

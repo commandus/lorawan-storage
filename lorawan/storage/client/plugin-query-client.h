@@ -5,7 +5,7 @@
 #include "lorawan/storage/serialization/gateway-serialization.h"
 #include "lorawan/storage/client/query-client.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <Windows.h>
 #define PLUGIN_FILE_NAME_SUFFIX ".dll"
 #else

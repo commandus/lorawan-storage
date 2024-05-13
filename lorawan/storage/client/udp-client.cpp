@@ -2,7 +2,7 @@
 
 #include <cstring>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WS2tcpip.h>
 
 #define close closesocket
@@ -27,6 +27,7 @@
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/helper/ip-helper.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #define DEF_KEEPALIVE_SECS 60
 #define DEF_READ_TIMEOUT_SECONDS    2

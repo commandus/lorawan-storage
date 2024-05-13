@@ -2,7 +2,7 @@
 
 #include "lorawan/lorawan-conv.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WinSock2.h>
 #include <WS2tcpip.h>
 #else

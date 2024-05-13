@@ -8,7 +8,7 @@
 #include "lorawan-msg.h"
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <io.h>
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define write _write
@@ -114,14 +114,16 @@ static void onUDPRead(
                     sizeof(writeBuffer), (const unsigned char *) buf->base, bytesRead);
             }
             if (sz > 0) {
-                uv_buf_t wrBuf = uv_buf_init((char *) writeBuffer, sz);
+                uv_buf_t wrBuf = uv_buf_init((char *) writeBuffer, (unsigned int) sz);
                 auto req = (uv_udp_send_t *) malloc(sizeof(uv_udp_send_t));
-                req->data = writeBuffer; // to free up if need it
-                uv_udp_send(req, handle, &wrBuf, 1, addr,
-                    [](uv_udp_send_t *req, int status) {
-                        if (req)
-                            free(req);
-                    });
+                if (req) {
+                    req->data = writeBuffer; // to free up if need it
+                    uv_udp_send(req, handle, &wrBuf, 1, addr,
+                        [](uv_udp_send_t* req, int status) {
+                            if (req)
+                                free(req);
+                        });
+                }
             }
         }
     }
@@ -162,7 +164,7 @@ static void onReadTCP(
         }
         if (sz > 0) {
 			uv_write_t *req = allocReq();
-			uv_buf_t writeBuf = uv_buf_init((char *) writeBuffer, sz);
+			uv_buf_t writeBuf = uv_buf_init((char *) writeBuffer, (unsigned int) sz);
 			req->data = writeBuffer; // to free up if required
 			uv_write(req, client, &writeBuf, 1,
                  [](uv_write_t *req, int status) {

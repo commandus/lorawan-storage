@@ -9,6 +9,10 @@
 
 #define DEF_CODING_RATE CRLORA_4_6
 
+#if defined(_MSC_VER)
+#pragma warning(disable: 4996)
+#endif
+
 /**
  * @see https://stackoverflow.com/questions/2896600/how-to-replace-all-occurrences-of-a-character-in-string
  */
@@ -189,7 +193,7 @@ DEVNONCE string2DEVNONCE(
 )
 {
     DEVNONCE r;
-    r.u = strtoul(value.c_str(), nullptr, 16);
+    r.u = (uint16_t) strtoul(value.c_str(), nullptr, 16);
     r.u = NTOH2(r.u);
     return r;
 }
@@ -815,7 +819,17 @@ bool string2NETWORKIDENTITY(
 }
 
 const std::string ERR_CODE_TX_STR[] {
-    "NONE", "TOO_LATE", "TOO_EARLY", "FULL", "EMPTY", "COLLISION_PACKET", "COLLISION_BEACON", "TX_FREQ", "TX_POWER", "GPS_UNLOCKED"
+    "NONE",             // 0
+    "TOO_LATE",
+    "TOO_EARLY",
+    "FULL",
+    "EMPTY",
+    "COLLISION_PACKET", // 5
+    "COLLISION_BEACON",
+    "TX_FREQ",
+    "TX_POWER",
+    "GPS_UNLOCKED",
+    "INVALID"           // 10
 };
 
 const std::string& ERR_CODE_TX2string(
@@ -824,6 +838,8 @@ const std::string& ERR_CODE_TX2string(
 {
     if (code > JIT_TX_ERROR_INVALID)
         code = JIT_TX_ERROR_INVALID;
+    if (code < JIT_TX_OK)
+        code = JIT_TX_OK;
     return ERR_CODE_TX_STR[code];
 }
 

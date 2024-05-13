@@ -40,8 +40,8 @@ public:
 
     virtual int list(
         std::vector<GatewayIdentity> &retVal,
-        size_t offset,
-        size_t size
+        uint32_t offset,
+        uint8_t size
     ) = 0;
 
     // Entries count

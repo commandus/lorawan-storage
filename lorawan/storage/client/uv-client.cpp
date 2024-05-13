@@ -4,7 +4,7 @@
 
 #include "lorawan/helper/ip-helper.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <io.h>
 #define bzero(b,len) (memset((b), '\0', (len)), (void) 0)
 #define write _write
@@ -21,6 +21,7 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-conv.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -104,7 +105,7 @@ static void onTCPRead(
     if (nRead < 0) {
         if (nRead == UV__EOF) {
             client->tcpConnected = false;
-            client->onResponse->onError(client, ERR_CODE_SOCKET_READ, nRead);
+            client->onResponse->onError(client, ERR_CODE_SOCKET_READ, (int) nRead);
             return;
         } else {
 #ifdef ENABLE_DEBUG
@@ -185,7 +186,7 @@ static int sendTcp(
     uv_stream_t* tcp
 )
 {
-    uv_buf_t buf = uv_buf_init((char *) client->dataBuf, client->dataSize);
+    uv_buf_t buf = uv_buf_init((char *) client->dataBuf, (unsigned int) client->dataSize);
     auto *write_req = new uv_write_t;
     write_req->data = client;
     int buf_count = 1;
@@ -314,9 +315,13 @@ void UvClient::initiateQuery()
 	} else {
         // UDP
         auto *sendReq = (uv_udp_send_t *) malloc(sizeof(uv_udp_send_t));
-        uv_buf_t uvBuf = uv_buf_init((char *) sendBuffer, sz);
-        sendReq->data = this;
-        r = uv_udp_send(sendReq, &udpSocket, &uvBuf, 1, (const struct sockaddr *) &serverAddress, onClientUDPSent);
+        uv_buf_t uvBuf = uv_buf_init((char *) sendBuffer, (unsigned int) sz);
+        if (sendReq) {
+            sendReq->data = this;
+            r = uv_udp_send(sendReq, &udpSocket, &uvBuf, 1, (const struct sockaddr*)&serverAddress, onClientUDPSent);
+        }
+        else
+            r = ERR_CODE_INSUFFICIENT_MEMORY;
     }
 	if (r) {
 #ifdef ENABLE_DEBUG

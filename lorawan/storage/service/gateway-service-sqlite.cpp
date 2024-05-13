@@ -59,9 +59,10 @@ int SqliteGatewayService::get(
 // List entries
 int SqliteGatewayService::list(
     std::vector<GatewayIdentity> &retVal,
-    size_t offset,
-    size_t size
-) {
+    uint32_t offset,
+    uint8_t size
+)
+{
     if (!db)
         return ERR_CODE_DB_DATABASE_NOT_FOUND;
     char *zErrMsg = nullptr;

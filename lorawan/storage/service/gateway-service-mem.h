@@ -16,7 +16,10 @@ public:
     ~MemoryGatewayService() override;
     int get(GatewayIdentity &retVal, const GatewayIdentity &request) override;
     // List entries
-    int list(std::vector<GatewayIdentity> &retVal, size_t offset, size_t size) override;
+    int list(std::vector<GatewayIdentity> &retVal, 
+        uint32_t offset,
+        uint8_t size
+    ) override;
     // Entries count
     size_t size() override;
     int put(const GatewayIdentity &request) override;

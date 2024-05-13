@@ -10,6 +10,7 @@
 
 #include "lorawan/lorawan-types.h"
 #include "lorawan/storage/serialization/identity-serialization.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 #include "lorawan/storage/serialization/gateway-serialization.h"
 
 class DeviceOrGatewayIdentity {

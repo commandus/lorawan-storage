@@ -5,7 +5,7 @@
 
 #include "direct-client.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #include <Windows.h>
 #else
 typedef void * HINSTANCE;

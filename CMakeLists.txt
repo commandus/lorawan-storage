@@ -5,6 +5,7 @@
 # -DENABLE_LIBUV=off   	enable libuv UDP/TCP. Default UDP only
 # -DENABLE_DEBUG=off   	enable debugging output
 # -DENABLE_GEN=on   	enable key generator (default in memory storage)
+# -DENABLE_HTTP=off		enable HTTP service. libmicrohttpd dependency required.
 # -DENABLE_SQLITE=off  	enable SQLITE3 backend (reserved)
 # -DENABLE_IPV6=off   	enable IPv6 (reserved)
 #
@@ -88,6 +89,7 @@ else()
 	option(ENABLE_DEBUG "Build with debug" OFF)
 	option(ENABLE_LIBUV "Build with libuv" OFF)
 	option(ENABLE_GEN "Build with generator" OFF)
+	option(ENABLE_HTTP "Build with HTTP" OFF)
 	option(ENABLE_SQLITE "Build with SQLite" OFF)
 	option(ENABLE_JSON "Build with JSON file" ON)
 
@@ -120,7 +122,8 @@ else()
 		lorawan/storage/client/sync-query-client.cpp lorawan/storage/client/sync-response-client.cpp
 		lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
 		lorawan/storage/listener/uv-listener.cpp
-		lorawan/storage/serialization/gateway-serialization.cpp lorawan/storage/serialization/identity-serialization.cpp
+		lorawan/storage/serialization/gateway-serialization.cpp 
+		lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/identity-binary-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
 		lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-json.cpp
@@ -167,6 +170,13 @@ else()
 		endif()
 	endif()
 
+	if (ENABLE_HTTP)
+#		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/storage/listener/http-listener.cpp)
+		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB})
+		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_HTTP)
+		set(HTTPD_LIB ${LIBMICROHTTPD})
+	endif()
+
 	if (ENABLE_SQLITE)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			find_package(unofficial-sqlite3 CONFIG REQUIRED)
@@ -197,7 +207,6 @@ else()
 
 	add_library(storage-gen SHARED lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp lorawan/helper/key128gen.cpp ${AES_SRC})
 	target_link_libraries(storage-gen PRIVATE lorawan)
-	target_include_directories(storage-gen PRIVATE ".")
 	target_include_directories(storage-gen PRIVATE "." "third-party")
 	set_target_properties(storage-gen PROPERTIES SOVERSION ${VERSION_INFO})
 
@@ -222,7 +231,7 @@ else()
 		${ARGTABLE}
 	)
 	add_executable(lorawan-identity-service ${LORAWAN_IDENTITY_SERVICE_SRC})
-	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBINTL} ${LIBUVA} lorawan)
+	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${HTTPD_LIB} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-identity-service PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-identity-service PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 

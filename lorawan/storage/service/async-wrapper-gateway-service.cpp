@@ -41,8 +41,8 @@ void AsyncWrapperGatewayService::rm(
 
 // List entries
 void AsyncWrapperGatewayService::list(
-    size_t offset,
-    size_t size,
+    uint32_t offset,
+    uint8_t size,
     std::function<void(
         int retCode,
         std::vector<GatewayIdentity> &retVal
@@ -58,11 +58,10 @@ void AsyncWrapperGatewayService::list(
 void AsyncWrapperGatewayService::size(
     std::function<void(
         size_t size
-    )> cb
+   )> cb
 )
 {
-    int r = gatewayService->size();
-    cb(r);
+    cb(gatewayService->size());
 }
 
 // force save

@@ -53,8 +53,8 @@ int JsonGatewayService::get(
 // List entries
 int  JsonGatewayService::list(
     std::vector<GatewayIdentity> &retVal,
-    size_t offset,
-    size_t size
+    uint32_t offset,
+    uint8_t size
 ) {
     size_t o = 0;
     size_t sz = 0;

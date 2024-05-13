@@ -39,8 +39,8 @@ public:
 
     // List entries
     void list(
-        size_t offset,
-        size_t size,
+        uint32_t offset,
+        uint8_t size,
         std::function<void(
             int retCode,
             std::vector<GatewayIdentity> &retVal

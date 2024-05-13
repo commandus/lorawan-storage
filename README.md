@@ -178,9 +178,18 @@ Visual Studio Code
 
 - gettext (except ESP32)
 - libuv (optional)
+- libmicrohttpd (optional)
 
+Install dependencies.
+
+Linux:
 ```
-sudo apt install libuv1-dev gettext 
+sudo apt install libuv1-dev gettext libmicrohttpd-dev
+```
+
+Windows:
+```
+vcpkg install libuv gettextize libmicrohttpd
 ```
 
 ## Usage

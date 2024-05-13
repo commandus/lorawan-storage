@@ -105,7 +105,7 @@ size_t serializeSocketAddress(
                 auto *addrIn = (struct sockaddr_in *) addr;
                 retBuf[1] = *(unsigned char *) &addrIn->sin_port;
                 retBuf[2] = * ((unsigned char *) &addrIn->sin_port + 1);
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
                 retBuf[3] = addrIn->sin_addr.S_un.S_un_b.s_b1;
                 retBuf[4] = addrIn->sin_addr.S_un.S_un_b.s_b2;
                 retBuf[5] = addrIn->sin_addr.S_un.S_un_b.s_b3;
@@ -127,7 +127,7 @@ size_t serializeSocketAddress(
                 retBuf[1] = *(unsigned char *) &addrIn->sin6_port;
                 retBuf[2] = * ((unsigned char *) &addrIn->sin6_port + 1);
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
                 retBuf[3] = addrIn->sin6_addr.u.Byte[0];
                 retBuf[4] = addrIn->sin6_addr.u.Byte[1];
                 retBuf[5] = addrIn->sin6_addr.u.Byte[2];
@@ -218,7 +218,7 @@ size_t deserializeSocketAddress(
                 *(unsigned char *) &addrIn->sin_port = retBuf[1];
                 *((unsigned char *) &addrIn->sin_port + 1) = retBuf[2];
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
                 addrIn->sin_addr.S_un.S_un_b.s_b1 = retBuf[3];
                 addrIn->sin_addr.S_un.S_un_b.s_b2 = retBuf[4];
                 addrIn->sin_addr.S_un.S_un_b.s_b3 = retBuf[5];
@@ -241,7 +241,7 @@ size_t deserializeSocketAddress(
                 auto *addrIn = (struct sockaddr_in6 *) addr;
                 *(unsigned char *) &addrIn->sin6_port = retBuf[1];
                 *((unsigned char *) &addrIn->sin6_port + 1) = retBuf[2];
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__MINGW32__)
                 addrIn->sin6_addr.u.Byte[0] = retBuf[3];
                 addrIn->sin6_addr.u.Byte[1] = retBuf[4];
                 addrIn->sin6_addr.u.Byte[2] = retBuf[5];

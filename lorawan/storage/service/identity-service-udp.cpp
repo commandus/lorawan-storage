@@ -8,6 +8,7 @@
 #include "lorawan/helper/file-helper.h"
 #include "lorawan/storage/client/udp-client.h"
 #include "lorawan/helper/ip-helper.h"
+#include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
