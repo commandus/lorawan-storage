@@ -4,10 +4,10 @@ AsyncWrapperGatewayService::AsyncWrapperGatewayService() = default;
 
 void AsyncWrapperGatewayService::get(
     const GatewayIdentity &request,
-    std::function<void(
+    const std::function<void(
         int retCode,
         GatewayIdentity &retVal
-    )> cb
+    )>& cb
 )
 {
     GatewayIdentity gatewayIdentity;
@@ -18,9 +18,9 @@ void AsyncWrapperGatewayService::get(
 // Add or replace Address = EUI and keys pair
 void AsyncWrapperGatewayService::put(
     const GatewayIdentity &identity,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     int r = gatewayService->put(identity);
@@ -30,9 +30,9 @@ void AsyncWrapperGatewayService::put(
 // Remove entry
 void AsyncWrapperGatewayService::rm(
     const GatewayIdentity &identity,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     int r = gatewayService->rm(identity);
@@ -43,10 +43,10 @@ void AsyncWrapperGatewayService::rm(
 void AsyncWrapperGatewayService::list(
     uint32_t offset,
     uint8_t size,
-    std::function<void(
+    const std::function<void(
         int retCode,
         std::vector<GatewayIdentity> &retVal
-    )> cb
+    )>& cb
 )
 {
     std::vector<GatewayIdentity> gatewayIdentities;
@@ -56,9 +56,9 @@ void AsyncWrapperGatewayService::list(
 
 // Entries count
 void AsyncWrapperGatewayService::size(
-    std::function<void(
+    const std::function<void(
         size_t size
-   )> cb
+   )>& cb
 )
 {
     cb(gatewayService->size());
@@ -66,9 +66,9 @@ void AsyncWrapperGatewayService::size(
 
 // force save
 void AsyncWrapperGatewayService::flush(
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     gatewayService->flush();
@@ -79,9 +79,9 @@ void AsyncWrapperGatewayService::flush(
 void AsyncWrapperGatewayService::init(
     const std::string &option,
     void *data,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     cb(gatewayService->init(option, data));
@@ -89,9 +89,9 @@ void AsyncWrapperGatewayService::init(
 
 // close resources
 void AsyncWrapperGatewayService::done(
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     gatewayService->done();
@@ -101,9 +101,9 @@ void AsyncWrapperGatewayService::done(
 void AsyncWrapperGatewayService::setOption(
     int option,
     void *value,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     gatewayService->setOption(option, value);

@@ -5,6 +5,6 @@ QueryClient::QueryClient(
 )
     : onResponse(aOnResponse)
 {
-};
+}
 
 QueryClient::~QueryClient() = default;

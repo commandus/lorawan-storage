@@ -30,7 +30,7 @@ public:
         const std::string &classIdentityName,
         const std::string &classGatewayName
     );
-    virtual ~PluginClient();
+    ~PluginClient() override;
 };
 
 #endif

@@ -137,7 +137,7 @@ void NETID::set(
 	const std::string &value
 )
 {
-    std::stringstream ss(value.c_str());
+    std::stringstream ss(value);
     uint32_t r;
     ss >> std::hex >> r;
     set(r);
@@ -202,11 +202,11 @@ int NETID::getRFUBitsCount() const
     switch (((NETID_TYPE*) this)->networkType) {
         case 0:
         case 1:
-            return 15;  // 15 unused bits, 3 bits type, 6 bits- identifier
+            return 15;  // 15 unused bits, 3 bits type, 6 bits identifier
         case 2:
-            return 12;  // 12 unused bits, 3 bits type, 9 bits- identifier
+            return 12;  // 12 unused bits, 3 bits type, 9 bits identifier
         default:        // 3..7
-            return 0;   // 0 unused bits, 3 bits type, 21 bits- identifier
+            return 0;   // 0 unused bits, 3 bits type, 21 bits identifier
     }
 }
 
@@ -215,11 +215,11 @@ int NETID::getNetIdBitsCount() const
     switch (((NETID_TYPE*) this)->networkType) {
         case 0:
         case 1:
-            return 6;    // 15 unused bits, 3 bits type, 6 bits- identifier
+            return 6;    // 15 unused bits, 3 bits type, 6 bits identifier
         case 2:
-            return 9;    // 12 unused bits, 3 bits type, 9 bits- identifier
+            return 9;    // 12 unused bits, 3 bits type, 9 bits identifier
         default:    // 3..7
-            return 21;   // 0 unused bits, 3 bits type, 21 bits- identifier
+            return 21;   // 0 unused bits, 3 bits type, 21 bits identifier
     }
 }
 
@@ -1643,21 +1643,21 @@ std::string DEVICEID::toJsonString(
     std::stringstream ss;
     ss << "{";
     if (!addr.empty())
-        ss << "\"addr\":\"" << DEVADDR2string(addr) << "\",";
-    ss << "\"activation\":\"" << activation2string(activation)
-       << "\",\"class\":\"" << deviceclass2string(deviceclass)
-       << "\",\"deveui\":\"" << DEVEUI2string(devEUI)
-       << "\",\"nwkSKey\":\"" << KEY2string(nwkSKey)
-       << "\",\"appSKey\":\"" << KEY2string(appSKey)
-       << "\",\"version\":\"" << LORAWAN_VERSION2string(version)
+        ss << R"("addr":")" << DEVADDR2string(addr) << "\",";
+    ss << R"("activation":")" << activation2string(activation)
+       << R"(","class":")" << deviceclass2string(deviceclass)
+       << R"(","deveui":")" << DEVEUI2string(devEUI)
+       << R"(","nwkSKey":")" << KEY2string(nwkSKey)
+       << R"(","appSKey":")" << KEY2string(appSKey)
+       << R"(","version":")" << LORAWAN_VERSION2string(version)
 
-       << "\",\"appeui\":\"" << DEVEUI2string(appEUI)
-       << "\",\"appKey\":\"" << KEY2string(appKey)
-       << "\",\"nwkKey\":\"" << KEY2string(nwkKey)
-       << "\",\"devNonce\":\"" << DEVNONCE2string(devNonce)
-       << "\",\"joinNonce\":\"" << JOINNONCE2string(joinNonce)
+       << R"(","appeui":")" << DEVEUI2string(appEUI)
+       << R"(","appKey":")" << KEY2string(appKey)
+       << R"(","nwkKey":")" << KEY2string(nwkKey)
+       << R"(","devNonce":")" << DEVNONCE2string(devNonce)
+       << R"(","joinNonce":")" << JOINNONCE2string(joinNonce)
 
-       << "\",\"name\":\"" << name.toString()
+       << R"(","name":")" << name.toString()
        << "\"}";
     return ss.str();
 }
@@ -1665,7 +1665,7 @@ std::string DEVICEID::toJsonString(
 void DEVICEID::setProperties
 (
 	std::map<std::string, std::string> &retval
-)
+) const
 {
 	retval["activation"] = activation2string(activation);
 	retval["class"] = deviceclass2string(deviceclass);
@@ -1685,8 +1685,7 @@ bool DEVICEID::empty() const
 }
 
 NETWORKIDENTITY::NETWORKIDENTITY()
-{
-}
+= default;
 
 NETWORKIDENTITY::NETWORKIDENTITY(
     const DEVADDR &a,
@@ -1812,13 +1811,13 @@ bool JOIN_REQUEST_FRAME::operator!=(const JOIN_REQUEST_FRAME &rhs) const
 bool JOIN_ACCEPT_FRAME::operator==(
     const JOIN_ACCEPT_FRAME &rhs) const
 {
-    return memcmp(&hdr, &rhs.hdr, SIZE_JOIN_ACCEPT_FRAME) == 0;
+    return memcmp(&hdr.joinNonce.c, &rhs.hdr.joinNonce.c, SIZE_JOIN_ACCEPT_FRAME) == 0;
 }
 
 bool JOIN_ACCEPT_FRAME::operator==(
     const JOIN_ACCEPT_FRAME_HEADER &rhs) const
 {
-    return memcmp(&hdr, &rhs, SIZE_JOIN_ACCEPT_FRAME) == 0;
+    return memcmp(&hdr.joinNonce.c, &rhs.joinNonce.c, SIZE_JOIN_ACCEPT_FRAME) == 0;
 }
 
 bool MHDR::operator==(const MHDR &rhs) const

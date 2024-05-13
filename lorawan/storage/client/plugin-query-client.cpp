@@ -122,7 +122,7 @@ void PluginQueryClient::unload()
 
     if (handleSvc) {
         dlclose(handleSvc);
-        handleSvc = 0;
+        handleSvc = nullptr;
     }
 }
 
@@ -139,7 +139,7 @@ PluginQueryClient::PluginQueryClient(
         int32_t aCode,
         uint64_t aAccessCode
 )
-	: QueryClient(aOnResponse), handleSvc(0), svcIdentity(nullptr), svcGateway(nullptr),
+	: QueryClient(aOnResponse), handleSvc(nullptr), svcIdentity(nullptr), svcGateway(nullptr),
     status(CODE_OK), query(nullptr), code(aCode), accessCode(aAccessCode)
 {
     load(fileName, identityClassName, gatewayClassName);

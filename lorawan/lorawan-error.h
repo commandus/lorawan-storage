@@ -134,7 +134,7 @@
 #define ERR_CODE_NO_PACKET_PARSER           (-5114)
 #define ERR_CODE_LOAD_WS_PASSWD_NOT_FOUND   (-5115)
 
-// embedded gateway config)
+// embedded gateway config
 #define ERR_CODE_LORA_GATEWAY_CONFIGURE_BOARD_FAILED       (-5116)
 #define ERR_CODE_LORA_GATEWAY_CONFIGURE_TIME_STAMP         (-5117)
 #define ERR_CODE_LORA_GATEWAY_CONFIGURE_SX1261_RADIO       (-5118)

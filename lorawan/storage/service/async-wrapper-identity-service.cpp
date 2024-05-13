@@ -7,10 +7,10 @@ AsyncWrapperIdentityService::AsyncWrapperIdentityService(IdentityService *value)
 
 void AsyncWrapperIdentityService::get(
     const DEVADDR &devAddr,
-    std::function<void(
+    const std::function<void(
         int retCode,
         DEVICEID &retVal
-    )> cb
+    )>& cb
 )
 {
     DEVICEID v;
@@ -20,10 +20,10 @@ void AsyncWrapperIdentityService::get(
 
 void AsyncWrapperIdentityService::getNetworkIdentity(
     const DEVEUI &eui,
-    std::function<void(
+    const std::function<void(
         int retCode,
         NETWORKIDENTITY &retVal
-    )> cb
+    )>& cb
 )
 {
     NETWORKIDENTITY v;
@@ -35,9 +35,9 @@ void AsyncWrapperIdentityService::getNetworkIdentity(
 void AsyncWrapperIdentityService::put(
     const DEVADDR &devaddr,
     const DEVICEID &id,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     int r = identityService->put(devaddr, id);
@@ -47,9 +47,9 @@ void AsyncWrapperIdentityService::put(
 // Remove
 void AsyncWrapperIdentityService::rm(
     const DEVADDR &addr,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     int r = identityService->rm(addr);
@@ -59,10 +59,10 @@ void AsyncWrapperIdentityService::rm(
 void AsyncWrapperIdentityService::list(
     uint32_t offset,
     uint8_t size,
-    std::function<void(
+    const std::function<void(
         int retCode,
         std::vector<NETWORKIDENTITY> &retval
-    )> cb
+    )>& cb
 )
 {
     std::vector<NETWORKIDENTITY> v;
@@ -72,9 +72,9 @@ void AsyncWrapperIdentityService::list(
 
 // Entries count
 void AsyncWrapperIdentityService::size(
-    std::function<void(
+    const std::function<void(
         size_t size
-    )> cb
+    )>& cb
 )
 {
     cb(identityService->size());
@@ -82,9 +82,9 @@ void AsyncWrapperIdentityService::size(
 
 // force save
 void AsyncWrapperIdentityService::flush(
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     identityService->flush();
@@ -95,9 +95,9 @@ void AsyncWrapperIdentityService::flush(
 void AsyncWrapperIdentityService::init(
     const std::string &option,
     void *data,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     cb(identityService->init(option, data));
@@ -105,9 +105,9 @@ void AsyncWrapperIdentityService::init(
 
 // close resources
 void AsyncWrapperIdentityService::done(
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     identityService->done();
@@ -115,9 +115,9 @@ void AsyncWrapperIdentityService::done(
 }
 
 void AsyncWrapperIdentityService::next(
-    std::function<void(
+    const std::function<void(
         NETWORKIDENTITY &retVal
-    )> cb
+    )>& cb
 )
 {
     NETWORKIDENTITY r;
@@ -128,9 +128,9 @@ void AsyncWrapperIdentityService::next(
 void AsyncWrapperIdentityService::setOption(
     int option,
     void *value,
-    std::function<void(
+    const std::function<void(
         int retCode
-    )> cb
+    )>& cb
 )
 {
     identityService->setOption(option, value);

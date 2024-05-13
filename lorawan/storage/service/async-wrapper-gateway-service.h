@@ -15,74 +15,74 @@ public:
     AsyncWrapperGatewayService();
     void get(
         const GatewayIdentity &request,
-        std::function<void(
+        const std::function<void(
             int retCode,
             GatewayIdentity &retVal
-        )> cb
+        )>& cb
     );
 
     // Add or replace Address = EUI and keys pair
     void put(
         const GatewayIdentity &identity,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // Remove entry
     void rm(
         const GatewayIdentity &identity,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // List entries
     void list(
         uint32_t offset,
         uint8_t size,
-        std::function<void(
+        const std::function<void(
             int retCode,
             std::vector<GatewayIdentity> &retVal
-        )> cb
+        )>& cb
     );
 
     // Entries count
     void size(
-        std::function<void(
+        const std::function<void(
             size_t size
-        )> cb
+        )>& cb
     );
 
     // force save
     void flush(
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // reload
     void init(
         const std::string &option,
         void *data,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // close resources
     void done(
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     void setOption(
         int option,
         void *value,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
 };

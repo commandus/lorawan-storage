@@ -1,9 +1,8 @@
 #if defined(_MSC_VER) || defined(__MINGW32__)
-#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <io.h>
-#include <wchar.h>
-#include <stdio.h>
+#include <cwchar>
+#include <cstdio>
 #define PATH_DELIMITER "\\"
 #else
 #include <sys/param.h>
@@ -46,7 +45,7 @@
 #if defined(_MSC_VER) || defined(__MINGW32__)
 bool file::rmAllDir(const char *path)
 {
-	if (&path == NULL)
+	if (!path)
 		return false;
 	size_t sz = strlen(path);
 	if (sz <= 1)
@@ -56,14 +55,14 @@ bool file::rmAllDir(const char *path)
 	fp[sz] = '\0';
 	fp[sz + 1] = '\0';
 	SHFILEOPSTRUCTA shfo = {
-		NULL,
+		nullptr,
 		FO_DELETE,
 		fp,
-		NULL,
+		nullptr,
 		FOF_SILENT | FOF_NOERRORUI | FOF_NOCONFIRMATION,
 		FALSE,
-		NULL,
-		NULL };
+		nullptr,
+		nullptr };
 
 	SHFileOperationA(&shfo);
     return true;
@@ -71,7 +70,7 @@ bool file::rmAllDir(const char *path)
 
 bool file::rmDir(const std::string &path)
 {
-	if (&path == NULL)
+	if (&path == nullptr)
 		return false;
 	if (path.size() <= 1)
 		return false;	// prevent "rm -r /"
@@ -130,7 +129,7 @@ size_t file::filesInPath
 			// , delete '!' read other 2 default folder . and ..
 			std::string f(fd.cFileName);
 			if ((f == ".") || (f == ".."))
-				continue;;
+				continue;
 			if (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
 				r += filesInPath(f, suffix, flags, retval);
 			} else {

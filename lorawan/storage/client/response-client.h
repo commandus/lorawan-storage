@@ -1,7 +1,7 @@
 #ifndef RESPONSE_CLIENT_H
 #define RESPONSE_CLIENT_H
 
-#include <inttypes.h>
+#include <cinttypes>
 
 class QueryClient;
 class IdentityGetResponse;

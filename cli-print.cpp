@@ -214,7 +214,6 @@ static bool getDeviceByAddr(
             } else
                 return false;
         }
-            break;
         case 1: {
             auto c = PluginClient(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
             if (!c.svcIdentity || !c.svcGateway) {
@@ -301,7 +300,7 @@ static void printPacket(
             }
         }
         strm << std::endl;
-        printNetId(strm, NETID(a.getNwkId()), true);
+        printNetId(strm, NETID(a.getNwkId()), verbose);
     } else {
         if (sz < SIZE_RFM_HEADER)
             return;

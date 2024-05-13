@@ -15,88 +15,88 @@ public:
 
     void get(
         const DEVADDR &devAddr,
-        std::function<void(
+        const std::function<void(
             int retCode,
             DEVICEID &retVal
-        )> cb
+        )>& cb
     );
 
     void getNetworkIdentity(
         const DEVEUI &eui,
-        std::function<void(
+        const std::function<void(
             int retCode,
             NETWORKIDENTITY &retVal
-        )> cb
+        )>& cb
     );
 
     // Add or replace Address = EUI and keys pair
     void put(
         const DEVADDR &devaddr,
         const DEVICEID &id,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // Remove
     void rm(
         const DEVADDR &addr,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     void list(
         uint32_t offset,
         uint8_t size,
-        std::function<void(
+        const std::function<void(
             int retCode,
             std::vector<NETWORKIDENTITY> &retval
-        )> cb
+        )>& cb
     );
 
     // Entries count
     void size(
-        std::function<void(
+        const std::function<void(
             size_t size
-        )> cb
+        )>& cb
     );
 
     // force save
     void flush(
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // reload
     void init(
         const std::string &option,
         void *data,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     // close resources
     void done(
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
     void next(
-        std::function<void(
+        const std::function<void(
             NETWORKIDENTITY &retVal
-        )> cb
+        )>& cb
     );
 
     void setOption(
         int option,
         void *value,
-        std::function<void(
+        const std::function<void(
             int retCode
-        )> cb
+        )>& cb
     );
 
 };

@@ -2,7 +2,7 @@
 
 ## Install
 
-Edit path in the line 12 in the lorawan-identity-storage.service file:
+Edit path in the line 12 in the "lorawan-identity-storage.service" file:
 
 ```
 ExecStart=/home/andrei/src/ws-lora/build/lora-ws -d --pidfile /var/run/lorawan-identity-storage.pid

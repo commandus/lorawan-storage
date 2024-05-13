@@ -3,7 +3,7 @@
 SyncQueryClient::SyncQueryClient()
     : QueryClient(&rc)
 {
-};
+}
 
 SyncQueryClient::~SyncQueryClient() = default;
 

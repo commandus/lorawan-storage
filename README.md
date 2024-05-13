@@ -315,7 +315,6 @@ Examples:
 
 ### lorawan-query-identity-direct
 
-lorawan-query-identity-direct
 lorawan-query-identity-direct dynamically load shared libraries with exported function like:
 
 ```

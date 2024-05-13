@@ -500,7 +500,7 @@ typedef PACK( struct {
 
 #define SIZE_CFLIST 16
 
-//  MHDR mhdr;  			        // 0x00 Join request. MAC header byte: message type, RFU, Major
+// 0x00 Join request. MAC header byte: message type, RFU, Major
 typedef PACK( struct {
     JOIN_ACCEPT_FRAME_HEADER hdr;   // 12
     CFLIST cflist;
@@ -631,7 +631,7 @@ public:
     std::string toString(const DEVADDR &addr) const;
 	std::string toJsonString() const;
     std::string toJsonString(const DEVADDR &addr) const;
-	void setProperties(std::map<std::string, std::string> &retval);
+	void setProperties(std::map<std::string, std::string> &retval) const;
 
     bool empty() const;
 });					// 44 bytes + 8 + 18 = 70

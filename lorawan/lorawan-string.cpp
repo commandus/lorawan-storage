@@ -221,7 +221,6 @@ std::string JOIN_ACCEPT_FRAME2string(
     ss << "{\"header\": " << JOIN_ACCEPT_FRAME_HEADER2string(value.hdr)
         << R"(, "mic": ")" << MIC2String(value.mic) << "\"}";
     return ss.str();
-    return ss.str();
 }
 
 std::string CFLIST2string(const CFLIST &value)
@@ -838,8 +837,6 @@ const std::string& ERR_CODE_TX2string(
 {
     if (code > JIT_TX_ERROR_INVALID)
         code = JIT_TX_ERROR_INVALID;
-    if (code < JIT_TX_OK)
-        code = JIT_TX_OK;
     return ERR_CODE_TX_STR[code];
 }
 
@@ -872,9 +869,9 @@ SPREADING_FACTOR string2datr(
     if (p == std::string::npos)
         return DRLORA_SF5;
     std::string s = value.substr(2, p - 2);
-    auto spreadingFactor = static_cast<SPREADING_FACTOR>(atoi(s.c_str()));
+    auto spreadingFactor = static_cast<SPREADING_FACTOR>(strtol(s.c_str(), nullptr, 10));
     s = value.substr(p + 2);
-    int bandwidthValue = atoi(s.c_str());
+    int bandwidthValue = strtol(s.c_str(), nullptr, 10);
     switch (bandwidthValue) {
         case 7:
             bandwidth = BANDWIDTH_INDEX_7KHZ; // 7.8
@@ -922,7 +919,7 @@ std::string datr2string(
     BANDWIDTH bandwidth
 )
 {
-    int bandwidthValue = 125;
+    int bandwidthValue;
     switch (bandwidth) {
         case BANDWIDTH_INDEX_7KHZ:
             bandwidthValue = 7; // 7.8
