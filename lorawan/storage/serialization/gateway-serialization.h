@@ -194,4 +194,6 @@ const char* gatewayTag2string(enum GatewayQueryTag value);
 
 const std::string &gatewayCommandSet();
 
+GatewayQueryTag isGatewayTag(const char *tag);
+
 #endif

@@ -32,10 +32,6 @@ std::string shortCommandList(char delimiter);
 
 std::string commandLongName(int tag);
 
-GatewayQueryTag isGatewayTag(const char *tag);
-
-IdentityQueryTag isIdentityTag(const char *tag);
-
 /**
  * Merge address and identifiers
  * @param query Each item has address or identifier

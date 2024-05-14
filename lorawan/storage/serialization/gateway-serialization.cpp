@@ -866,3 +866,21 @@ bool isGatewayTag(
             return false;
     }
 }
+
+GatewayQueryTag isGatewayTag(const char *tag) {
+    if (!tag)
+        return QUERY_GATEWAY_NONE;
+    const std::string &cs = gatewayCommandSet();
+    auto len = strlen(tag);
+    if (len == 1) {
+        if (cs.find(*tag) != std::string::npos) {
+            return (GatewayQueryTag) *tag;
+        }
+    } else {
+        for (auto it : cs) {
+            if (strcmp(gatewayTag2string((GatewayQueryTag) it), tag) == 0)
+                return (GatewayQueryTag) it;
+        }
+    }
+    return QUERY_GATEWAY_NONE;
+}

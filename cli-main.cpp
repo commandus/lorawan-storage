@@ -25,6 +25,10 @@
 #define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK true
 #endif
 
+#ifdef ENABLE_HTTP
+#include "lorawan/storage/listener/http-listener.h"
+#endif
+
 #define DEF_DB_GATEWAY_JSON  "gateway.json"
 
 #ifdef ENABLE_SQLITE
@@ -90,11 +94,15 @@ static std::string IP_PROTO2string(
 class CliServiceDescriptorNParams : public Log
 {
 public:
-    StorageListener *server = nullptr;
-
+    StorageListener *server;
     enum IP_PROTO proto;
     std::string intf;
     uint16_t port;
+#ifdef ENABLE_HTTP
+    StorageListener *httpServer;
+    std::string httpIntf;
+    uint16_t httpPort;
+#endif
     int32_t code;
     uint64_t accessCode;
     bool runAsDaemon;
@@ -108,7 +116,11 @@ public:
     NETID netid;
 #endif
     CliServiceDescriptorNParams()
-        : server(nullptr), proto(PROTO_UDP), port(4244), code(0), accessCode(0), verbose(0), retCode(0),
+        : server(nullptr), proto(PROTO_UDP), port(4244),
+#ifdef ENABLE_HTTP
+        httpServer(nullptr), httpPort(4246),
+#endif
+        code(0), accessCode(0), verbose(0), retCode(0),
         runAsDaemon(false)
 #ifdef ENABLE_GEN
         , netid(0, 0)
@@ -221,6 +233,13 @@ void run() {
 #endif
     svc.server->setAddress(svc.intf, svc.port);
     svc.server->setLog(svc.verbose, &svc);
+
+#ifdef ENABLE_HTTP
+    svc.httpServer = new HTTPListener(identitySerialization, gatewaySerialization);
+    svc.httpServer->setAddress(svc.httpIntf, svc.httpPort);
+    svc.httpServer->setLog(svc.verbose, &svc);
+#endif
+
     if (svc.verbose)
         std::cout << _("Identities: ") << svc.server->identitySerialization->svc->size() << std::endl;
 
@@ -230,7 +249,12 @@ void run() {
 }
 
 int main(int argc, char **argv) {
-	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, _("ipaddr:port"), _("Default *:4244"));
+	struct arg_str *a_interface_n_port = arg_str0(nullptr, nullptr, _("IP addr:port"), _("Default *:4244"));
+
+#ifdef ENABLE_HTTP
+    struct arg_str *a_http_interface_n_port = arg_str0("h", "http", _("IP addr:port"), _("Default *:4246"));
+#endif
+
     struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
 #ifdef ENABLE_JSON
     struct arg_str *a_gateway_json_db = arg_str0("g", "gateway-db", _("<database file>"), _("database file name. Default " DEF_DB_GATEWAY_JSON));
@@ -250,6 +274,9 @@ int main(int argc, char **argv) {
 
 	void* argtable[] = { 
 		a_interface_n_port,
+#ifdef ENABLE_HTTP
+        a_http_interface_n_port,
+#endif
 #ifdef ENABLE_GEN
         a_pass_phrase, a_net_id,
 #endif
@@ -285,6 +312,15 @@ int main(int argc, char **argv) {
         svc.intf = "*";
         svc.port = 4244;
     }
+
+#ifdef ENABLE_HTTP
+    if (a_http_interface_n_port->count) {
+        splitAddress(svc.httpIntf, svc.httpPort, std::string(*a_http_interface_n_port->sval));
+    } else {
+        svc.httpIntf = "*";
+        svc.httpPort = 4246;
+    }
+#endif
 
 #ifdef ENABLE_GEN
     if (a_pass_phrase->count)

@@ -24,7 +24,8 @@ if(${ESP_PLATFORM})
 else()
 	project("lorawan-storage" VERSION ${VERSION_INFO})
     # ------------------------ CHANGE PATH BELOW ON WINDOWS ------------------------
-    set(VCPKG_INC "/git/vcpkg/installed/x64-windows/include")
+    set(VCPKG_INC "C:\\git\\vcpkg\\installed\\x64-windows\\include")
+	set(MINGW_LIB "C:\\git\\vcpkg\\installed\\x64-windows\\lib")	# for MinGW only
     # ------------------------ CHANGE PATH ABOVE ON WINDOWS ------------------------
 	set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
 	include_directories(${VCPKG_INC})
@@ -122,7 +123,7 @@ else()
 		lorawan/storage/client/sync-query-client.cpp lorawan/storage/client/sync-response-client.cpp
 		lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
 		lorawan/storage/listener/uv-listener.cpp
-		lorawan/storage/serialization/gateway-serialization.cpp 
+		lorawan/storage/serialization/gateway-serialization.cpp
 		lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/identity-binary-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
@@ -136,10 +137,19 @@ else()
 		${AES_SRC}
 	)
 
+	if(ENABLE_HTTP)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/storage/listener/http-listener.cpp)
+		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_HTTP)
+		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB}
+				${MINGW_LIB}
+		)
+	endif()
+
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
-	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} )
+	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} ${LIBMICROHTTPD})
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 	set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
+
 
 	if (ENABLE_IPV6)
 		set(GATEWAY_DEF ENABLE_IPV6 )
@@ -168,13 +178,6 @@ else()
 		if (ENABLE_SQLITE)
 			set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_SQLITE)
 		endif()
-	endif()
-
-	if (ENABLE_HTTP)
-#		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/storage/listener/http-listener.cpp)
-		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB})
-		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_HTTP)
-		set(HTTPD_LIB ${LIBMICROHTTPD})
 	endif()
 
 	if (ENABLE_SQLITE)
@@ -231,7 +234,7 @@ else()
 		${ARGTABLE}
 	)
 	add_executable(lorawan-identity-service ${LORAWAN_IDENTITY_SERVICE_SRC})
-	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${HTTPD_LIB} ${LIBINTL} ${LIBUVA} lorawan)
+	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBMICROHTTPD} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-identity-service PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-identity-service PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
