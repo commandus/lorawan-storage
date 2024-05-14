@@ -910,7 +910,7 @@ IdentityBinarySerialization::IdentityBinarySerialization(
     int32_t aCode,
     uint64_t aAccessCode
 )
-    : IdentitySerialization(aSvc, aCode, aAccessCode)
+    : IdentitySerialization(SKT_BINARY, aSvc, aCode, aAccessCode)
 {
 
 }

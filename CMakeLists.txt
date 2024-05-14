@@ -123,7 +123,7 @@ else()
 		lorawan/storage/client/sync-query-client.cpp lorawan/storage/client/sync-response-client.cpp
 		lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
 		lorawan/storage/listener/uv-listener.cpp
-		lorawan/storage/serialization/gateway-serialization.cpp
+		lorawan/storage/serialization/serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp
 		lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/identity-binary-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
@@ -138,7 +138,9 @@ else()
 	)
 
 	if(ENABLE_HTTP)
-		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/storage/listener/http-listener.cpp)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/storage/listener/http-listener.cpp
+                lorawan/storage/serialization/serialization.h
+				lorawan/storage/serialization/serialization.cpp)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_HTTP)
 		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB}
 				${MINGW_LIB}
@@ -149,7 +151,6 @@ else()
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} ${LIBMICROHTTPD})
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 	set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
-
 
 	if (ENABLE_IPV6)
 		set(GATEWAY_DEF ENABLE_IPV6 )

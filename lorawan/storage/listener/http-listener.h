@@ -24,6 +24,7 @@ public:
     unsigned int threadCount;
     unsigned int connectionLimit;
     void *descriptor;   // HTTP daemon
+    const char* mimeType;
 
     explicit HTTPListener(
         IdentitySerialization* aIdentitySerialization,

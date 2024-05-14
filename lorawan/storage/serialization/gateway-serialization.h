@@ -9,7 +9,8 @@ typedef SSIZE_T ssize_t;
 #endif
 #include "lorawan/storage/service/gateway-service.h"
 #include "lorawan/storage/gateway-identity.h"
-#include "service-serialization.h"
+#include "lorawan/storage/serialization/serialization.h"
+#include "lorawan/storage/serialization/service-serialization.h"
 
 enum GatewayQueryTag {
     QUERY_GATEWAY_NONE = '\0',
@@ -119,7 +120,7 @@ public:
     size_t shortenList2Fit(size_t serializedSize);
 };
 
-class GatewaySerialization {
+class GatewaySerialization : public Serialization {
 private:
     GatewayService *svc;
     int32_t code;

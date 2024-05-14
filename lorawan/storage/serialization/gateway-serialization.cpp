@@ -528,7 +528,7 @@ GatewaySerialization::GatewaySerialization(
     int32_t aCode,
     uint64_t aAccessCode
 )
-    : svc(aSvc), code(aCode), accessCode(aAccessCode)
+    : Serialization(SKT_BINARY), svc(aSvc), code(aCode), accessCode(aAccessCode)
 {
 
 }

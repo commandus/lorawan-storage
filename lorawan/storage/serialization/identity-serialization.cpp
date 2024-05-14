@@ -1,11 +1,12 @@
 #include "identity-serialization.h"
 
 IdentitySerialization::IdentitySerialization(
+    SerializationKnownType typ,
     IdentityService* aSvc,
     int32_t aCode,
     uint64_t aAccessCode
 )
-    : code(aCode), accessCode(aAccessCode), svc(aSvc)
+    : Serialization(typ), code(aCode), accessCode(aAccessCode), svc(aSvc)
 {
 
 }

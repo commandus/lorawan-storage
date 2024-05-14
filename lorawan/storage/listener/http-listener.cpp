@@ -1,5 +1,4 @@
 #include <cstring>
-#include <sstream>
 #include <iostream>
 
 #include <microhttpd.h>
@@ -9,8 +8,6 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-error.h"
-#include "lorawan/lorawan-msg.h"
-#include "lorawan/helper/ip-helper.h"
 
 #define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
 
@@ -39,7 +36,8 @@ HTTPListener::HTTPListener(
 )
     : StorageListener(aIdentitySerialization, aSerializationWrapper), 
     log(nullptr), verbose(0), flags(MHD_START_FLAGS),
-    threadCount(1), connectionLimit(32768), descriptor(nullptr)
+    threadCount(1), connectionLimit(32768), descriptor(nullptr),
+    mimeType(aIdentitySerialization ? aIdentitySerialization->mimeType() : serializationKnownType2MimeType(SKT_BINARY))
 {
 }
 
@@ -81,47 +79,20 @@ void HTTPListener::setAddress(
     port = aPort;
 }
 
-const static char* CT_JSON = "text/javascript;charset=UTF-8";
+const static char* CT_TEXT = "text/plain;charset=UTF-8";
 const static char* HDR_CORS_ORIGIN = "*";
 const static char* HDR_CORS_METHODS = "GET,HEAD,OPTIONS,POST,PUT,DELETE";
 const static char* HDR_CORS_HEADERS = "Authorization, Access-Control-Allow-Headers, Access-Control-Allow-Origin, "
 "Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers";
 
-const static char* MSG_HTTP_ERROR = "Error";
-const static char* MSG401 = "Unauthorized";
-const static char* MSG501 = "Not implemented";
-
-const static char* MSG500 = "Internal error";
+const static char* HTTP_ERROR_404 = "Not found";
+const static char* HTTP_ERROR_501 = "Not implemented";
 
 static void addCORS(MHD_Response *response) {
     MHD_add_response_header(response, MHD_HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN, HDR_CORS_ORIGIN);
     // MHD_add_response_header(response, MHD_HTTP_HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS, HDR_CORS_CREDENTIALS);
     MHD_add_response_header(response, MHD_HTTP_HEADER_ACCESS_CONTROL_ALLOW_METHODS, HDR_CORS_METHODS);
     MHD_add_response_header(response, MHD_HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS, HDR_CORS_HEADERS);
-}
-
-static MHD_Result httpError(
-    struct MHD_Connection *connection,
-    int code
-)
-{
-    struct MHD_Response *response = MHD_create_response_from_buffer(strlen(MSG_HTTP_ERROR), (void *) MSG_HTTP_ERROR, MHD_RESPMEM_PERSISTENT);
-    addCORS(response);
-    MHD_Result r = MHD_queue_response(connection, code, response);
-    MHD_destroy_response(response);
-    return r;
-}
-
-static MHD_Result httpError404(
-    struct MHD_Connection *connection
-)
-{
-    int hc = MHD_HTTP_NOT_FOUND;
-    struct MHD_Response *response = MHD_create_response_from_buffer(strlen(MSG401), (void *) MSG401, MHD_RESPMEM_PERSISTENT);
-    addCORS(response);
-    MHD_Result r = MHD_queue_response(connection, hc, response);
-    MHD_destroy_response(response);
-    return r;
 }
 
 class RequestContext {
@@ -131,14 +102,13 @@ public:
 };
 
 static void *uri_logger_callback(
-        void *cls,
-        const char *uri
+    void *cls,
+    const char *uri
 )
 {
     auto c = (HTTPListener *) cls;
-    if (c->verbose) {
+    if (c->verbose)
         std::cout << uri << std::endl;
-    }
     return nullptr;
 }
 
@@ -163,8 +133,8 @@ static MHD_Result request_callback(
 	}
 
     if (strcmp(method, "OPTIONS") == 0) {
-        response = MHD_create_response_from_buffer(strlen(MSG500), (void *) MSG500, MHD_RESPMEM_PERSISTENT);
-        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, CT_JSON);
+        response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_501), (void *) HTTP_ERROR_501, MHD_RESPMEM_PERSISTENT);
+        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, CT_TEXT);
         addCORS(response);
         MHD_queue_response(connection, MHD_HTTP_OK, response);
         MHD_destroy_response(response);
@@ -181,13 +151,13 @@ static MHD_Result request_callback(
     requestCtx->url = url;
 
     int hc;
+    auto *l = (HTTPListener *) cls;
+
     if (strcmp(method, "DELETE") == 0) {
         hc = MHD_HTTP_NOT_IMPLEMENTED;
-        response = MHD_create_response_from_buffer(strlen(MSG501), (void *) MSG501, MHD_RESPMEM_PERSISTENT);
+        response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_501), (void *) HTTP_ERROR_501, MHD_RESPMEM_PERSISTENT);
     } else {
-        // get instance
-        auto *l = (HTTPListener *) cls;
-        unsigned char rb[4096];
+        unsigned char rb[8192];
         size_t sz;
         if (l->identitySerialization) {
             sz = l->identitySerialization->query(&rb[0], sizeof(rb),
@@ -200,14 +170,14 @@ static MHD_Result request_callback(
             }
         }
         if (sz == 0) {
-            hc = MHD_HTTP_INTERNAL_SERVER_ERROR;
-            response = MHD_create_response_from_buffer(strlen(MSG500), (void *) MSG500, MHD_RESPMEM_PERSISTENT);
+            hc = MHD_HTTP_NOT_FOUND;
+            response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_404), (void *) HTTP_ERROR_404, MHD_RESPMEM_PERSISTENT);
         } else {
             hc = MHD_HTTP_OK;
             response = MHD_create_response_from_buffer(sz, (void *) &rb, MHD_RESPMEM_MUST_COPY);
         }
     }
-    MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, CT_JSON);
+    MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, l->mimeType);
     addCORS(response);
 	ret = MHD_queue_response(connection, hc, response);
 	MHD_destroy_response(response);

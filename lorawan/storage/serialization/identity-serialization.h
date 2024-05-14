@@ -7,14 +7,16 @@ typedef SSIZE_T ssize_t;
 #else
 #include <cinttypes>
 #endif
+#include "lorawan/storage/serialization/serialization.h"
 #include "lorawan/storage/service/identity-service.h"
 
-class IdentitySerialization {
+class IdentitySerialization : public Serialization {
 public:
     int32_t code;
     uint64_t accessCode;
     IdentityService *svc;
     explicit IdentitySerialization(
+        SerializationKnownType typ,
         IdentityService *svc,
         int32_t code,
         uint64_t accessCode
