@@ -659,7 +659,7 @@ size_t IdentitySerialization::query(
             r->tag = gr->tag;
             r->code = CODE_OK;
             r->accessCode = gr->accessCode;
-            ((IdentityOperationResponse *) r)->response = (uint8_t) svc->size();
+            ((IdentityOperationResponse *) r)->response = (uint32_t) svc->size();
             break;
         }
         case QUERY_IDENTITY_NEXT:   // next

@@ -51,14 +51,14 @@ static size_t retStr(
     return r;
 }
 
-static size_t retError(
+static size_t retStatusCode(
     unsigned char* retBuf,
     size_t retSize,
     int errCode
 )
 {
     nlohmann::json js;
-    js["error"] = errCode;
+    js["code"] = errCode;
     return retJs(retBuf, retSize, js);
 }
 
@@ -112,7 +112,7 @@ size_t IdentityTextJSONSerialization::query(
                 if (r == CODE_OK) {
                     return retStr(retBuf, retSize, nid.toJsonString());
                 } else {
-                    return retError(retBuf, retSize, r);
+                    return retStatusCode(retBuf, retSize, r);
                 }
             } else {
                 // addr
@@ -123,7 +123,7 @@ size_t IdentityTextJSONSerialization::query(
                 if (r == CODE_OK)
                     return retStr(retBuf, retSize, did.toJsonString());
                 else
-                    return retError(retBuf, retSize, r);
+                    return retStatusCode(retBuf, retSize, r);
             }
         }
             break;
@@ -144,7 +144,7 @@ size_t IdentityTextJSONSerialization::query(
             if (r == CODE_OK)
                 return retStr(retBuf, retSize, did.toJsonString());
             else
-                return retError(retBuf, retSize, r);
+                return retStatusCode(retBuf, retSize, r);
         }
             break;
         case 'l': {
@@ -178,21 +178,119 @@ size_t IdentityTextJSONSerialization::query(
                 ss << "]";
                 return retStr(retBuf, retSize, ss.str());
             } else
-                return retError(retBuf, retSize, r);
+                return retStatusCode(retBuf, retSize, r);
         }
-            break;
-        case 'c':
-            break;
+        case 'c': {
+            // count
+            auto r = (uint32_t) svc->size();
+            return retStr(retBuf, retSize, std::to_string(r));
+        }
         case 'n':
-            break;
+            // next
+        {
+            NETWORKIDENTITY ni;
+            auto r = svc->next(ni);
+            if (r)
+                return retStatusCode(retBuf, retSize, r);
+            else
+                return retStr(retBuf, retSize, ni.toJsonString());
+        }
         case 'p':
-            break;
+            // assign
+        {
+            DEVADDR deviceAddr;
+            if (!js.contains("addr"))
+                return 0;
+            auto jAddr = js["addr"];
+            if (!jAddr.is_string())
+                return 0;
+            string2DEVADDR(deviceAddr, jAddr);
+
+            DEVICEID deviceId;
+            if (js.contains("activation")) {
+                auto jsv = js["activation"];
+                if (jsv.is_string())
+                    deviceId.activation = string2activation(jsv);
+            }
+
+            if (js.contains("class")) {
+                auto jsv = js["class"];
+                if (jsv.is_string())
+                    deviceId.setClass(string2deviceclass(jsv));
+            }
+
+            if (js.contains("deveui")) {
+                auto jsv = js["deveui"];
+                if (jsv.is_string())
+                    string2DEVEUI(deviceId.devEUI, jsv);
+            }
+
+            if (js.contains("nwkSKey")) {
+                auto jsv = js["nwkSKey"];
+                if (jsv.is_string())
+                    string2KEY(deviceId.nwkSKey, jsv);
+            }
+            if (js.contains("appSKey")) {
+                auto jsv = js["appSKey"];
+                if (jsv.is_string())
+                    string2KEY(deviceId.appSKey, jsv);
+            }
+
+            if (js.contains("version")) {
+                auto jsv = js["version"];
+                if (jsv.is_string())
+                    deviceId.version = string2LORAWAN_VERSION(jsv);
+            }
+
+            if (js.contains("appeui")) {
+                auto jsv = js["appeui"];
+                if (jsv.is_string())
+                    string2DEVEUI(deviceId.appEUI, jsv);
+            }
+
+            if (js.contains("appKey")) {
+                auto jsv = js["appKey"];
+                if (jsv.is_string())
+                    string2KEY(deviceId.appKey, jsv);
+            }
+
+            if (js.contains("nwkKey")) {
+                auto jsv = js["nwkKey"];
+                if (jsv.is_string())
+                    string2KEY(deviceId.nwkKey, jsv);
+            }
+
+            if (js.contains("devNonce")) {
+                auto jsv = js["devNonce"];
+                if (jsv.is_string())
+                    deviceId.devNonce = string2DEVNONCE(jsv);
+            }
+
+            if (js.contains("joinNonce")) {
+                auto jsv = js["joinNonce"];
+                if (jsv.is_string())
+                    string2JOINNONCE(deviceId.joinNonce, jsv);
+            }
+
+            if (js.contains("name")) {
+                auto jsv = js["name"];
+                if (jsv.is_string()) {
+                    std::string s(jsv);
+                    string2DEVICENAME(deviceId.name, s.c_str());
+                }
+            }
+
+            auto r = svc->put(deviceAddr, deviceId);
+            return retStatusCode(retBuf, retSize, r);
+        }
         case 'r':
-            break;
+            return retStatusCode(retBuf, retSize, CODE_OK);
         case 's':
-            break;
+            // force save
+            return retStatusCode(retBuf, retSize, CODE_OK);
         case 'e':
-            break;
+            // close resources
+            return retStatusCode(retBuf, retSize, CODE_OK);
         default:
             return 0;
     }
