@@ -125,6 +125,7 @@ else()
 		lorawan/storage/listener/uv-listener.cpp
 		lorawan/storage/serialization/serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp
 		lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/identity-binary-serialization.cpp
+		lorawan/storage/serialization/identity-text-json-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
 		lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-json.cpp
@@ -138,9 +139,10 @@ else()
 	)
 
 	if(ENABLE_HTTP)
-		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/storage/listener/http-listener.cpp
-                lorawan/storage/serialization/serialization.h
-				lorawan/storage/serialization/serialization.cpp)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
+			lorawan/storage/listener/http-listener.cpp
+			lorawan/storage/serialization/identity-text-json-serialization.cpp
+		)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_HTTP)
 		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB}
 				${MINGW_LIB}
