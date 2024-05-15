@@ -592,7 +592,7 @@ size_t IdentitySerialization::query(
 
     ServiceMessage *r = nullptr;
     switch (request[0]) {
-        case QUERY_IDENTITY_ADDR:   // request gateway identifier(with address) by network address. Return 0 if success
+        case QUERY_IDENTITY_ADDR:   // request device identifier(with address) by network address. Return 0 if success
             {
                 auto gr = (IdentityEUIRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
@@ -610,7 +610,7 @@ size_t IdentitySerialization::query(
                 }
                 break;
             }
-        case QUERY_IDENTITY_EUI:   // request gateway address (with identifier) by identifier. Return 0 if success
+        case QUERY_IDENTITY_EUI:   // request device address (with identifier) by identifier. Return 0 if success
             {
                 auto gr = (IdentityAddrRequest *) pMsg;
                 r = new IdentityGetResponse(*gr);
@@ -618,7 +618,7 @@ size_t IdentitySerialization::query(
                 svc->get(((IdentityGetResponse*) r)->response.devid, ((IdentityGetResponse*) r)->response.devaddr);
                 break;
             }
-        case QUERY_IDENTITY_ASSIGN:   // assign (put) gateway address to the gateway by identifier
+        case QUERY_IDENTITY_ASSIGN:   // assign (put) device address to the gateway by identifier
             {
                 auto gr = (IdentityAssignRequest *) pMsg;
                 r = new IdentityOperationResponse(*gr);

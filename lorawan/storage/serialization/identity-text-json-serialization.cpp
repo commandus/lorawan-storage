@@ -37,16 +37,28 @@ static size_t retJs(
     return r;
 }
 
+static size_t retStr(
+    unsigned char* retBuf,
+    size_t retSize,
+    const std::string &s
+)
+{
+    auto r = s.size();
+    if (r <= retSize) {
+        memmove(retBuf, s.c_str(), s.size());
+    } else
+        r = 0;
+    return r;
+}
+
 static size_t retError(
     unsigned char* retBuf,
     size_t retSize,
-    const std::string& tag,
     int errCode
 )
 {
     nlohmann::json js;
-    js["tag"] = tag;
-    js["errorCode"] = errCode;
+    js["error"] = errCode;
     return retJs(retBuf, retSize, js);
 }
 
@@ -98,20 +110,76 @@ size_t IdentityTextJSONSerialization::query(
                 NETWORKIDENTITY nid;
                 int r = svc->getNetworkIdentity(nid, devEUI);
                 if (r == CODE_OK) {
-
+                    return retStr(retBuf, retSize, nid.toJsonString());
                 } else {
-                    return retError(retBuf, retSize, tag, r);
+                    return retError(retBuf, retSize, r);
                 }
             } else {
                 // addr
                 DEVADDR a;
                 string2DEVADDR(a, addr);
+                DEVICEID did;
+                int r = svc->get(did, a);
+                if (r == CODE_OK)
+                    return retStr(retBuf, retSize, did.toJsonString());
+                else
+                    return retError(retBuf, retSize, r);
             }
         }
             break;
         case 'i':
+            // request gateway address (with identifier) by identifier. Return 0 if success
+        {
+            std::string addr;
+            if (js.contains("addr")) {
+                auto jAddr = js["addr"];
+                if (jAddr.is_string()) {
+                    addr = jAddr;
+                }
+            }
+            DEVADDR a;
+            string2DEVADDR(a, addr);
+            DEVICEID did;
+            int r = svc->get(did, a);
+            if (r == CODE_OK)
+                return retStr(retBuf, retSize, did.toJsonString());
+            else
+                return retError(retBuf, retSize, r);
+        }
             break;
-        case 'l':
+        case 'l': {
+            uint32_t offset = 0;
+            uint8_t size = 10;
+            if (js.contains("offset")) {
+                auto jOffset = js["offset"];
+                if (jOffset.is_number()) {
+                    offset = jOffset;
+                }
+            }
+            if (js.contains("size")) {
+                auto jSize = js["size"];
+                if (jSize.is_number()) {
+                    size = jSize;
+                }
+            }
+            std::vector<NETWORKIDENTITY> nis;
+            int r = svc->list(nis, offset, size);
+            if (r == CODE_OK) {
+                std::stringstream ss;
+                bool isFirst = true;
+                ss << "[";
+                for (auto &ni: nis) {
+                    if (isFirst)
+                        isFirst = false;
+                    else
+                        ss << ", ";
+                    ss << ni.toJsonString();
+                }
+                ss << "]";
+                return retStr(retBuf, retSize, ss.str());
+            } else
+                return retError(retBuf, retSize, r);
+        }
             break;
         case 'c':
             break;
