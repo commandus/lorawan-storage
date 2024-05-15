@@ -85,7 +85,7 @@ size_t IdentityTextJSONSerialization::query(
     char t = tag[0];
     switch (t) {
         case 'a':
-            // request gateway identifier(with address) by network address
+            // request identifier(with address) by network address
         {
             // get address
             std::string addr;
@@ -128,7 +128,7 @@ size_t IdentityTextJSONSerialization::query(
         }
             break;
         case 'i':
-            // request gateway address (with identifier) by identifier. Return 0 if success
+            // request address (with identifier) by identifier
         {
             std::string addr;
             if (js.contains("addr")) {
@@ -148,6 +148,7 @@ size_t IdentityTextJSONSerialization::query(
         }
             break;
         case 'l': {
+            // request list
             uint32_t offset = 0;
             uint8_t size = 10;
             if (js.contains("offset")) {
@@ -284,7 +285,20 @@ size_t IdentityTextJSONSerialization::query(
             return retStatusCode(retBuf, retSize, r);
         }
         case 'r':
-            return retStatusCode(retBuf, retSize, CODE_OK);
+            // remove entry
+        {
+            // get address
+            DEVADDR deviceAddr;
+            std::string addr;
+            if (!js.contains("addr"))
+                return retStatusCode(retBuf, retSize, ERR_CODE_DEVICE_ADDRESS_NOTFOUND);
+            auto jAddr = js["addr"];
+            if (!jAddr.is_string())
+                return retStatusCode(retBuf, retSize, ERR_CODE_DEVICE_ADDRESS_NOTFOUND);
+            string2DEVADDR(deviceAddr, jAddr);
+            auto r = svc->rm(deviceAddr);
+            return retStatusCode(retBuf, retSize, r);
+        }
         case 's':
             // force save
             return retStatusCode(retBuf, retSize, CODE_OK);

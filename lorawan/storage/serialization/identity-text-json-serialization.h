@@ -11,6 +11,54 @@ typedef SSIZE_T ssize_t;
 #include "lorawan/storage/serialization/identity-serialization.h"
 #include "lorawan/storage/serialization/service-serialization.h"
 
+/**
+ * request identifier(with address) by network address
+ *      { "tag": "a[ddress]", "eui": "<EUI>"}
+ *      { "tag": "a", "addr": "<address>"}
+ * return
+ *  { "addr":"", "activation":"","class":"","deveui":"","nwkSKey":"","appSKey":"",
+ *      "version":"","appeui":"","appKey":"","nwkKey":"",
+ *      "devNonce":"","joinNonce":"","name":""}
+ * request address (with identifier) by identifier
+ *      { "tag": "i[dentifier]", "addr": "<address>"}
+ * return
+ *  { "addr":"", "activation":"","class":"","deveui":"","nwkSKey":"","appSKey":"",
+ *      "version":"","appeui":"","appKey":"","nwkKey":"",
+ *      "devNonce":"","joinNonce":"","name":""}
+ * or {"code: <number> } if fail
+ * request list
+ *      { "tag": "l[ist]", "offset": <number>, "size": <number>}
+ *  Offset 0..N, size 0..255
+ * return
+ *  [{ "addr":"", "activation":"","class":"","deveui":"","nwkSKey":"","appSKey":"",...}, ...]
+ * request count
+ *      { "tag": "c[ount]"}
+ * return <number>
+ * request next
+ *      { "tag": "n[ext]"}
+ * return
+ *  { "addr":"", "activation":"","class":"","deveui":"","nwkSKey":"","appSKey":"",...}
+ * or {"code: <number> } if fail
+ * put identity
+ *      { "tag": "p[ut]", "addr":"", "activation":"","class":"","deveui":"","nwkSKey":"","appSKey":"",
+ *      "version":"","appeui":"","appKey":"","nwkKey":"",
+ *      "devNonce":"","joinNonce":"","name":""}
+ * return
+ *  {"code: <number> } 0- success, otherwise error code
+ * remove address
+ *      { "tag": "r[emove]", "addr": "<address>"}
+ * return
+ *  {"code: <number> } 0- success, otherwise error code
+ *
+ * force save
+ *      { "tag": "s[ave]"}
+ * return
+ *  {"code: 0 } not implemented
+ * close resources
+ *      { "tag": "e[nd]"}
+ * return
+ *  {"code: 0 } not implemented
+ */
 class IdentityTextJSONSerialization : public IdentitySerialization {
 public:
     explicit IdentityTextJSONSerialization(
