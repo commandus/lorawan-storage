@@ -1,8 +1,6 @@
 #include <sstream>
-#include <cstring>
 
 #include "lorawan/storage/serialization/gateway-text-json-serialization.h"
-#include "lorawan/helper/ip-helper.h"
 #include "lorawan/helper/ip-address.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-conv.h"
@@ -37,7 +35,12 @@ size_t GatewayTextJSONSerialization::query(
 {
     if (!svc)
         return 0;
-    nlohmann::json js = nlohmann::json::parse(request, request + sz);
+    nlohmann::json js;
+    try {
+        js = nlohmann::json::parse(request, request + sz);
+    } catch (nlohmann::json::exception &exception) {
+        return 0;
+    }
     if (!js.is_object())
         return 0;
     if (!js.contains("tag"))

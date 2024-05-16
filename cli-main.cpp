@@ -134,9 +134,11 @@ public:
 
     std::string toString() const {
         std::stringstream ss;
-        ss
-            << _("Service: ") << intf << ":" << port << " " << IP_PROTO2string(proto) << ".\n"
-            << _("Code: ") << std::hex << code << _(", access code: ")  << accessCode << " " << "\n";
+        ss << _("Service: ") << intf << ":" << port << " " << IP_PROTO2string(proto) << "\n";
+#ifdef ENABLE_HTTP
+        ss << _("HTTP: ") << httpIntf << ":" << httpPort << "\n";
+#endif
+        ss << _("Code: ") << std::hex << code << _(", access code: ")  << accessCode << " " << "\n";
         if (!db.empty())
             ss << _("database file name: ") << db << "\n";
 #ifdef ENABLE_JSON
@@ -243,14 +245,16 @@ void run() {
     svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerializationJSON);
     svc.httpServer->setAddress(svc.httpIntf, svc.httpPort);
     svc.httpServer->setLog(svc.verbose, &svc);
+    svc.httpServer->run();
 #endif
-
     if (svc.verbose)
         std::cout << _("Identities: ") << svc.server->identitySerialization->svc->size() << std::endl;
 
     svc.retCode = svc.server->run();
     if (svc.retCode)
         std::cerr << ERR_MESSAGE << svc.retCode << ": " << std::endl;
+
+
 }
 
 int main(int argc, char **argv) {
