@@ -76,6 +76,15 @@ AC_ARG_ENABLE([json],
 esac],[json=false])
 AM_CONDITIONAL([ENABLE_JSON], [test x$json = xtrue])
 
+AC_ARG_ENABLE([http],
+[  --enable-json    Turn on HTTP listener],
+[case "${enableval}" in
+  yes) http=true ;;
+  no)  http=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-http]) ;;
+esac],[http=false])
+AM_CONDITIONAL([ENABLE_HTTP], [test x$http = xtrue])
+
 AC_ARG_ENABLE([gen],
 [  --enable-gen    Turn on gen backend],
 [case "${enableval}" in

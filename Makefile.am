@@ -131,17 +131,17 @@ liblorawan_a_CPPFLAGS = -fPIC
 
 lorawan_query_SOURCES = cli-query-main.cpp cli-helper.cpp \
 	$(SRC_ARGTABLE)
-lorawan_query_LDADD = $(EXTRA_LIB) -L. -llorawan
+lorawan_query_LDADD = -L. -llorawan $(EXTRA_LIB)
 lorawan_query_CPPFLAGS = $(GATEWAY_DEF)
 
 lorawan_service_SOURCES = cli-main.cpp cli-helper.cpp third-party/daemonize.cpp \
     $(SRC_ARGTABLE)
-lorawan_service_LDADD = $(EXTRA_LIB) -L. -llorawan
+lorawan_service_LDADD = -L. -llorawan $(EXTRA_LIB)
 lorawan_service_CPPFLAGS = $(GATEWAY_DEF) -DLNS_VERSION=$(VERSION)
 
 lorawan_query_direct_SOURCES = cli-query-plugin-main.cpp cli-helper.cpp \
     $(SRC_ARGTABLE)
-lorawan_query_direct_LDADD = $(EXTRA_LIB) -L. -llorawan
+lorawan_query_direct_LDADD = -L. -llorawan $(EXTRA_LIB) 
 lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
 
 #
@@ -165,7 +165,7 @@ libstorage_gen_la_CPPFLAGS = -Ithird-party
 
 libstorage_sqlite_la_SOURCES = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
 	lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp
-libstorage_sqlite_la_LIBADD = $(EXTRA_LIB) -L. -llorawan
+libstorage_sqlite_la_LIBADD = -L. -llorawan $(EXTRA_LIB)
 
 #
 # Configs, readme, CMake etc.
