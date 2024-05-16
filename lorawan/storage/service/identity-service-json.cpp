@@ -113,7 +113,13 @@ int JsonIdentityService::rm(
 bool JsonIdentityService::load()
 {
     std::ifstream f(fileName);
-    nlohmann::json js = nlohmann::json::parse(f);
+    nlohmann::json js;
+    try {
+        js = nlohmann::json::parse(f);
+    } catch (nlohmann::json::exception &exception) {
+        std::cerr << exception.what() << std::endl;
+        return false;
+    }
     if (!js.is_array())
         return false;
     for (auto& e : js) {
@@ -177,8 +183,7 @@ int JsonIdentityService::init(
 )
 {
     fileName = databaseName;
-    load();
-    return CODE_OK;
+    return load() ? CODE_OK : ERR_CODE_INVALID_JSON;
 }
 
 void JsonIdentityService::flush()

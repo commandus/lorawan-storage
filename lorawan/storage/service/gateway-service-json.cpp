@@ -1,5 +1,6 @@
 #include <cstring>
 #include <fstream>
+#include <iostream>
 
 #include "gateway-service-json.h"
 #include "lorawan/helper/ip-address.h"
@@ -112,7 +113,13 @@ int JsonGatewayService::rm(
 bool JsonGatewayService::load()
 {
     std::ifstream f(fileName);
-    nlohmann::json js = nlohmann::json::parse(f);
+    nlohmann::json js;
+    try {
+        js = nlohmann::json::parse(f);
+    } catch (nlohmann::json::exception &exception) {
+        std::cerr << exception.what() << std::endl;
+        return false;
+    }
     if (!js.is_array())
         return false;
     for (auto& e : js) {
