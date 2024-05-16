@@ -20,7 +20,14 @@ $(bin_PROGRAMS): $(lib_LIBRARIES)
 
 lib_LIBRARIES = liblorawan.a
 
-lib_LTLIBRARIES = libstorage-mem.la libstorage-json.la libstorage-gen.la
+lib_LTLIBRARIES = libstorage-mem.la libstorage-gen.la
+
+if ENABLE_JSON
+lib_LTLIBRARIES += libstorage-json.la
+endif
+if ENABLE_SQLITE
+lib_LTLIBRARIES += libstorage-sqlite.la
+endif
 
 #
 # Binaries
@@ -76,9 +83,8 @@ SRC_LIBLORAWAN = \
     lorawan/storage/client/udp-client.cpp lorawan/storage/client/uv-client.cpp \
     lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp \
     lorawan/storage/listener/uv-listener.cpp \
-    lorawan/storage/serialization/serialization.cpp \
-    lorawan/storage/serialization/gateway-serialization.cpp \
-    lorawan/storage/serialization/gateway-binary-serialization.cpp \
+    lorawan/storage/serialization/serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp \
+	lorawan/storage/serialization/identity-binary-serialization.cpp lorawan/storage/serialization/gateway-binary-serialization.cpp \
     lorawan/storage/serialization/identity-serialization.cpp \
     lorawan/storage/serialization/service-serialization.cpp \
     lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp \
@@ -93,39 +99,37 @@ SRC_LIBLORAWAN = \
 EXTRA_LIB =
 
 if ENABLE_LIBUV
-    GATEWAY_DEF += -DENABLE_LIBUV
-    EXTRA_LIB += -luv
+GATEWAY_DEF += -DENABLE_LIBUV
+EXTRA_LIB += -luv
 endif
 
 if ENABLE_GEN
-    GATEWAY_DEF += -DENABLE_GEN
+GATEWAY_DEF += -DENABLE_GEN
 endif
 
 if ENABLE_JSON
-    GATEWAY_DEF += -DENABLE_JSON
+GATEWAY_DEF += -DENABLE_JSON
 endif
 
 if ENABLE_SQLITE
-    GATEWAY_DEF += -DENABLE_SQLITE
-    EXTRA_LIB += -lsqlite3
-    SRC_LIBLORAWAN += lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp
-    lib_LTLIBRARIES += libstorage-sqlite.la
+GATEWAY_DEF += -DENABLE_SQLITE
+EXTRA_LIB += -lsqlite3
+SRC_LIBLORAWAN += lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp
 endif
 
 if ENABLE_HTTP
-    GATEWAY_DEF += -DENABLE_HTTP
-    EXTRA_LIB += -lmicrohttpd
-	SRC_LIBLORAWAN += lorawan/storage/listener/http-listener.cpp \
-	    lorawan/storage/serialization/identity-text-json-serialization.cpp \
-	    lorawan/storage/serialization/gateway-text-json-serialization.cpp \
-	    lorawan/storage/serialization/json-helper.cpp
+GATEWAY_DEF += -DENABLE_HTTP
+EXTRA_LIB += -lmicrohttpd
+SRC_LIBLORAWAN += lorawan/storage/listener/http-listener.cpp \
+	lorawan/storage/serialization/identity-text-json-serialization.cpp \
+	lorawan/storage/serialization/gateway-text-json-serialization.cpp \
+	lorawan/storage/serialization/json-helper.cpp
 endif
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)
 liblorawan_a_CPPFLAGS = -fPIC
 
-lorawan_query_SOURCES = \
-    cli-query-main.cpp cli-helper.cpp \
+lorawan_query_SOURCES = cli-query-main.cpp cli-helper.cpp \
 	$(SRC_ARGTABLE)
 lorawan_query_LDADD = $(EXTRA_LIB) -L. -llorawan
 lorawan_query_CPPFLAGS = $(GATEWAY_DEF)
@@ -159,11 +163,9 @@ libstorage_gen_la_LIBADD = -L. -llorawan
 libstorage_gen_la_CPPFLAGS = -Ithird-party
 #libstorage_gen_la_LDFLAGS = -version-info $(VERSION_INFO)
 
-if ENABLE_SQLITE
-    libstorage_sqlite_la_SOURCES = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
-	    lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp
-    libstorage_sqlite_la_LIBADD = $(EXTRA_LIB) -L. -llorawan
-endif
+libstorage_sqlite_la_SOURCES = lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp \
+	lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp
+libstorage_sqlite_la_LIBADD = $(EXTRA_LIB) -L. -llorawan
 
 #
 # Configs, readme, CMake etc.
