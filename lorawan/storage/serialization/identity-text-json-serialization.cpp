@@ -3,6 +3,7 @@
 #include "nlohmann/json.hpp"
 
 #include "lorawan/storage/serialization/identity-text-json-serialization.h"
+#include "lorawan/storage/serialization/json-helper.h"
 #include "lorawan/lorawan-conv.h"
 
 #include "lorawan/lorawan-error.h"
@@ -20,46 +21,6 @@ IdentityTextJSONSerialization::IdentityTextJSONSerialization(
     : IdentitySerialization(SKT_TEXT_JSON, aSvc, aCode, aAccessCode)
 {
 
-}
-
-static size_t retJs(
-    unsigned char* retBuf,
-    size_t retSize,
-    const nlohmann::json &js
-)
-{
-    std::string s = js.dump();
-    auto r = s.size();
-    if (r <= retSize) {
-        memmove(retBuf, s.c_str(), s.size());
-    } else
-        r = 0;
-    return r;
-}
-
-static size_t retStr(
-    unsigned char* retBuf,
-    size_t retSize,
-    const std::string &s
-)
-{
-    auto r = s.size();
-    if (r <= retSize) {
-        memmove(retBuf, s.c_str(), s.size());
-    } else
-        r = 0;
-    return r;
-}
-
-static size_t retStatusCode(
-    unsigned char* retBuf,
-    size_t retSize,
-    int errCode
-)
-{
-    nlohmann::json js;
-    js["code"] = errCode;
-    return retJs(retBuf, retSize, js);
 }
 
 size_t IdentityTextJSONSerialization::query(
@@ -183,7 +144,7 @@ size_t IdentityTextJSONSerialization::query(
         }
         case 'c': {
             // count
-            auto r = (uint32_t) svc->size();
+            auto r = svc->size();
             return retStr(retBuf, retSize, std::to_string(r));
         }
         case 'n':

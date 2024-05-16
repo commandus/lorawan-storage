@@ -144,6 +144,8 @@ else()
 		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
 			lorawan/storage/listener/http-listener.cpp
 			lorawan/storage/serialization/identity-text-json-serialization.cpp
+			lorawan/storage/serialization/gateway-text-json-serialization.cpp
+			lorawan/storage/serialization/json-helper.cpp
 		)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_HTTP)
 		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB}

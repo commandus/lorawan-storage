@@ -1,12 +1,7 @@
 #ifndef IDENTITY_TEXT_JSON_SERIALIZATION_H
 #define IDENTITY_TEXT_JSON_SERIALIZATION_H
 
-#ifdef _MSC_VER
-#include <BaseTsd.h>
-typedef SSIZE_T ssize_t;
-#else
 #include <cinttypes>
-#endif
 #include "lorawan/storage/service/identity-service.h"
 #include "lorawan/storage/serialization/identity-serialization.h"
 #include "lorawan/storage/serialization/service-serialization.h"

@@ -42,11 +42,12 @@ nobase_dist_include_HEADERS = \
 	lorawan/storage/client/uv-client.h \
 	lorawan/storage/listener/storage-listener.h lorawan/storage/listener/udp-listener.h \
 	lorawan/storage/listener/uv-listener.h lorawan/storage/listener/http-listener.h \
-	lorawan/storage/serialization/serialization.h \
+	lorawan/storage/serialization/json-helper.h lorawan/storage/serialization/serialization.h \
 	lorawan/storage/serialization/gateway-serialization.h \
 	lorawan/storage/serialization/gateway-binary-serialization.h \
 	lorawan/storage/serialization/identity-serialization.h lorawan/storage/serialization/identity-binary-serialization.h \
 	lorawan/storage/serialization/identity-text-json-serialization.h \
+	lorawan/storage/serialization/gateway-text-json-serialization.h \
 	lorawan/storage/serialization/service-serialization.h \
 	lorawan/storage/service/async-wrapper-gateway-service.h lorawan/storage/service/async-wrapper-identity-service.h \
 	lorawan/storage/service/gateway-service.h lorawan/storage/service/gateway-service-mem.h \
@@ -115,7 +116,9 @@ if ENABLE_HTTP
     GATEWAY_DEF += -DENABLE_HTTP
     EXTRA_LIB += -lmicrohttpd
 	SRC_LIBLORAWAN += lorawan/storage/listener/http-listener.cpp \
-	    lorawan/storage/serialization/identity-text-json-serialization.cpp
+	    lorawan/storage/serialization/identity-text-json-serialization.cpp \
+	    lorawan/storage/serialization/gateway-text-json-serialization.cpp \
+	    lorawan/storage/serialization/json-helper.cpp
 endif
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)

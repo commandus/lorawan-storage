@@ -28,6 +28,7 @@
 #ifdef ENABLE_HTTP
 #include "lorawan/storage/listener/http-listener.h"
 #include "lorawan/storage/serialization/identity-text-json-serialization.h"
+#include "lorawan/storage/serialization/gateway-text-json-serialization.h"
 #endif
 
 #define DEF_DB_GATEWAY_JSON  "gateway.json"
@@ -238,7 +239,8 @@ void run() {
 
 #ifdef ENABLE_HTTP
     auto identitySerializationJSON = new IdentityTextJSONSerialization(identityService, svc.code, svc.accessCode);
-    svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerialization);
+    auto gatewaySerializationJSON = new GatewayTextJSONSerialization(gatewayService, svc.code, svc.accessCode);
+    svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerializationJSON);
     svc.httpServer->setAddress(svc.httpIntf, svc.httpPort);
     svc.httpServer->setLog(svc.verbose, &svc);
 #endif
