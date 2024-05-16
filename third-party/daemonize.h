@@ -13,7 +13,7 @@ class Daemonize
 {
 private:
 	std::string pidFileName;
-	static int init();
+	int init();
 	bool setPidFile();
 	const std::string &workingDirectory;
 	int maxFileDescriptors;

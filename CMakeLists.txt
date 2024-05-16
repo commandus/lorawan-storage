@@ -132,10 +132,9 @@ else()
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
 		lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-json.cpp
 		lorawan/storage/service/gateway-service-mem.cpp
-		lorawan/storage/service/gateway-service-sqlite.cpp lorawan/storage/service/identity-service.cpp
+		lorawan/storage/service/identity-service.cpp
 		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-json.cpp
 		lorawan/storage/service/identity-service-mem.cpp
-		lorawan/storage/service/identity-service-sqlite.cpp
 		third-party/strptime.cpp
 		${AES_SRC}
 	)
@@ -188,6 +187,10 @@ else()
 	endif()
 
 	if (ENABLE_SQLITE)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
+			lorawan/storage/service/identity-service-sqlite.cpp
+			lorawan/storage/service/gateway-service-sqlite.cpp
+		)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			find_package(unofficial-sqlite3 CONFIG REQUIRED)
 			set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
@@ -221,7 +224,12 @@ else()
 	set_target_properties(storage-gen PROPERTIES SOVERSION ${VERSION_INFO})
 
 	if (ENABLE_SQLITE)
-		add_library(storage-sqlite SHARED lorawan/storage/service/identity-service-sqlite.cpp lorawan/storage/service/gateway-service-sqlite.cpp lorawan/helper/file-helper.cpp lorawan/helper/sqlite-helper.cpp)
+		add_library(storage-sqlite SHARED 
+			lorawan/storage/service/identity-service-sqlite.cpp 
+			lorawan/storage/service/gateway-service-sqlite.cpp
+			lorawan/helper/file-helper.cpp
+			lorawan/helper/sqlite-helper.cpp
+		)
 		target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
 		target_include_directories(storage-sqlite PRIVATE ".")
 		set_target_properties(storage-sqlite PROPERTIES SOVERSION ${VERSION_INFO})
