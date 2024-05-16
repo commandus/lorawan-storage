@@ -54,7 +54,7 @@ size_t GatewayTextJSONSerialization::query(
     char t = tag[0];
     switch (t) {
         case 'A':
-            // request gateway identifier(with address) by network address. Return 0 if success
+            // request gateway identifier(with address) by IP address
         {
             // get address
             if (!js.contains("addr"))

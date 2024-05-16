@@ -51,7 +51,7 @@ size_t IdentityTextJSONSerialization::query(
     char t = tag[0];
     switch (t) {
         case 'a':
-            // request identifier(with address) by network address
+            // request identifier(with address) by LoRaWAN network address
         {
             // get address
             std::string addr;

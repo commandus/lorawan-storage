@@ -107,7 +107,7 @@ static void *uri_logger_callback(
 )
 {
     auto c = (HTTPListener *) cls;
-    if (c->verbose)
+    if (c->verbose > 1)
         std::cout << uri << std::endl;
     return nullptr;
 }
