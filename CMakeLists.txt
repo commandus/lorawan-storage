@@ -123,7 +123,9 @@ else()
 		lorawan/storage/client/sync-query-client.cpp lorawan/storage/client/sync-response-client.cpp
 		lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
 		lorawan/storage/listener/uv-listener.cpp
-		lorawan/storage/serialization/serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp
+		lorawan/storage/serialization/serialization.cpp
+		lorawan/storage/serialization/gateway-serialization.cpp
+		lorawan/storage/serialization/gateway-binary-serialization.cpp
 		lorawan/storage/serialization/identity-serialization.cpp lorawan/storage/serialization/identity-binary-serialization.cpp
 		lorawan/storage/serialization/identity-text-json-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp

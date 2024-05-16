@@ -1,14 +1,12 @@
-#include <sstream>
 #include <iostream>
 
 #include "lorawan/helper/ip-address.h"
 #include "identity-service-udp.h"
-#include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/file-helper.h"
 #include "lorawan/storage/client/udp-client.h"
 #include "lorawan/helper/ip-helper.h"
-#include "lorawan/storage/serialization/identity-binary-serialization.h"
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>

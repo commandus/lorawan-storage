@@ -28,6 +28,7 @@
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/helper/ip-helper.h"
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
 
 #define DEF_KEEPALIVE_SECS 60
 #define DEF_READ_TIMEOUT_SECONDS    2

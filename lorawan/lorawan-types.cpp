@@ -7,7 +7,7 @@
 
 const char *LIST_SEPARATOR = ",";
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #pragma warning(disable: 4996)
 #endif
 

@@ -42,7 +42,9 @@ nobase_dist_include_HEADERS = \
 	lorawan/storage/client/uv-client.h \
 	lorawan/storage/listener/storage-listener.h lorawan/storage/listener/udp-listener.h \
 	lorawan/storage/listener/uv-listener.h lorawan/storage/listener/http-listener.h \
-	lorawan/storage/serialization/serialization.h lorawan/storage/serialization/gateway-serialization.h \
+	lorawan/storage/serialization/serialization.h \
+	lorawan/storage/serialization/gateway-serialization.h \
+	lorawan/storage/serialization/gateway-binary-serialization.h \
 	lorawan/storage/serialization/identity-serialization.h lorawan/storage/serialization/identity-binary-serialization.h \
 	lorawan/storage/serialization/identity-text-json-serialization.h \
 	lorawan/storage/serialization/service-serialization.h \
@@ -74,7 +76,9 @@ SRC_LIBLORAWAN = \
     lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp \
     lorawan/storage/listener/uv-listener.cpp \
     lorawan/storage/serialization/serialization.cpp \
-    lorawan/storage/serialization/gateway-serialization.cpp lorawan/storage/serialization/identity-serialization.cpp \
+    lorawan/storage/serialization/gateway-serialization.cpp \
+    lorawan/storage/serialization/gateway-binary-serialization.cpp \
+    lorawan/storage/serialization/identity-serialization.cpp \
     lorawan/storage/serialization/service-serialization.cpp \
     lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp \
     lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-mem.cpp \

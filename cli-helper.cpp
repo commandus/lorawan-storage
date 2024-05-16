@@ -2,6 +2,7 @@
 #include <cstring>
 #include "cli-helper.h"
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
 
 std::string listCommands() {
     std::stringstream ss;

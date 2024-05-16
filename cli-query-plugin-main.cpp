@@ -16,6 +16,8 @@
 #include "log.h"
 #include "lorawan/helper/ip-address.h"
 
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
+
 // i18n
 // #include <libintl.h>
 // #define _(String) gettext (String)

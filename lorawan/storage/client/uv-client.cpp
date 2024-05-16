@@ -3,6 +3,7 @@
 #include <uv.h>
 
 #include "lorawan/helper/ip-helper.h"
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <io.h>

@@ -62,6 +62,7 @@
 #include "daemonize.h"
 #include "lorawan/helper/ip-address.h"
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
 
 // i18n
 // #include <libintl.h>
@@ -226,7 +227,7 @@ void run() {
 #endif
 
     auto identitySerialization = new IdentityBinarySerialization(identityService, svc.code, svc.accessCode);
-    auto gatewaySerialization = new GatewaySerialization(gatewayService, svc.code, svc.accessCode);
+    auto gatewaySerialization = new GatewayBinarySerialization(gatewayService, svc.code, svc.accessCode);
 #ifdef ENABLE_LIBUV
     svc.server = new UVListener(identitySerialization, gatewaySerialization);
 #else

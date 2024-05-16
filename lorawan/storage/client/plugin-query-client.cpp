@@ -14,6 +14,7 @@
 #endif
 
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
+#include "lorawan/storage/serialization/gateway-binary-serialization.h"
 
 #ifdef ENABLE_DEBUG
 #include <iostream>
@@ -162,7 +163,7 @@ ServiceMessage* PluginQueryClient::request(
 
 void PluginQueryClient::start() {
     IdentityBinarySerialization identitySerialization(svcIdentity, code, accessCode);
-    GatewaySerialization gatewaySerialization(svcGateway, code, accessCode);
+    GatewayBinarySerialization gatewaySerialization(svcGateway, code, accessCode);
     while (status != ERR_CODE_STOPPED) {
         if (!query) {
             status = ERR_CODE_STOPPED;
