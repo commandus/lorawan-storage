@@ -43,6 +43,13 @@ size_t GatewayTextJSONSerialization::query(
     }
     if (!js.is_object())
         return 0;
+    if (!checkCredentials(js, code, accessCode)) {
+#ifdef ENABLE_DEBUG
+        std::cerr << ERR_ACCESS_DENIED << std::endl;
+#endif
+        return 0;
+    }
+
     if (!js.contains("tag"))
         return 0;
     auto jTag = js["tag"];

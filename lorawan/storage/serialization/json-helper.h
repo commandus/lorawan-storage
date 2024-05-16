@@ -21,4 +21,10 @@ size_t retStatusCode(
     int errCode
 );
 
+bool checkCredentials(
+    const nlohmann::json &js,
+    int32_t code,
+    uint64_t accessCode
+);
+
 #endif
