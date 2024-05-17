@@ -157,7 +157,7 @@ static MHD_Result request_callback(
         hc = MHD_HTTP_NOT_IMPLEMENTED;
         response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_501), (void *) HTTP_ERROR_501, MHD_RESPMEM_PERSISTENT);
     } else {
-        unsigned char rb[8192];
+        unsigned char rb[100000];
         size_t sz;
         if (l->identitySerialization) {
             sz = l->identitySerialization->query(&rb[0], sizeof(rb),
