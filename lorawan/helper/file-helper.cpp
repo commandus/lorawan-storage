@@ -1,4 +1,5 @@
 #if defined(_MSC_VER) || defined(__MINGW32__)
+#pragma warning(disable: 4996)
 #include <windows.h>
 #include <io.h>
 #include <cwchar>
