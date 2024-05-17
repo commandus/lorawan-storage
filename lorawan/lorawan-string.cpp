@@ -9,7 +9,7 @@
 
 #define DEF_CODING_RATE CRLORA_4_6
 
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
 #pragma warning(disable: 4996)
 #endif
 

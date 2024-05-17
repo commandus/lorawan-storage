@@ -9,9 +9,27 @@
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-error.h"
 
-#define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
+#include <sys/stat.h>
+#include <sstream>
+#include <algorithm>
 
-#define NUMBER_OF_THREADS CPU_COUNT
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#pragma warning(disable: 4996)
+#endif
+
+#define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
+#define DEF_HTML_INDEX_FILE_NAME "index.html"
+
+const static char *CE_GZIP = "gzip";
+const static char *CT_HTML = "text/html;charset=UTF-8";
+const static char *CT_JSON = "text/javascript;charset=UTF-8";
+const static char *CT_KML = "application/vnd.google-earth.kml+xml";
+const static char *CT_PNG = "image/png";
+const static char *CT_JPEG = "image/jpeg";
+const static char *CT_CSS = "text/css";
+const static char *CT_TEXT = "text/plain;charset=UTF-8";
+const static char *CT_TTF = "font/ttf";
+const static char *CT_BIN = "application/octet";
 
 // Caution: version may be different, if microhttpd dependency not compiled, revise version humber
 #if MHD_VERSION <= 0x00096600
@@ -32,12 +50,14 @@
 
 HTTPListener::HTTPListener(
     IdentitySerialization* aIdentitySerialization,
-    GatewaySerialization* aSerializationWrapper
+    GatewaySerialization* aSerializationWrapper,
+    const std::string &aHTMLRootDir
 )
-    : StorageListener(aIdentitySerialization, aSerializationWrapper), 
-    log(nullptr), verbose(0), flags(MHD_START_FLAGS),
-    threadCount(1), connectionLimit(32768), descriptor(nullptr),
-    mimeType(aIdentitySerialization ? aIdentitySerialization->mimeType() : serializationKnownType2MimeType(SKT_BINARY))
+    : StorageListener(aIdentitySerialization, aSerializationWrapper),
+      log(nullptr), verbose(0), flags(MHD_START_FLAGS),
+      threadCount(1), connectionLimit(32768), descriptor(nullptr),
+      mimeType(aIdentitySerialization ? aIdentitySerialization->mimeType() : serializationKnownType2MimeType(SKT_BINARY)),
+      htmlRootDir(aHTMLRootDir)
 {
 }
 
@@ -79,7 +99,6 @@ void HTTPListener::setAddress(
     port = aPort;
 }
 
-const static char* CT_TEXT = "text/plain;charset=UTF-8";
 const static char* HDR_CORS_ORIGIN = "*";
 const static char* HDR_CORS_METHODS = "GET,HEAD,OPTIONS,POST,PUT,DELETE";
 const static char* HDR_CORS_HEADERS = "Authorization, Access-Control-Allow-Headers, Access-Control-Allow-Origin, "
@@ -110,6 +129,117 @@ static void *uri_logger_callback(
     if (c->verbose > 1)
         std::cout << uri << std::endl;
     return nullptr;
+}
+
+static const char *mimeTypeByFileExtension(const std::string &filename)
+{
+    std::string ext = filename.substr(filename.find_last_of('.') + 1);
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+    if (ext == "html")
+        return CT_HTML;
+    else
+    if (ext == "htm")
+        return CT_HTML;
+    else
+    if (ext == "js")
+        return CT_JSON;
+    else
+    if (ext == "css")
+        return CT_CSS;
+    if (ext == "png")
+        return CT_PNG;
+    else
+    if (ext == "jpg")
+        return CT_JPEG;
+    else
+    if (ext == "jpeg")
+        return CT_JPEG;
+    else
+    if (ext == "kml")
+        return CT_KML;
+    else
+    if (ext == "txt")
+        return CT_TEXT;
+    else
+    if (ext == "ttf")
+        return CT_TTF;
+    else
+        return CT_BIN;
+}
+
+static ssize_t file_reader_callback(void *cls, uint64_t pos, char *buf, size_t max)
+{
+    FILE *file = (FILE *) cls;
+    (void) fseek (file, (long) pos, SEEK_SET);
+    return fread (buf, 1, max, file);
+}
+
+static void free_file_reader_callback(void *cls)
+{
+    fclose ((FILE *) cls);
+}
+
+/**
+ * Translate Url to the file name
+ */
+static std::string buildFileName(
+    const char *dirRoot,
+    const char *url
+)
+{
+    std::stringstream r;
+    r << dirRoot;
+    if (url) {
+        r << url;
+        size_t l = strlen(url);
+        if (l && (url[l - 1] == '/'))
+            r << DEF_HTML_INDEX_FILE_NAME;
+    }
+    return r.str();
+}
+
+static MHD_Result processFile(
+    struct MHD_Connection *connection,
+    const std::string &filename
+)
+{
+    struct MHD_Response *response;
+    MHD_Result ret;
+    FILE *file;
+    struct stat buf;
+
+    const char *localFileName = filename.c_str();
+    bool gzipped = false;
+    if (stat(localFileName, &buf) == 0)
+        file = fopen(localFileName, "rb");
+    else {
+        std::string fnGzip(filename);
+        fnGzip += ".gz";
+        localFileName = fnGzip.c_str();
+        if (stat(localFileName, &buf) == 0) {
+            file = fopen(localFileName, "rb");
+            gzipped = true;
+        } else
+            file = nullptr;
+    }
+    if (file == nullptr) {
+        response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_404), (void *) HTTP_ERROR_404, MHD_RESPMEM_PERSISTENT);
+        ret = MHD_queue_response(connection, MHD_HTTP_NOT_FOUND, response);
+        MHD_destroy_response (response);
+    } else {
+        response = MHD_create_response_from_callback(buf.st_size, 32 * 1024,
+            &file_reader_callback, file, &free_file_reader_callback);
+        if (nullptr == response) {
+            fclose (file);
+            return MHD_NO;
+        }
+        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, mimeTypeByFileExtension(filename));
+        if (gzipped)
+            MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_ENCODING, CE_GZIP);
+        ret = MHD_queue_response(connection, MHD_HTTP_OK, response);
+        MHD_destroy_response(response);
+    }
+    return ret;
 }
 
 static MHD_Result request_callback(
@@ -166,6 +296,13 @@ static MHD_Result request_callback(
                 if (l->gatewaySerialization) {
                     sz = l->gatewaySerialization->query(&rb[0], sizeof(rb),
                         (const unsigned char *) requestCtx->postData.c_str(), requestCtx->postData.size());
+                }
+            } else {
+                if (!l->htmlRootDir.empty()) {
+                    MHD_Result r = processFile(connection, buildFileName(l->htmlRootDir.c_str(), url));
+                    delete requestCtx;
+                    *ptr = nullptr;
+                    return r;
                 }
             }
         }

@@ -25,10 +25,12 @@ public:
     unsigned int connectionLimit;
     void *descriptor;   // HTTP daemon
     const char* mimeType;
+    std::string htmlRootDir;
 
     explicit HTTPListener(
         IdentitySerialization* aIdentitySerialization,
-        GatewaySerialization* aSerializationWrapper
+        GatewaySerialization* aSerializationWrapper,
+        const std::string &aHTMLRootDir = ""
     );
     ~HTTPListener() override;
     void setAddress(

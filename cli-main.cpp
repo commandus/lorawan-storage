@@ -105,6 +105,7 @@ public:
     StorageListener *httpServer;
     std::string httpIntf;
     uint16_t httpPort;
+    std::string httpHtmlRootDir;
 #endif
     int32_t code;
     uint64_t accessCode;
@@ -242,7 +243,8 @@ void run() {
 #ifdef ENABLE_HTTP
     auto identitySerializationJSON = new IdentityTextJSONSerialization(identityService, svc.code, svc.accessCode);
     auto gatewaySerializationJSON = new GatewayTextJSONSerialization(gatewayService, svc.code, svc.accessCode);
-    svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerializationJSON);
+    svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerializationJSON,
+                                      svc.httpHtmlRootDir);
     svc.httpServer->setAddress(svc.httpIntf, svc.httpPort);
     svc.httpServer->setLog(svc.verbose, &svc);
     svc.httpServer->run();
@@ -262,6 +264,7 @@ int main(int argc, char **argv) {
 
 #ifdef ENABLE_HTTP
     struct arg_str *a_http_interface_n_port = arg_str0("h", "http", _("IP addr:port"), _("Default *:4246"));
+    struct arg_str *a_http_html_root_dir = arg_str0("r", "root", _("<path>"), _("web root path. Default 'html'"));
 #endif
 
     struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
@@ -281,22 +284,23 @@ int main(int argc, char **argv) {
 	struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
 
-	void* argtable[] = { 
-		a_interface_n_port,
+	void* argtable[] = {
+            a_interface_n_port,
 #ifdef ENABLE_HTTP
-        a_http_interface_n_port,
+            a_http_interface_n_port,
+            a_http_html_root_dir,
 #endif
 #ifdef ENABLE_GEN
         a_pass_phrase, a_net_id,
 #endif
 #if defined ENABLE_SQLITE || defined ENABLE_JSON
-        a_db,
+            a_db,
 #endif
 #ifdef ENABLE_JSON
-        a_gateway_json_db,
+            a_gateway_json_db,
 #endif
-        a_code, a_access_code, a_verbose, a_daemonize, a_pidfile,
-		a_help, a_end 
+            a_code, a_access_code, a_verbose, a_daemonize, a_pidfile,
+            a_help, a_end
 	};
 
 	// verify the argtable[] entries were allocated successfully
@@ -329,6 +333,11 @@ int main(int argc, char **argv) {
         svc.httpIntf = "*";
         svc.httpPort = 4246;
     }
+    if (a_http_html_root_dir->count)
+        svc.httpHtmlRootDir = *a_http_html_root_dir->sval;
+    else
+        svc.httpHtmlRootDir = "html";
+
 #endif
 
 #ifdef ENABLE_GEN
