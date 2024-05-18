@@ -297,7 +297,8 @@ static MHD_Result request_callback(
                     sz = l->gatewaySerialization->query(&rb[0], sizeof(rb),
                         (const unsigned char *) requestCtx->postData.c_str(), requestCtx->postData.size());
                 }
-            } else {
+            }
+            if (sz == 0) {
                 if (!l->htmlRootDir.empty()) {
                     MHD_Result r = processFile(connection, buildFileName(l->htmlRootDir.c_str(), url));
                     delete requestCtx;

@@ -64,6 +64,7 @@
 #include "lorawan/helper/ip-address.h"
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
 #include "lorawan/storage/serialization/gateway-binary-serialization.h"
+#include "lorawan/helper/file-helper.h"
 
 // i18n
 // #include <libintl.h>
@@ -137,7 +138,8 @@ public:
         std::stringstream ss;
         ss << _("Service: ") << intf << ":" << port << " " << IP_PROTO2string(proto) << "\n";
 #ifdef ENABLE_HTTP
-        ss << _("HTTP: ") << httpIntf << ":" << httpPort << "\n";
+        ss << _("HTTP: ") << httpIntf << ":" << httpPort << "\n"
+            << _("HTML page root directory: ") << (httpHtmlRootDir.empty() ? _("none") : httpHtmlRootDir) << "\n";
 #endif
         ss << _("Code: ") << std::hex << code << _(", access code: ")  << accessCode << " " << "\n";
         if (!db.empty())
@@ -255,8 +257,6 @@ void run() {
     svc.retCode = svc.server->run();
     if (svc.retCode)
         std::cerr << ERR_MESSAGE << svc.retCode << ": " << std::endl;
-
-
 }
 
 int main(int argc, char **argv) {
@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 
 #ifdef ENABLE_HTTP
     struct arg_str *a_http_interface_n_port = arg_str0("h", "http", _("IP addr:port"), _("Default *:4246"));
-    struct arg_str *a_http_html_root_dir = arg_str0("r", "root", _("<path>"), _("web root path. Default 'html'"));
+    struct arg_str *a_http_html_root_dir = arg_str0("r", "root", _("<path>"), _("web root path. Default none"));
 #endif
 
     struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
@@ -334,9 +334,9 @@ int main(int argc, char **argv) {
         svc.httpPort = 4246;
     }
     if (a_http_html_root_dir->count)
-        svc.httpHtmlRootDir = *a_http_html_root_dir->sval;
+        svc.httpHtmlRootDir = file::expandFileName(*a_http_html_root_dir->sval);
     else
-        svc.httpHtmlRootDir = "html";
+        svc.httpHtmlRootDir = "";
 
 #endif
 
