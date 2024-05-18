@@ -54,8 +54,10 @@ nobase_dist_include_HEADERS = \
 	lorawan/storage/serialization/gateway-binary-serialization.h \
 	lorawan/storage/serialization/identity-serialization.h lorawan/storage/serialization/identity-binary-serialization.h \
 	lorawan/storage/serialization/identity-text-json-serialization.h \
+	lorawan/storage/serialization/identity-text-urn-serialization.h \
 	lorawan/storage/serialization/gateway-text-json-serialization.h \
 	lorawan/storage/serialization/service-serialization.h \
+	lorawan/storage/serialization/urn-helper.h \
 	lorawan/storage/service/async-wrapper-gateway-service.h lorawan/storage/service/async-wrapper-identity-service.h \
 	lorawan/storage/service/gateway-service.h lorawan/storage/service/gateway-service-mem.h \
 	lorawan/storage/service/gateway-service-json.h \
@@ -87,7 +89,9 @@ SRC_LIBLORAWAN = \
 	lorawan/storage/serialization/identity-binary-serialization.cpp lorawan/storage/serialization/gateway-binary-serialization.cpp \
     lorawan/storage/serialization/identity-serialization.cpp \
     lorawan/storage/serialization/service-serialization.cpp \
+    lorawan/storage/serialization/urn-helper.cpp \
     lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp \
+    lorawan/storage/serialization/identity-text-urn-serialization.cpp \
     lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-mem.cpp \
     lorawan/storage/service/gateway-service-json.cpp \
     lorawan/storage/service/identity-service.cpp \
@@ -109,6 +113,10 @@ endif
 
 if ENABLE_JSON
 GATEWAY_DEF += -DENABLE_JSON
+SRC_LIBLORAWAN += \
+    lorawan/storage/serialization/identity-text-json-serialization.cpp \
+    lorawan/storage/serialization/gateway-text-json-serialization.cpp \
+    lorawan/storage/serialization/json-helper.cpp
 endif
 
 if ENABLE_SQLITE
@@ -120,10 +128,7 @@ endif
 if ENABLE_HTTP
 GATEWAY_DEF += -DENABLE_HTTP
 EXTRA_LIB += -lmicrohttpd
-SRC_LIBLORAWAN += lorawan/storage/listener/http-listener.cpp \
-	lorawan/storage/serialization/identity-text-json-serialization.cpp \
-	lorawan/storage/serialization/gateway-text-json-serialization.cpp \
-	lorawan/storage/serialization/json-helper.cpp
+SRC_LIBLORAWAN += lorawan/storage/listener/http-listener.cpp
 endif
 
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)

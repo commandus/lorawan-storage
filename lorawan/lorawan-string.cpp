@@ -6,6 +6,9 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-date.h"
 #include "lorawan/lorawan-mac.h"
+#ifdef ENABLE_UNICODE
+#include <unicode/unistr.h>
+#endif
 
 #define DEF_CODING_RATE CRLORA_4_6
 
@@ -108,6 +111,29 @@ std::string hex2string(const std::string &hex)
 {
 	std::stringstream ss(hex);
     return readHex(ss);
+}
+
+std::string toUpperCase(
+    const std::string &value
+)
+{
+    std::string r;
+#ifdef ENABLE_UNICODE
+    icu::UnicodeString::fromUTF8(value).toUpper().toUTF8String(r);
+#else
+    r = value;
+    for (auto & c: r) {
+        c = std::toupper(c);
+    }
+#endif
+#if defined(_MSC_VER) || defined(__MINGW32__)
+    if (r.empty())
+        CharUpperA((LPSTR)r.c_str());
+#endif
+    if (r.empty())
+        return value;
+    else
+        return r;
 }
 
 std::string DEVICENAME2string(
