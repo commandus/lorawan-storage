@@ -32,7 +32,7 @@ endif
 #
 # Binaries
 #
-bin_PROGRAMS = lorawan-service lorawan-query lorawan-query-direct
+bin_PROGRAMS = lorawan-service lorawan-query lorawan-query-direct lorawan-tag
 
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
@@ -41,6 +41,7 @@ nobase_dist_include_HEADERS = \
 	lorawan/lorawan-mac.h lorawan/lorawan-msg.h lorawan/lorawan-string.h lorawan/lorawan-types.h \
 	lorawan/helper/aes-helper.h lorawan/helper/file-helper.h lorawan/helper/ip-address.h lorawan/helper/ip-helper.h \
 	lorawan/helper/key128gen.h lorawan/helper/sqlite-helper.h lorawan/helper/uv-mem.h \
+	lorawan/helper/crc-helper.h \
 	lorawan/storage/gateway-identity.h lorawan/storage/network-identity.h \
 	lorawan/storage/client/direct-client.h lorawan/storage/client/plugin-client.h \
 	lorawan/storage/client/plugin-query-client.h lorawan/storage/client/query-client.h \
@@ -78,6 +79,7 @@ SRC_LIBLORAWAN = \
     lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp \
     lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp \
     lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp lorawan/helper/uv-mem.cpp \
+    lorawan/helper/crc-helper.cpp \
     lorawan/storage/gateway-identity.cpp lorawan/storage/network-identity.cpp \
     lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp \
     lorawan/storage/client/plugin-query-client.cpp \
@@ -148,6 +150,11 @@ lorawan_query_direct_SOURCES = cli-query-plugin-main.cpp cli-helper.cpp \
     $(SRC_ARGTABLE)
 lorawan_query_direct_LDADD = -L. -llorawan $(EXTRA_LIB) 
 lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
+
+lorawan_tag_SOURCES = cli-tag.cpp cli-helper.cpp \
+    $(SRC_ARGTABLE)
+lorawan_tag_LDADD -L. -llorawan $(EXTRA_LIB)
+lorawan_tag_CPPFLAGS = $(GATEWAY_DEF)
 
 #
 # Plugins

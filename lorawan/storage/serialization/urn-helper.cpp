@@ -1,15 +1,28 @@
 #include <sstream>
+#include <iomanip>
 #include "lorawan/storage/serialization/urn-helper.h"
 #include "lorawan/lorawan-string.h"
+#include "lorawan/helper/crc-helper.h"
 
 const char* URN_PREFIX = "LW:";
 const char* SCHEMA_ID = "D0:";
 const char* DEF_PROFILE_ID = "FFFFFFFF";
 const char* DLMT = ":";
 
+static uint16_t calcCheckSum(
+    const std::string &urn
+)
+{
+    return crc16((uint8_t *) urn.c_str(), urn.size());
+}
+
 std::string NETWORKIDENTITY2URN(
     const NETWORKIDENTITY &networkIdentity,
-    bool proprietary
+    const std::string &ownerToken,
+    const std::string &serialNumber,
+    bool addProprietary,
+    bool addCheckSum,
+    const std::vector<std::string> *extraProprietary
 )
 {
     std::stringstream ss;
@@ -25,11 +38,15 @@ std::string NETWORKIDENTITY2URN(
             profileID = profileID.substr(0, 8);
         else
             profileID = std::string(8 - l, '0') + profileID;
-        ss << profileID << DLMT;
+        ss << profileID;
     } else
         ss << DEF_PROFILE_ID;
 
-    if (proprietary) {
+    if (!ownerToken.empty())
+        ss << ":O" << ownerToken;
+    if (!serialNumber.empty())
+        ss << ":S" << serialNumber;
+    if (addProprietary) {
         ss << ":PD" << DEVADDR2string(networkIdentity.devaddr)
             << ":PT" << activation2string(networkIdentity.devid.activation)
             << ":PC" << deviceclass2string(networkIdentity.devid.deviceclass)
@@ -41,6 +58,16 @@ std::string NETWORKIDENTITY2URN(
             << ":PD" << DEVNONCE2string(networkIdentity.devid.devNonce)
             << ":PJ" << JOINNONCE2string(networkIdentity.devid.joinNonce);
     }
+    if (extraProprietary) {
+        for (auto &p : *extraProprietary) {
+            ss << ":P" << p;
+        }
+    }
     std::string r = toUpperCase(ss.str());
+    if (addCheckSum) {
+        ss << ":C" << std::hex << std::setw(4) << std::setfill('0') << calcCheckSum(r);
+        r = toUpperCase(ss.str());
+    }
+
     return r;
 }

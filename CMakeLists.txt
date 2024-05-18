@@ -112,6 +112,7 @@ else()
 		lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp
 		lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp
 		lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp lorawan/helper/uv-mem.cpp
+		lorawan/helper/crc-helper.cpp
 		lorawan/storage/gateway-identity.cpp lorawan/storage/network-identity.cpp
 		lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp
 		lorawan/storage/client/plugin-query-client.cpp
@@ -197,6 +198,8 @@ else()
 			lorawan/storage/serialization/json-helper.cpp
 			lorawan/storage/serialization/identity-text-json-serialization.cpp
 			lorawan/storage/serialization/gateway-text-json-serialization.cpp
+				lorawan/helper/crc-helper.h
+				lorawan/helper/crc-helper.cpp
 		)
 	endif()
 
@@ -278,6 +281,14 @@ else()
 	add_executable(lorawan-identity-print cli-print.cpp cli-helper.cpp ${ARGTABLE})
 	target_link_libraries(lorawan-identity-print PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
 	target_include_directories(lorawan-identity-print PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
+
+	#
+	# lorawan-tag
+	#
+	add_executable(lorawan-tag cli-tag.cpp cli-helper.cpp ${ARGTABLE})
+	target_link_libraries(lorawan-tag PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} lorawan)
+	target_compile_definitions(lorawan-tag PRIVATE ${GATEWAY_DEF})
+	target_include_directories(lorawan-tag PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 		# avoid Error LNK2038 mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_DynamicRelease'
