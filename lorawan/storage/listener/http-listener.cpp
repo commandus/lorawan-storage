@@ -288,7 +288,7 @@ static MHD_Result request_callback(
         response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_501), (void *) HTTP_ERROR_501, MHD_RESPMEM_PERSISTENT);
     } else {
         unsigned char rb[100000];
-        size_t sz;
+        size_t sz = 0;
         if (l->identitySerialization) {
             sz = l->identitySerialization->query(&rb[0], sizeof(rb),
             (const unsigned char *) requestCtx->postData.c_str(), requestCtx->postData.size());
