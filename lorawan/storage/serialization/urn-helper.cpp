@@ -6,31 +6,7 @@
 
 const char* URN_PREFIX = "LW:";
 const char* SCHEMA_ID = "D0:";
-const char* DEF_PROFILE_ID = "FFFFFFFF";
 const char* DLMT = ":";
-
-static const char FLD_PREFIXES[17] = {
-    // mandatory in order
-    '0',    // appEui
-    '1',    // devEui
-    '2',    // profile id (4 bytes)
-    // optional with prefix tag
-    'C',    // check sum
-    'O',    // owner token;
-    'S',    // serial number
-    // proprietary with prefix tag 'P'
-    'D',    // device address
-    'T',    // activation
-    'C',     // device class
-    'W',     // nwkSKey
-    'S',    // appSKey
-    'V',    // LoRaWAN version
-    'A',    // appKey
-    'N',    // nwkKey
-    'O',    // devNonce
-    'J',    // joinNonce
-    'X'     // 'command': 'A', 'I', 'L', 'C', 'N', 'P', 'R', 'S', 'E'
-};
 
 static uint16_t calcCheckSum(
     const std::string &urn
@@ -40,7 +16,7 @@ static uint16_t calcCheckSum(
 }
 
 LorawanIdentificationURN::LorawanIdentificationURN()
-    : crc(0xffff), command('\0')
+    : crc(0xffff), command('\0'), offset(0), size(0)
 {
 
 }
@@ -48,6 +24,7 @@ LorawanIdentificationURN::LorawanIdentificationURN()
 LorawanIdentificationURN::LorawanIdentificationURN(
     const std::string &urn
 )
+    : crc(0xffff), command('\0'), offset(0), size(0)
 {
     parse(urn);
 }
@@ -125,17 +102,21 @@ bool LorawanIdentificationURN::parse(
                                 string2JOINNONCE(networkIdentity.devid.joinNonce, token.substr(2));
                                 break;
                             case 'X':     // 'command': 'A', 'I', 'L', 'C', 'N', 'P', 'R', 'S', 'E'
-                                if (token.size() > 2)
-                                    command = token[3];
-                                else
-                                    token = '\0';
+                                if (token.size() > 1)
+                                    command = token[2];
+                                break;
+                            case 'F':     // offset
+                                offset = (uint8_t) strtoul(token.substr(2).c_str(), nullptr, 16);
+                                break;
+                            case 'Z':     // size
+                                size = (uint32_t) strtoul(token.substr(2).c_str(), nullptr, 16);
                                 break;
                             default:
                                 break;
                         }
                         break;
                     default:
-                        continue;
+                        break;  // invalid character
                 }
             }
         }
@@ -214,4 +195,35 @@ std::string NETWORKIDENTITY2URN(
 
     return mkURN(networkIdentity.devid.appEUI, networkIdentity.devid.devEUI, pid,
           ownerToken, serialNumber, &proprietary, addCheckSum);
+}
+
+size_t returnStr(
+    unsigned char* retBuf,
+    size_t retSize,
+    const std::string &value,
+    int errCode
+)
+{
+    auto r = value.size();
+    if (r <= retSize) {
+        memmove(retBuf, value.c_str(), value.size());
+    } else
+        r = 0;
+    return r;
+}
+
+size_t returnURN(
+    unsigned char* retBuf,
+    size_t retSize,
+    const LorawanIdentificationURN &value,
+    int errCode
+)
+{
+    auto s = value.toString();
+    auto r = s.size();
+    if (r <= retSize) {
+        memmove(retBuf, s.c_str(), s.size());
+    } else
+        r = 0;
+    return r;
 }

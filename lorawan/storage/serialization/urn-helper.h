@@ -32,6 +32,8 @@ public:
     std::string ownerToken;
     std::string serialNumber;
     char command;
+    uint32_t offset;    // for list command
+    uint8_t size;       // for list command
     LorawanIdentificationURN();
     LorawanIdentificationURN(const std::string &urn);
     std::string toString() const;
@@ -54,6 +56,20 @@ std::string NETWORKIDENTITY2URN(
     bool addProprietary = false,
     bool addCheckSum = false,
     const std::vector<std::string> *extraProprietary = nullptr
+);
+
+size_t returnStr(
+    unsigned char* retBuf,
+    size_t retSize,
+    const std::string &value,
+    int errCode
+);
+
+size_t returnURN(
+    unsigned char* retBuf,
+    size_t retSize,
+    const LorawanIdentificationURN &value,
+    int errCode
 );
 
 #endif

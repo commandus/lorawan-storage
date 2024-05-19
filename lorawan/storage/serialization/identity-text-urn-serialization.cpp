@@ -1,7 +1,8 @@
+#include <string>
 #include <sstream>
 
 #include "lorawan/storage/serialization/identity-text-urn-serialization.h"
-#include "lorawan/storage/serialization/json-helper.h"
+#include "lorawan/storage/serialization/urn-helper.h"
 #include "lorawan/lorawan-conv.h"
 
 #include "lorawan/lorawan-error.h"
@@ -30,256 +31,78 @@ size_t IdentityTextURNSerialization::query(
 {
     if (!svc)
         return 0;
-    nlohmann::json js;
-    try {
-        js = nlohmann::json::parse(request, request + sz);
-    } catch (nlohmann::json::exception &exception) {
-#ifdef ENABLE_DEBUG
-        std::cerr << ERR_ACCESS_DENIED << " " << exception.what() << std::endl;
-#endif
-        return 0;
-    }
-    if (!js.is_object())
-        return 0;
-
-    if (!checkCredentials(js, code, accessCode)) {
-#ifdef ENABLE_DEBUG
-        std::cerr << ERR_ACCESS_DENIED << std::endl;
-#endif
-        return 0;
-    }
-
-    if (!js.contains("tag"))
-        return 0;
-    auto jTag = js["tag"];
-    if (!jTag.is_string())
-        return 0;
-    std::string tag = jTag;
-    if (tag.empty())
-        return 0;
-    char t = tag[0];
-    switch (t) {
-        case 'a':
+    LorawanIdentificationURN urn(std::string((const char*) request, sz));
+    switch (urn.command) {
+        case 'A':
             // request identifier(with address) by LoRaWAN network address
         {
-            // get address
-            std::string addr;
-            if (js.contains("addr")) {
-                auto jAddr = js["addr"];
-                if (jAddr.is_string()) {
-                    addr = jAddr;
-                }
-            }
-            // or eui
-            std::string eui;
-            if (js.contains("eui")) {
-                auto jEui = js["eui"];
-                if (jEui.is_string()) {
-                    eui = jEui;
-                }
-            }
-            if (addr.empty()) {
+            if (urn.networkIdentity.devaddr.empty()) {
                 // eui
-                DEVEUI devEUI;
-                string2DEVEUI(devEUI, eui);
-                NETWORKIDENTITY nid;
-                int r = svc->getNetworkIdentity(nid, devEUI);
-                if (r == CODE_OK) {
-                    return retStr(retBuf, retSize, nid.toJsonString());
-                } else {
-                    return retStatusCode(retBuf, retSize, r);
-                }
+                int r = svc->getNetworkIdentity(urn.networkIdentity, urn.networkIdentity.devid.devEUI);
+                return returnURN(retBuf, retSize, urn, r);
             } else {
                 // addr
-                DEVADDR a;
-                string2DEVADDR(a, addr);
-                DEVICEID did;
-                int r = svc->get(did, a);
-                if (r == CODE_OK)
-                    return retStr(retBuf, retSize, did.toJsonString());
-                else
-                    return retStatusCode(retBuf, retSize, r);
+                int r = svc->get(urn.networkIdentity.devid, urn.networkIdentity.devaddr);
+                return returnURN(retBuf, retSize, urn, r);
             }
         }
             break;
-        case 'i':
+        case 'I':
             // request address (with identifier) by identifier
         {
-            std::string addr;
-            if (js.contains("addr")) {
-                auto jAddr = js["addr"];
-                if (jAddr.is_string()) {
-                    addr = jAddr;
-                }
-            }
-            DEVADDR a;
-            string2DEVADDR(a, addr);
-            DEVICEID did;
-            int r = svc->get(did, a);
-            if (r == CODE_OK)
-                return retStr(retBuf, retSize, did.toJsonString());
-            else
-                return retStatusCode(retBuf, retSize, r);
+            int r = svc->get(urn.networkIdentity.devid, urn.networkIdentity.devaddr);
+            return returnURN(retBuf, retSize, urn, r);
         }
             break;
-        case 'l': {
+        case 'L': {
             // request list
-            uint32_t offset = 0;
-            uint8_t size = 10;
-            if (js.contains("offset")) {
-                auto jOffset = js["offset"];
-                if (jOffset.is_number()) {
-                    offset = jOffset;
-                }
-            }
-            if (js.contains("size")) {
-                auto jSize = js["size"];
-                if (jSize.is_number()) {
-                    size = jSize;
-                }
-            }
             std::vector<NETWORKIDENTITY> nis;
-            int r = svc->list(nis, offset, size);
+            int r = svc->list(nis, urn.offset, urn.size);
+            std::stringstream ss;
             if (r == CODE_OK) {
-                std::stringstream ss;
                 bool isFirst = true;
-                ss << "[";
                 for (auto &ni: nis) {
                     if (isFirst)
                         isFirst = false;
                     else
-                        ss << ", ";
-                    ss << ni.toJsonString();
+                        ss << ';';
+                    LorawanIdentificationURN u;
+                    u.networkIdentity = ni;
+                    ss << u.toString();
                 }
-                ss << "]";
-                return retStr(retBuf, retSize, ss.str());
-            } else
-                return retStatusCode(retBuf, retSize, r);
+
+            }
+            return returnStr(retBuf, retSize, ss.str(), r);
         }
         case 'c': {
             // count
             auto r = svc->size();
-            return retStr(retBuf, retSize, std::to_string(r));
+            return returnStr(retBuf, retSize, std::to_string(r), 0);
         }
         case 'n':
             // next
         {
-            NETWORKIDENTITY ni;
-            auto r = svc->next(ni);
-            if (r)
-                return retStatusCode(retBuf, retSize, r);
-            else
-                return retStr(retBuf, retSize, ni.toJsonString());
+            auto r = svc->next(urn.networkIdentity);
+            return returnURN(retBuf, retSize, urn, r);
         }
         case 'p':
             // assign
         {
-            DEVADDR deviceAddr;
-            if (!js.contains("addr"))
-                return 0;
-            auto jAddr = js["addr"];
-            if (!jAddr.is_string())
-                return 0;
-            string2DEVADDR(deviceAddr, jAddr);
-
-            DEVICEID deviceId;
-            if (js.contains("activation")) {
-                auto jsv = js["activation"];
-                if (jsv.is_string())
-                    deviceId.activation = string2activation(jsv);
-            }
-
-            if (js.contains("class")) {
-                auto jsv = js["class"];
-                if (jsv.is_string())
-                    deviceId.setClass(string2deviceclass(jsv));
-            }
-
-            if (js.contains("deveui")) {
-                auto jsv = js["deveui"];
-                if (jsv.is_string())
-                    string2DEVEUI(deviceId.devEUI, jsv);
-            }
-
-            if (js.contains("nwkSKey")) {
-                auto jsv = js["nwkSKey"];
-                if (jsv.is_string())
-                    string2KEY(deviceId.nwkSKey, jsv);
-            }
-            if (js.contains("appSKey")) {
-                auto jsv = js["appSKey"];
-                if (jsv.is_string())
-                    string2KEY(deviceId.appSKey, jsv);
-            }
-
-            if (js.contains("version")) {
-                auto jsv = js["version"];
-                if (jsv.is_string())
-                    deviceId.version = string2LORAWAN_VERSION(jsv);
-            }
-
-            if (js.contains("appeui")) {
-                auto jsv = js["appeui"];
-                if (jsv.is_string())
-                    string2DEVEUI(deviceId.appEUI, jsv);
-            }
-
-            if (js.contains("appKey")) {
-                auto jsv = js["appKey"];
-                if (jsv.is_string())
-                    string2KEY(deviceId.appKey, jsv);
-            }
-
-            if (js.contains("nwkKey")) {
-                auto jsv = js["nwkKey"];
-                if (jsv.is_string())
-                    string2KEY(deviceId.nwkKey, jsv);
-            }
-
-            if (js.contains("devNonce")) {
-                auto jsv = js["devNonce"];
-                if (jsv.is_string())
-                    deviceId.devNonce = string2DEVNONCE(jsv);
-            }
-
-            if (js.contains("joinNonce")) {
-                auto jsv = js["joinNonce"];
-                if (jsv.is_string())
-                    string2JOINNONCE(deviceId.joinNonce, jsv);
-            }
-
-            if (js.contains("name")) {
-                auto jsv = js["name"];
-                if (jsv.is_string()) {
-                    std::string s(jsv);
-                    string2DEVICENAME(deviceId.name, s.c_str());
-                }
-            }
-
-            auto r = svc->put(deviceAddr, deviceId);
-            return retStatusCode(retBuf, retSize, r);
+            auto r = svc->put(urn.networkIdentity.devaddr, urn.networkIdentity.devid);
+            return returnStr(retBuf, retSize, std::to_string(r), 0);
         }
         case 'r':
             // remove entry
         {
-            // get address
-            DEVADDR deviceAddr;
-            std::string addr;
-            if (!js.contains("addr"))
-                return retStatusCode(retBuf, retSize, ERR_CODE_DEVICE_ADDRESS_NOTFOUND);
-            auto jAddr = js["addr"];
-            if (!jAddr.is_string())
-                return retStatusCode(retBuf, retSize, ERR_CODE_DEVICE_ADDRESS_NOTFOUND);
-            string2DEVADDR(deviceAddr, jAddr);
-            auto r = svc->rm(deviceAddr);
-            return retStatusCode(retBuf, retSize, r);
+            auto r = svc->rm(urn.networkIdentity.devaddr);
+            return returnStr(retBuf, retSize, std::to_string(r), 0);
         }
         case 's':
             // force save
-            return retStatusCode(retBuf, retSize, CODE_OK);
+            return returnStr(retBuf, retSize, std::to_string(CODE_OK), 0);
         case 'e':
             // close resources
-            return retStatusCode(retBuf, retSize, CODE_OK);
+            return returnStr(retBuf, retSize, std::to_string(CODE_OK), 0);
         default:
             return 0;
     }
