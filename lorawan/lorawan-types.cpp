@@ -1829,3 +1829,63 @@ bool MHDR::operator!=(const MHDR &rhs) const
 {
     return i != rhs.i;
 }
+
+/**
+ * @see file:///C:/Users/andrei/Downloads/tr005-lorawan-device-identification-qr-codes.pdf
+ * The VendorID, 0xFFFF, is to be utilized prior to commercial production of a device.
+ */
+PROFILEID::PROFILEID()
+    : u(0xffff0000)
+{
+}
+
+PROFILEID::PROFILEID(
+    const std::string &hex
+)
+    : u(0xffff0000)
+{
+    if (isHex(hex))
+        u = (uint32_t) strtoull(hex.c_str(), nullptr, 16);
+}
+
+PROFILEID::PROFILEID(
+    uint32_t value
+)
+    : u(value)
+{
+
+}
+
+std::size_t PROFILEID::operator()(
+    const PROFILEID &value
+) const {
+    return value.u;
+}
+
+bool PROFILEID::operator==(
+    const PROFILEID &rhs
+) const
+{
+    return rhs.u == u;
+}
+
+bool PROFILEID::operator<(
+    const PROFILEID &rhs
+) const
+{
+    return u < rhs.u;
+}
+
+bool PROFILEID::operator>(
+    const PROFILEID &rhs
+) const
+{
+    return u > rhs.u;
+}
+
+bool PROFILEID::operator!=(
+        const PROFILEID &rhs
+) const
+{
+    return u != rhs.u;
+}

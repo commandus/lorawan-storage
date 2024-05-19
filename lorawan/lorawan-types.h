@@ -657,4 +657,26 @@ public:
 
 #define SIZE_NETWORKIDENTITY 96
 
+typedef PACK(struct {
+     uint16_t vendorId;
+     uint16_t vendorProfileId;
+} ) PROFILE_TYPE;		// 4 bytes
+
+PACK(class PROFILEID {
+     public:
+         union {
+             unsigned char c[4];
+             uint32_t u;
+             PROFILE_TYPE profile;
+         };
+         PROFILEID();
+         explicit PROFILEID(const std::string &hex);
+         explicit PROFILEID(uint32_t value);
+         std::size_t operator()(const PROFILEID &value) const;
+         bool operator==(const PROFILEID &rhs) const;
+         bool operator<(const PROFILEID &rhs) const;
+         bool operator>(const PROFILEID &rhs) const;
+         bool operator!=(const PROFILEID &rhs) const;
+});
+
 #endif

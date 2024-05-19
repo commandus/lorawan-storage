@@ -43,19 +43,15 @@ static int32_t printURN(
     std::string &retVal,
     const CliTagParams &p
 ) {
-    NETWORKIDENTITY networkIdentity;
-    string2DEVEUI(networkIdentity.devid.appEUI, p.join_eui);
-    string2DEVEUI(networkIdentity.devid.devEUI, p.dev_eui);
-    memmove(networkIdentity.devid.name.c, p.profile_id.c_str(), p.profile_id.size() > 8 ? 8 : p.profile_id.size());
-    retVal = NETWORKIDENTITY2URN(
-        networkIdentity,
+    retVal = mkURN(
+        DEVEUI(p.join_eui),
+        DEVEUI(p.dev_eui),
+        PROFILEID(p.profile_id),
         p.owner_token,
         p.serial_number,
-        false,
-        p.crc,
-        &p.proprietary
+        &p.proprietary,
+        p.crc
     );
-
     return CODE_OK;
 }
 

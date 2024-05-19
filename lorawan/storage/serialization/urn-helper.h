@@ -8,6 +8,16 @@
 #include <vector>
 #include "lorawan/lorawan-types.h"
 
+std::string mkURN(
+    const DEVEUI &appEui,
+    const DEVEUI &devEui,
+    const PROFILEID &profileId,
+    const std::string &ownerToken = "",
+    const std::string &serialNumber = "",
+    const std::vector<std::string> *extraProprietary = nullptr,
+    bool addCheckSum = false
+);
+
 std::string NETWORKIDENTITY2URN(
     const NETWORKIDENTITY &networkIdentity,
     const std::string &ownerToken = "",
