@@ -285,7 +285,9 @@ else()
 	#
 	# lorawan-tag
 	#
-	add_executable(lorawan-tag cli-tag.cpp cli-helper.cpp ${ARGTABLE})
+	add_executable(lorawan-tag cli-tag.cpp cli-helper.cpp ${ARGTABLE}
+		third-party/nayuki/qrcodegen.cpp
+	)
 	target_link_libraries(lorawan-tag PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} lorawan)
 	target_compile_definitions(lorawan-tag PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-tag PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})

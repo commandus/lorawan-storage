@@ -2,12 +2,14 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <climits>
 
 #include "argtable3/argtable3.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/storage/serialization/urn-helper.h"
 #include "lorawan/lorawan-string.h"
+#include "nayuki/qrcodegen.hpp"
 
 const char *programName = "lorawan-tag";
 
@@ -27,11 +29,12 @@ public:
     std::vector<std::string> proprietary;
     bool crc;
     bool qr;
+    bool svg;
     int verbose;
     int32_t retCode;
 
     CliTagParams()
-        : crc(false), qr(false), verbose(0), retCode(0)
+        : crc(false), qr(false), svg(false), verbose(0), retCode(0)
     {
 
     }
@@ -55,6 +58,20 @@ static int32_t printURN(
     return CODE_OK;
 }
 
+static void printQr2strm(
+    std::ostream &strm,
+    const qrcodegen::QrCode &qr
+) {
+    int border = 1;
+    for (int y = -border; y < qr.getSize() + border; y++) {
+        for (int x = -border; x < qr.getSize() + border; x++) {
+            strm << (qr.getModule(x, y) ? "  " : u8"\u2588\u2588");
+        }
+        strm << "\n";
+    }
+    strm << std::endl;
+}
+
 static int32_t printQR(
     std::string &retVal,
     const CliTagParams &p
@@ -62,7 +79,53 @@ static int32_t printQR(
     std::string r;
     int32_t c = printURN(r, p);
     if (!c) {
-        retVal = "QR: " + r;
+        const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(r.c_str(), qrcodegen::QrCode::Ecc::LOW);
+        printQr2strm(std::cout, qr);
+    }
+    return c;
+}
+
+// Returns a string of SVG code for an image depicting the given QR Code, with the given number
+// of border modules. The string always uses Unix newlines (\n), regardless of the platform.
+static std::string toSvgString(
+    const qrcodegen::QrCode &qr,
+    int border
+) {
+    if (border < 0)
+        border = 0;
+    if (border > INT_MAX / 2 || border * 2 > INT_MAX - qr.getSize())
+        border = 1;
+
+    std::ostringstream sb;
+    sb << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    sb << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
+    sb << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 ";
+    sb << (qr.getSize() + border * 2) << " " << (qr.getSize() + border * 2) << "\" stroke=\"none\">\n";
+    sb << "\t<rect width=\"100%\" height=\"100%\" fill=\"#FFFFFF\"/>\n";
+    sb << "\t<path d=\"";
+    for (int y = 0; y < qr.getSize(); y++) {
+        for (int x = 0; x < qr.getSize(); x++) {
+            if (qr.getModule(x, y)) {
+                if (x != 0 || y != 0)
+                    sb << " ";
+                sb << "M" << (x + border) << "," << (y + border) << "h1v1h-1z";
+            }
+        }
+    }
+    sb << "\" fill=\"#000000\"/>\n";
+    sb << "</svg>\n";
+    return sb.str();
+}
+
+static int32_t printSVG(
+    std::string &retVal,
+    const CliTagParams &p
+) {
+    std::string r;
+    int32_t c = printURN(r, p);
+    if (!c) {
+        const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(r.c_str(), qrcodegen::QrCode::Ecc::LOW);
+        std::cout << toSvgString(qr, 1) << std::endl;
     }
     return c;
 }
@@ -70,6 +133,8 @@ static int32_t printQR(
 static void run()
 {
     std::string r;
+    if (params.svg)
+        params.retCode = printSVG(r, params);
     if (params.qr)
         params.retCode = printQR(r, params);
     else
@@ -88,7 +153,8 @@ int main(int argc, char **argv) {
     struct arg_str* a_serial_number = arg_str0("s", "serial-number", _("<string>"), _("Serial number"));
     struct arg_str* a_proprietary = arg_strn("p", "proprietary", _("<string>"), 0, 50, _("Proprietary value"));
     struct arg_lit *a_crc = arg_lit0("c", "crc", _("add CRC-16"));
-    struct arg_lit *a_qr = arg_lit0("q", "qr", _("print QR code"));
+    struct arg_lit *a_qr = arg_lit0("q", "qr", _("print QR code to console"));
+    struct arg_lit *a_svg = arg_lit0("g", "svf", _("print QR code as SVG"));
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
     struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
@@ -96,7 +162,7 @@ int main(int argc, char **argv) {
 	void* argtable[] = {
 		a_join_eui, a_dev_eui, a_profile_id,
         a_owner_token, a_serial_number, a_proprietary,
-        a_crc, a_qr, a_verbose,
+        a_crc, a_qr, a_svg,a_verbose,
 		a_help, a_end 
 	};
 
@@ -117,6 +183,7 @@ int main(int argc, char **argv) {
         params.serial_number = *a_serial_number->sval;
     params.crc = a_crc->count > 0;
     params.qr = a_qr->count > 0;
+    params.svg = a_svg->count > 0;
     params.verbose = a_verbose->count;
     for (int i = 0; i < a_proprietary->count; i++) {
         params.proprietary.emplace_back(a_proprietary->sval[i]);

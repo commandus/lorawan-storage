@@ -69,7 +69,8 @@ nobase_dist_include_HEADERS = \
 	cli-helper.h config.h log.h platform-specific.h \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
 	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c \
-	third-party/argtable3/argtable3.h third-party/strptime.h third-party/daemonize.h
+	third-party/argtable3/argtable3.h third-party/strptime.h third-party/daemonize.h \
+	third-party/nayuki/qrcodegen.h
 
 #
 # liblorawan
@@ -152,6 +153,7 @@ lorawan_query_direct_LDADD = -L. -llorawan $(EXTRA_LIB)
 lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
 
 lorawan_tag_SOURCES = cli-tag.cpp cli-helper.cpp \
+    third-party/nayuki/qrcodegen.cpp \
     $(SRC_ARGTABLE)
 lorawan_tag_LDADD -L. -llorawan $(EXTRA_LIB)
 lorawan_tag_CPPFLAGS = $(GATEWAY_DEF)
@@ -187,7 +189,8 @@ dist_config_DATA = \
 	autogen.sh CMakeLists.txt CODE_OF_CONDUCT.md CONTRIBUTING.md COPYING HISTORY LICENSE README.md TODO \
 	third-party/argtable3/README \
 	tests/test-parse-packet.cpp \
-	examples/example-direct.cpp examples/example-gen.cpp examples/example-gw-mem.cpp examples/example-mem.cpp
+	examples/example-direct.cpp examples/example-gen.cpp examples/example-gw-mem.cpp examples/example-mem.cpp \
+	third-party/nayuki/README.nayuki
 #
 # Tests
 #
