@@ -250,7 +250,7 @@ else()
 	# lorawan-identity-service
 	#
 	set(LORAWAN_IDENTITY_SERVICE_SRC
-		cli-main.cpp
+		cli-main.cpp cli-helper.cpp
 		third-party/daemonize.cpp
 		${ARGTABLE}
 	)

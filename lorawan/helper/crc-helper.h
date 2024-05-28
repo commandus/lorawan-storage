@@ -1,7 +1,8 @@
 #ifndef LORAWAN_STORAGE_CRC_HELPER_H
 #define LORAWAN_STORAGE_CRC_HELPER_H
 
-#include "cinttypes"
+#include <cstddef>
+#include <cinttypes>
 
 /**
  * @param data

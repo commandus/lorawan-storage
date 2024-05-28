@@ -25,6 +25,8 @@
 #define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK true
 #endif
 
+#include "cli-helper.h"
+
 #ifdef ENABLE_HTTP
 #include "lorawan/storage/listener/http-listener.h"
 #include "lorawan/storage/serialization/identity-text-json-serialization.h"

@@ -1,5 +1,6 @@
 #include <sstream>
 #include <iomanip>
+#include <cstring>
 #include "lorawan/storage/serialization/urn-helper.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/crc-helper.h"
