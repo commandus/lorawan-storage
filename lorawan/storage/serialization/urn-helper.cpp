@@ -30,102 +30,114 @@ LorawanIdentificationURN::LorawanIdentificationURN(
     parse(urn);
 }
 
+bool LorawanIdentificationURN::parseToken(
+    const std::string &token,
+    int &count
+)
+{
+    switch (count) {
+        case 0:
+            if (token != "LW")
+                return false;
+            break;
+        case 1:
+            if (token != "D0")
+                return false;
+            break;
+        case 2:
+            string2DEVEUI(networkIdentity.devid.appEUI, token);
+            break;
+        case 3:
+            string2DEVEUI(networkIdentity.devid.devEUI, token);
+            break;
+        default:
+            // optional
+        {
+            if (token.empty())
+                return false;
+            switch (token[0]) {
+                case 'C':
+                    crc = (uint16_t) strtoul(token.c_str() + 1, nullptr, 16);
+                    break;
+                case 'O':
+                    ownerToken = token.substr(1);
+                case 'S':
+                    serialNumber = token.substr(1);
+                    break;
+                case 'P':
+                    if (token.size() < 2)
+                        return false;
+                    switch (token[1]) {
+                        case 'D':    // device address
+                            string2DEVADDR(networkIdentity.devaddr, token.substr(2));
+                            break;
+                        case 'T':    // activation
+                            networkIdentity.devid.activation = string2activation(token.substr(2));
+                            break;
+                        case 'C':     // device class
+                            networkIdentity.devid.setClass(string2deviceclass(token.substr(2)));
+                            break;
+                        case 'W':     // nwkSKey
+                            string2KEY(networkIdentity.devid.nwkSKey, token.substr(2));
+                            break;
+                        case 'S':    // appSKey
+                            string2KEY(networkIdentity.devid.appSKey, token.substr(2));
+                            break;
+                        case 'V':    // LoRaWAN version
+                            networkIdentity.devid.version = string2LORAWAN_VERSION(token.substr(2));
+                            break;
+                        case 'A':    // appKey
+                            string2KEY(networkIdentity.devid.appKey, token.substr(2));
+                            break;
+                        case 'N':    // nwkKey
+                            string2KEY(networkIdentity.devid.nwkKey, token.substr(2));
+                            break;
+                        case 'O':    // devNonce
+                            networkIdentity.devid.devNonce = string2DEVNONCE(token.substr(2));
+                            break;
+                        case 'J':    // joinNonce
+                            string2JOINNONCE(networkIdentity.devid.joinNonce, token.substr(2));
+                            break;
+                        case 'X':     // 'command': 'A', 'I', 'L', 'C', 'N', 'P', 'R', 'S', 'E'
+                            if (token.size() > 1)
+                                command = token[2];
+                            break;
+                        case 'F':     // offset
+                            offset = (uint8_t) strtoul(token.substr(2).c_str(), nullptr, 16);
+                            break;
+                        case 'Z':     // size
+                            size = (uint32_t) strtoul(token.substr(2).c_str(), nullptr, 16);
+                            break;
+                        default:
+                            return false;
+                    }
+                    break;
+                default:
+                    return false;  // invalid character
+            }
+        }
+    }
+    count++;
+    return true;
+}
+
 bool LorawanIdentificationURN::parse(
     const std::string &urn
 )
 {
-    bool r = true;
     size_t p = 0;
+    size_t lastP = 0;
     int count = 0;
-    while ((p = urn.find(':', p)) != std::string::npos) {
-        std::string token = urn.substr(0, p);
-        switch (count) {
-            case 0:
-                if (token != "LW")
-                    return false;
-                break;
-            case 1:
-                if (token != "D0")
-                    return false;
-                break;
-            case 2:
-                string2DEVEUI(networkIdentity.devid.appEUI, token);
-                break;
-            case 3:
-                string2DEVEUI(networkIdentity.devid.devEUI, token);
-                break;
-            default:
-                // optional
-            {
-                if (token.empty())
-                    continue;
-                switch (token[0]) {
-                    case 'C':
-                        crc = (uint16_t) strtoul(token.c_str() + 1, nullptr, 16);
-                        break;
-                    case 'O':
-                        ownerToken = token.substr(1);
-                    case 'S':
-                        serialNumber = token.substr(1);
-                        break;
-                    case 'P':
-                        if (token.size() < 2)
-                            continue;
-                        switch (token[1]) {
-                            case 'D':    // device address
-                                string2DEVADDR(networkIdentity.devaddr, token.substr(2));
-                                break;
-                            case 'T':    // activation
-                                networkIdentity.devid.activation = string2activation(token.substr(2));
-                                break;
-                            case 'C':     // device class
-                                networkIdentity.devid.setClass(string2deviceclass(token.substr(2)));
-                                break;
-                            case 'W':     // nwkSKey
-                                string2KEY(networkIdentity.devid.nwkSKey, token.substr(2));
-                                break;
-                            case 'S':    // appSKey
-                                string2KEY(networkIdentity.devid.appSKey, token.substr(2));
-                                break;
-                            case 'V':    // LoRaWAN version
-                                networkIdentity.devid.version = string2LORAWAN_VERSION(token.substr(2));
-                                break;
-                            case 'A':    // appKey
-                                string2KEY(networkIdentity.devid.appKey, token.substr(2));
-                                break;
-                            case 'N':    // nwkKey
-                                string2KEY(networkIdentity.devid.nwkKey, token.substr(2));
-                                break;
-                            case 'O':    // devNonce
-                                networkIdentity.devid.devNonce = string2DEVNONCE(token.substr(2));
-                                break;
-                            case 'J':    // joinNonce
-                                string2JOINNONCE(networkIdentity.devid.joinNonce, token.substr(2));
-                                break;
-                            case 'X':     // 'command': 'A', 'I', 'L', 'C', 'N', 'P', 'R', 'S', 'E'
-                                if (token.size() > 1)
-                                    command = token[2];
-                                break;
-                            case 'F':     // offset
-                                offset = (uint8_t) strtoul(token.substr(2).c_str(), nullptr, 16);
-                                break;
-                            case 'Z':     // size
-                                size = (uint32_t) strtoul(token.substr(2).c_str(), nullptr, 16);
-                                break;
-                            default:
-                                break;
-                        }
-                        break;
-                    default:
-                        break;  // invalid character
-                }
-            }
-        }
+    while ((p = urn.find(':', p)) != std::string::npos)  {
+        if (!parseToken(urn.substr(lastP, p - lastP), count))
+            return false;
         p++;
-        count++;
+        lastP = p;
     }
-    LW:D0:
-    return r;
+    auto sz = urn.size();
+    if (lastP < sz)
+        return parseToken(urn.substr(lastP, sz - lastP), count);
+    return true;
 }
 
 std::string LorawanIdentificationURN::toString() const

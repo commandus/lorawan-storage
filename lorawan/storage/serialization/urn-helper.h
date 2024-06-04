@@ -24,7 +24,13 @@ typedef enum ProprietaryXCommand {
 
 class LorawanIdentificationURN {
 protected:
-    bool parse(const std::string &urn);
+    bool parseToken(
+        const std::string &token,
+        int &count
+    );
+    bool parse(
+        const std::string &urn
+    );
 public:
     NETWORKIDENTITY networkIdentity;
     PROFILEID profileId;
