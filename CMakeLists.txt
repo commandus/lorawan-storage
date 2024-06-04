@@ -6,6 +6,7 @@
 # -DENABLE_DEBUG=off   	enable debugging output
 # -DENABLE_GEN=on   	enable key generator (default in memory storage)
 # -DENABLE_HTTP=off		enable HTTP service. libmicrohttpd dependency required.
+# -DENABLE_QRCODE=off	enable HTTP QRCode URN service. libmicrohttpd dependency required.
 # -DENABLE_SQLITE=off  	enable SQLITE3 backend (reserved)
 # -DENABLE_IPV6=off   	enable IPv6 (reserved)
 #
@@ -91,6 +92,7 @@ else()
 	option(ENABLE_LIBUV "Build with libuv" OFF)
 	option(ENABLE_GEN "Build with generator" OFF)
 	option(ENABLE_HTTP "Build with HTTP" OFF)
+	option(ENABLE_QRCODE "Build with HTTP QRCode URN" OFF)
 	option(ENABLE_SQLITE "Build with SQLite" OFF)
 	option(ENABLE_JSON "Build with JSON file" ON)
 
@@ -146,6 +148,10 @@ else()
 		find_library(LIBMICROHTTPD NAMES microhttpd libmicrohttpd-dll.lib HINTS /usr/lib/x86_64-linux-gnu/ ${VCPKG_LIB}
 				${MINGW_LIB}
 		)
+	endif()
+
+	if(ENABLE_QRCODE)
+		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_QRCODE)
 	endif()
 
 	if (ENABLE_IPV6)

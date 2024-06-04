@@ -21,6 +21,9 @@
 #include "lorawan/storage/listener/uv-listener.h"
 #define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK false
 #else
+
+
+
 #include "lorawan/storage/listener/udp-listener.h"
 #define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK true
 #endif
@@ -31,6 +34,10 @@
 #include "lorawan/storage/listener/http-listener.h"
 #include "lorawan/storage/serialization/identity-text-json-serialization.h"
 #include "lorawan/storage/serialization/gateway-text-json-serialization.h"
+#endif
+
+#ifdef ENABLE_QRCODE
+#include "lorawan/storage/serialization/identity-text-urn-serialization.h"
 #endif
 
 #define DEF_DB_GATEWAY_JSON  "gateway.json"
@@ -110,6 +117,11 @@ public:
     uint16_t httpPort;
     std::string httpHtmlRootDir;
 #endif
+#ifdef ENABLE_QRCODE
+    StorageListener *httpQRCodeURNServer;
+    std::string httpQRCodeURNIntf;
+    uint16_t httpQRCodeURNPort;
+#endif
     int32_t code;
     uint64_t accessCode;
     bool runAsDaemon;
@@ -127,6 +139,9 @@ public:
 #ifdef ENABLE_HTTP
         httpServer(nullptr), httpPort(4246),
 #endif
+#ifdef ENABLE_QRCODE
+          httpQRCodeURNServer(nullptr), httpQRCodeURNPort(4248),
+#endif
         code(0), accessCode(0), verbose(0), retCode(0),
         runAsDaemon(false)
 #ifdef ENABLE_GEN
@@ -142,6 +157,9 @@ public:
 #ifdef ENABLE_HTTP
         ss << _("HTTP: ") << httpIntf << ":" << httpPort << "\n"
             << _("HTML page root directory: ") << (httpHtmlRootDir.empty() ? _("none") : httpHtmlRootDir) << "\n";
+#endif
+#ifdef ENABLE_QRCODE
+        ss << _("HTTP QR Code: ") << httpQRCodeURNIntf << ":" << httpQRCodeURNPort << "\n";
 #endif
         ss << _("Code: ") << std::hex << code << _(", access code: ")  << accessCode << " " << "\n";
         if (!db.empty())
@@ -247,12 +265,20 @@ void run() {
 #ifdef ENABLE_HTTP
     auto identitySerializationJSON = new IdentityTextJSONSerialization(identityService, svc.code, svc.accessCode);
     auto gatewaySerializationJSON = new GatewayTextJSONSerialization(gatewayService, svc.code, svc.accessCode);
-    svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerializationJSON,
-                                      svc.httpHtmlRootDir);
+    svc.httpServer = new HTTPListener(identitySerializationJSON, gatewaySerializationJSON, svc.httpHtmlRootDir);
     svc.httpServer->setAddress(svc.httpIntf, svc.httpPort);
     svc.httpServer->setLog(svc.verbose, &svc);
     svc.httpServer->run();
 #endif
+
+#ifdef ENABLE_QRCODE
+    auto identitySerializationQrCodeURN = new IdentityTextURNSerialization(identityService, svc.code, svc.accessCode);
+    svc.httpQRCodeURNServer = new HTTPListener(identitySerializationQrCodeURN, nullptr, svc.httpHtmlRootDir);
+    svc.httpQRCodeURNServer->setAddress(svc.httpQRCodeURNIntf, svc.httpQRCodeURNPort);
+    svc.httpQRCodeURNServer->setLog(svc.verbose, &svc);
+    svc.httpQRCodeURNServer->run();
+#endif
+
     if (svc.verbose)
         std::cout << _("Identities: ") << svc.server->identitySerialization->svc->size() << std::endl;
 
@@ -268,7 +294,9 @@ int main(int argc, char **argv) {
     struct arg_str *a_http_interface_n_port = arg_str0("h", "http", _("IP addr:port"), _("Default *:4246"));
     struct arg_str *a_http_html_root_dir = arg_str0("r", "root", _("<path>"), _("web root path. Default none"));
 #endif
-
+#ifdef ENABLE_QRCODE
+    struct arg_str *a_http_qrcode_urn_interface_n_port = arg_str0("q", "qr", _("IP addr:port"), _("Default *:4248"));
+#endif
     struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
 #ifdef ENABLE_JSON
     struct arg_str *a_gateway_json_db = arg_str0("g", "gateway-db", _("<database file>"), _("database file name. Default " DEF_DB_GATEWAY_JSON));
@@ -291,6 +319,9 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_HTTP
             a_http_interface_n_port,
             a_http_html_root_dir,
+#endif
+#ifdef ENABLE_QRCODE
+            a_http_qrcode_urn_interface_n_port,
 #endif
 #ifdef ENABLE_GEN
         a_pass_phrase, a_net_id,
@@ -339,7 +370,15 @@ int main(int argc, char **argv) {
         svc.httpHtmlRootDir = file::expandFileName(*a_http_html_root_dir->sval);
     else
         svc.httpHtmlRootDir = "";
+#endif
 
+#ifdef ENABLE_QRCODE
+    if (a_http_qrcode_urn_interface_n_port->count) {
+        splitAddress(svc.httpQRCodeURNIntf, svc.httpQRCodeURNPort, std::string(*a_http_qrcode_urn_interface_n_port->sval));
+    } else {
+        svc.httpQRCodeURNIntf = "*";
+        svc.httpQRCodeURNPort = 4248;
+    }
 #endif
 
 #ifdef ENABLE_GEN
