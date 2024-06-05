@@ -125,7 +125,7 @@ static int32_t printSVG(
     int32_t c = printURN(r, p);
     if (!c) {
         const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(r.c_str(), qrcodegen::QrCode::Ecc::LOW);
-        std::cout << toSvgString(qr, 1) << std::endl;
+        std::cout << qrCode2Svg(qr, 1) << std::endl;
     }
     return c;
 }

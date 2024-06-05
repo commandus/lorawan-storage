@@ -19,6 +19,7 @@
 
 #ifdef ENABLE_QRCODE
 #include "nayuki/qrcodegen.hpp"
+#include "lorawan/storage/serialization/qr-helper.h"
 #endif
 
 #define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
@@ -247,6 +248,23 @@ static MHD_Result processFile(
     return ret;
 }
 
+static enum MHD_Result getAllQueryString(
+    void *cls,
+    enum MHD_ValueKind kind,
+    const char *key,
+    const char *value
+)
+{
+    std::string *s = (std::string *) cls;
+    if (key)
+        s->append(key);
+    if (value) {
+        s->append("=");
+        s->append(value);
+    }
+    return MHD_YES;
+}
+
 static MHD_Result request_callback(
 	void *cls,			// HTTPListener
 	struct MHD_Connection *connection,
@@ -281,8 +299,13 @@ static MHD_Result request_callback(
         requestCtx->postData += std::string(upload_data, *upload_data_size);
         *upload_data_size = 0;
         return MHD_YES;
+    } else {
+        // try read QUERY_STRING
+        std::string s;
+        MHD_get_connection_values(connection, MHD_GET_ARGUMENT_KIND, getAllQueryString, &s);
+        if (!s.empty())
+            requestCtx->postData += s;
     }
-
     requestCtx->url = url;
 
     int hc;
@@ -324,16 +347,7 @@ static MHD_Result request_callback(
             if (retSVG) {
                 const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(
                     std::string((const char *) rb, sz).c_str(), qrcodegen::QrCode::Ecc::LOW);
-                int border = 1;
-                std::stringstream ss;
-                for (int y = -border; y < qr.getSize() + border; y++) {
-                    for (int x = -border; x < qr.getSize() + border; x++) {
-                        ss << (qr.getModule(x, y) ? "  " : u8"\u2588\u2588");
-                    }
-                    ss << "\n";
-                }
-                ss << "\n";
-                std::string s = ss.str();
+                std::string s = qrCode2Svg(qr);
                 response = MHD_create_response_from_buffer(s.size(), (void *) s.c_str(), MHD_RESPMEM_MUST_COPY);
             } else
 #endif

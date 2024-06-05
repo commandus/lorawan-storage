@@ -209,6 +209,13 @@ else()
 		)
 	endif()
 
+	if (ENABLE_QRCODE)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
+			lorawan/storage/serialization/qr-helper.cpp
+			third-party/nayuki/qrcodegen.cpp
+		)
+	endif()
+
 	#
 	# liblorawan
 	#
@@ -262,9 +269,6 @@ else()
 		third-party/daemonize.cpp
 		${ARGTABLE}
 	)
-if (ENABLE_JSON)
-	set(LORAWAN_IDENTITY_SERVICE_SRC ${LORAWAN_IDENTITY_SERVICE_SRC} third-party/nayuki/qrcodegen.cpp)
-endif()
 
 	add_executable(lorawan-identity-service ${LORAWAN_IDENTITY_SERVICE_SRC})
 	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBMICROHTTPD} ${LIBINTL} ${LIBUVA} lorawan)
