@@ -17,6 +17,10 @@
 #pragma warning(disable: 4996)
 #endif
 
+#ifdef ENABLE_QRCODE
+#include "nayuki/qrcodegen.hpp"
+#endif
+
 #define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
 #define DEF_HTML_INDEX_FILE_NAME "index.html"
 
@@ -26,6 +30,7 @@ const static char *CT_JSON = "text/javascript;charset=UTF-8";
 const static char *CT_KML = "application/vnd.google-earth.kml+xml";
 const static char *CT_PNG = "image/png";
 const static char *CT_JPEG = "image/jpeg";
+const static char *CT_SVG = "image/svg+xml";
 const static char *CT_CSS = "text/css";
 const static char *CT_TEXT = "text/plain;charset=UTF-8";
 const static char *CT_TTF = "font/ttf";
@@ -282,6 +287,9 @@ static MHD_Result request_callback(
 
     int hc;
     auto *l = (HTTPListener *) cls;
+#ifdef ENABLE_QRCODE
+    bool retSVG = strstr(url, "/qr") != nullptr;
+#endif
 
     if (strcmp(method, "DELETE") == 0) {
         hc = MHD_HTTP_NOT_IMPLEMENTED;
@@ -312,10 +320,35 @@ static MHD_Result request_callback(
             response = MHD_create_response_from_buffer(strlen(HTTP_ERROR_404), (void *) HTTP_ERROR_404, MHD_RESPMEM_PERSISTENT);
         } else {
             hc = MHD_HTTP_OK;
-            response = MHD_create_response_from_buffer(sz, (void *) &rb, MHD_RESPMEM_MUST_COPY);
+#ifdef ENABLE_QRCODE
+            if (retSVG) {
+                const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(
+                    std::string((const char *) rb, sz).c_str(), qrcodegen::QrCode::Ecc::LOW);
+                int border = 1;
+                std::stringstream ss;
+                for (int y = -border; y < qr.getSize() + border; y++) {
+                    for (int x = -border; x < qr.getSize() + border; x++) {
+                        ss << (qr.getModule(x, y) ? "  " : u8"\u2588\u2588");
+                    }
+                    ss << "\n";
+                }
+                ss << "\n";
+                std::string s = ss.str();
+                response = MHD_create_response_from_buffer(s.size(), (void *) s.c_str(), MHD_RESPMEM_MUST_COPY);
+            } else
+#endif
+                response = MHD_create_response_from_buffer(sz, (void *) &rb, MHD_RESPMEM_MUST_COPY);
+
         }
     }
+#ifdef ENABLE_QRCODE
+    if (retSVG) {
+        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, CT_SVG);
+    } else
+        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, l->mimeType);
+#else
     MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, l->mimeType);
+#endif
     addCORS(response);
 	ret = MHD_queue_response(connection, hc, response);
 	MHD_destroy_response(response);

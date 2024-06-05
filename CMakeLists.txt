@@ -215,6 +215,8 @@ else()
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
 	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} ${LIBMICROHTTPD})
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
+	# enable qr code generation by conditional variable
+	target_compile_definitions(lorawan PRIVATE ${GATEWAY_DEF})
 	set_property(TARGET lorawan PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 	#
@@ -260,6 +262,10 @@ else()
 		third-party/daemonize.cpp
 		${ARGTABLE}
 	)
+if (ENABLE_JSON)
+	set(LORAWAN_IDENTITY_SERVICE_SRC ${LORAWAN_IDENTITY_SERVICE_SRC} third-party/nayuki/qrcodegen.cpp)
+endif()
+
 	add_executable(lorawan-identity-service ${LORAWAN_IDENTITY_SERVICE_SRC})
 	target_link_libraries(lorawan-identity-service PRIVATE ${OS_SPECIFIC_LIBS} ${BACKEND_DB_LIB} ${LIBMICROHTTPD} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-identity-service PRIVATE ${GATEWAY_DEF})
