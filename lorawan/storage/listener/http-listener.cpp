@@ -370,7 +370,6 @@ static MHD_Result request_callback(
             } else
 #endif
                 response = MHD_create_response_from_buffer(sz, (void *) &rb, MHD_RESPMEM_MUST_COPY);
-
         }
     }
 #ifdef ENABLE_QRCODE
