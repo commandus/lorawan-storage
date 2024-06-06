@@ -12,7 +12,7 @@
  * @param border
  * @return
  */
-std::string toSvgString(
+std::string qrCode2Svg(
     const qrcodegen::QrCode &qr,
     int border = 0
 );

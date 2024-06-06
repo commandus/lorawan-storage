@@ -20,6 +20,7 @@
 #ifdef ENABLE_QRCODE
 #include "nayuki/qrcodegen.hpp"
 #include "lorawan/storage/serialization/qr-helper.h"
+#include "lorawan/storage/serialization/urn-helper.h"
 #endif
 
 #define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
@@ -265,6 +266,14 @@ static enum MHD_Result getAllQueryString(
     return MHD_YES;
 }
 
+#ifdef ENABLE_QRCODE
+typedef enum URN_TYPE {
+    URN_TYPE_NONE = 0,
+    URN_TYPE_STD = 1,
+    URN_TYPE_PROPRIETARY = 2
+} URN_TYPE;
+#endif
+
 static MHD_Result request_callback(
 	void *cls,			// HTTPListener
 	struct MHD_Connection *connection,
@@ -311,7 +320,14 @@ static MHD_Result request_callback(
     int hc;
     auto *l = (HTTPListener *) cls;
 #ifdef ENABLE_QRCODE
-    bool retSVG = strstr(url, "/qr") != nullptr;
+    URN_TYPE retSVG = URN_TYPE_NONE;
+    if (strstr(url, "/qr")) {
+        bool extended = (strstr(url, "prop") != nullptr);
+        if (extended)
+            retSVG = URN_TYPE_PROPRIETARY;
+        else
+            retSVG = URN_TYPE_STD;
+    }
 #endif
 
     if (strcmp(method, "DELETE") == 0) {
@@ -344,10 +360,12 @@ static MHD_Result request_callback(
         } else {
             hc = MHD_HTTP_OK;
 #ifdef ENABLE_QRCODE
-            if (retSVG) {
-                const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(
-                    std::string((const char *) rb, sz).c_str(), qrcodegen::QrCode::Ecc::LOW);
-                std::string s = qrCode2Svg(qr);
+            if (retSVG > URN_TYPE_NONE) {
+                std::string s = std::string((const char *) rb, sz);
+                if (retSVG == URN_TYPE_STD)
+                    s = stripURNProprietary(s);
+                const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(s.c_str(), qrcodegen::QrCode::Ecc::LOW);
+                s = qrCode2Svg(qr);
                 response = MHD_create_response_from_buffer(s.size(), (void *) s.c_str(), MHD_RESPMEM_MUST_COPY);
             } else
 #endif

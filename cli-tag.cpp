@@ -10,6 +10,7 @@
 #include "lorawan/storage/serialization/urn-helper.h"
 #include "lorawan/lorawan-string.h"
 #include "nayuki/qrcodegen.hpp"
+#include "lorawan/storage/serialization/qr-helper.h"
 
 const char *programName = "lorawan-tag";
 

@@ -240,3 +240,27 @@ size_t returnURN(
         r = 0;
     return r;
 }
+
+std::string stripURNProprietary(
+    const std::string &urn
+)
+{
+    std::stringstream ss;
+    size_t p = 0;
+    size_t lastP = 0;
+    int count = 0;
+    while ((p = urn.find(':', p)) != std::string::npos)  {
+        auto c = urn.substr(lastP, p - lastP + 1);
+        if (!(c.length() >= 1 && c[0] == 'P'))
+            ss << c;
+        p++;
+        lastP = p;
+    }
+    auto sz = urn.size();
+    if (lastP < sz) {
+        auto c = urn.substr(lastP, sz - lastP + 1);
+        if (!(c.length() >= 1 && c[0] == 'P'))
+            ss << c;
+    }
+    return ss.str();
+}

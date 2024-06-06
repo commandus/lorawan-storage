@@ -78,4 +78,13 @@ size_t returnURN(
     int errCode
 );
 
+/**
+ * Remove any proprietary properties from the URN (":P")
+ * @param value
+ * @return URN w/o proprietary properties
+ */
+std::string stripURNProprietary(
+    const std::string &value
+);
+
 #endif
