@@ -127,17 +127,6 @@ public:
     std::string postData;
 };
 
-static void *uri_logger_callback(
-    void *cls,
-    const char *uri
-)
-{
-    auto c = (HTTPListener *) cls;
-    if (c->verbose > 1)
-        std::cout << uri << std::endl;
-    return nullptr;
-}
-
 static const char *mimeTypeByFileExtension(const std::string &filename)
 {
     std::string ext = filename.substr(filename.find_last_of('.') + 1);
@@ -274,7 +263,7 @@ typedef enum URN_TYPE {
 } URN_TYPE;
 #endif
 
-static MHD_Result request_callback(
+static MHD_Result cbRequest(
 	void *cls,			// HTTPListener
 	struct MHD_Connection *connection,
 	const char *url,
@@ -336,6 +325,13 @@ static MHD_Result request_callback(
     } else {
         unsigned char rb[100000];
         size_t sz = 0;
+        if (l->verbose > 0) {
+            std::cout << method << " " << requestCtx->url;
+            if (l->verbose > 1) {
+                std::cout << " " << requestCtx->postData;
+            }
+            std::cout << std::endl;
+        }
         if (l->identitySerialization) {
             sz = l->identitySerialization->query(&rb[0], sizeof(rb),
             (const unsigned char *) requestCtx->postData.c_str(), requestCtx->postData.size());
@@ -392,10 +388,10 @@ int HTTPListener::run()
 {
     struct MHD_Daemon *d = MHD_start_daemon(
         flags, port, nullptr, nullptr,
-        &request_callback, this,
+        &cbRequest, this,
         MHD_OPTION_CONNECTION_TIMEOUT, (unsigned int) 30,  // 30s timeout
         MHD_OPTION_THREAD_POOL_SIZE, threadCount,
-        MHD_OPTION_URI_LOG_CALLBACK, &uri_logger_callback, this,
+        // MHD_OPTION_URI_LOG_CALLBACK, &cbUriLogger, this,
         MHD_OPTION_CONNECTION_LIMIT, connectionLimit,
         MHD_OPTION_END
     );
