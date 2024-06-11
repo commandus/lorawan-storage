@@ -259,7 +259,10 @@ static enum MHD_Result getAllQueryString(
 typedef enum URN_TYPE {
     URN_TYPE_NONE = 0,
     URN_TYPE_STD = 1,
-    URN_TYPE_PROPRIETARY = 2
+    URN_TYPE_PROPRIETARY = 2,
+    URN_TYPE_TEXT_STD = 3,
+    URN_TYPE_TEXT_PROPRIETARY = 4
+
 } URN_TYPE;
 #endif
 
@@ -312,10 +315,18 @@ static MHD_Result cbRequest(
     URN_TYPE retSVG = URN_TYPE_NONE;
     if (strstr(url, "/qr")) {
         bool extended = (strstr(url, "prop") != nullptr);
-        if (extended)
-            retSVG = URN_TYPE_PROPRIETARY;
-        else
-            retSVG = URN_TYPE_STD;
+        bool textOnly = (strstr(url, "text") != nullptr);
+        if (textOnly) {
+            if (extended)
+                retSVG = URN_TYPE_TEXT_PROPRIETARY;
+            else
+                retSVG = URN_TYPE_TEXT_STD;
+        } else {
+            if (extended)
+                retSVG = URN_TYPE_PROPRIETARY;
+            else
+                retSVG = URN_TYPE_STD;
+        }
     }
 #endif
 
@@ -358,10 +369,13 @@ static MHD_Result cbRequest(
 #ifdef ENABLE_QRCODE
             if (retSVG > URN_TYPE_NONE) {
                 std::string s = std::string((const char *) rb, sz);
-                if (retSVG == URN_TYPE_STD)
+                if (retSVG == URN_TYPE_STD || retSVG == URN_TYPE_TEXT_STD)
                     s = stripURNProprietary(s);
                 const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(s.c_str(), qrcodegen::QrCode::Ecc::LOW);
-                s = qrCode2Svg(qr);
+                if (retSVG == URN_TYPE_TEXT_STD || retSVG == URN_TYPE_TEXT_PROPRIETARY)
+                    s = qrCode2Text(qr);
+                else
+                    s = qrCode2Svg(qr);
                 response = MHD_create_response_from_buffer(s.size(), (void *) s.c_str(), MHD_RESPMEM_MUST_COPY);
             } else
 #endif
@@ -369,10 +383,13 @@ static MHD_Result cbRequest(
         }
     }
 #ifdef ENABLE_QRCODE
-    if (retSVG) {
+    if (retSVG == URN_TYPE_STD || retSVG == URN_TYPE_PROPRIETARY)
         MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, CT_SVG);
-    } else
-        MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, l->mimeType);
+    else
+        if (retSVG == URN_TYPE_TEXT_STD || retSVG == URN_TYPE_PROPRIETARY)
+            MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, CT_TEXT);
+        else
+            MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, l->mimeType);
 #else
     MHD_add_response_header(response, MHD_HTTP_HEADER_CONTENT_TYPE, l->mimeType);
 #endif

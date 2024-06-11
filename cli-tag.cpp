@@ -81,41 +81,9 @@ static int32_t printQR(
     int32_t c = printURN(r, p);
     if (!c) {
         const qrcodegen::QrCode qr = qrcodegen::QrCode::encodeText(r.c_str(), qrcodegen::QrCode::Ecc::LOW);
-        printQr2strm(std::cout, qr);
+        qrCode2Text(qr, 1);
     }
     return c;
-}
-
-// Returns a string of SVG code for an image depicting the given QR Code, with the given number
-// of border modules. The string always uses Unix newlines (\n), regardless of the platform.
-static std::string toSvgString(
-    const qrcodegen::QrCode &qr,
-    int border
-) {
-    if (border < 0)
-        border = 0;
-    if (border > INT_MAX / 2 || border * 2 > INT_MAX - qr.getSize())
-        border = 1;
-
-    std::ostringstream sb;
-    sb << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
-    sb << "<!DOCTYPE svg PUBLIC \"-//W3C//DTD SVG 1.1//EN\" \"http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd\">\n";
-    sb << "<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" viewBox=\"0 0 ";
-    sb << (qr.getSize() + border * 2) << " " << (qr.getSize() + border * 2) << "\" stroke=\"none\">\n";
-    sb << "\t<rect width=\"100%\" height=\"100%\" fill=\"#FFFFFF\"/>\n";
-    sb << "\t<path d=\"";
-    for (int y = 0; y < qr.getSize(); y++) {
-        for (int x = 0; x < qr.getSize(); x++) {
-            if (qr.getModule(x, y)) {
-                if (x != 0 || y != 0)
-                    sb << " ";
-                sb << "M" << (x + border) << "," << (y + border) << "h1v1h-1z";
-            }
-        }
-    }
-    sb << "\" fill=\"#000000\"/>\n";
-    sb << "</svg>\n";
-    return sb.str();
 }
 
 static int32_t printSVG(

@@ -36,3 +36,24 @@ std::string qrCode2Svg(
     sb << "</svg>\n";
     return sb.str();
 }
+
+/**
+ * Returns a string of QR code of pseudo-graphics
+ * @param qr
+ * @param border
+ * @return
+ */
+std::string qrCode2Text(
+    const qrcodegen::QrCode &qr,
+    int border
+) {
+    std::stringstream ss;
+    for (int y = -border; y < qr.getSize() + border; y++) {
+        for (int x = -border; x < qr.getSize() + border; x++) {
+            ss << (qr.getModule(x, y) ? "  " : u8"\u2588\u2588");
+        }
+        ss << "\n";
+    }
+    ss << "\n";
+    return ss.str();
+}
