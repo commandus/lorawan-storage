@@ -262,7 +262,6 @@ typedef enum URN_TYPE {
     URN_TYPE_PROPRIETARY = 2,
     URN_TYPE_TEXT_STD = 3,
     URN_TYPE_TEXT_PROPRIETARY = 4
-
 } URN_TYPE;
 #endif
 

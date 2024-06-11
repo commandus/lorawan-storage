@@ -57,6 +57,7 @@ nobase_dist_include_HEADERS = \
 	lorawan/storage/serialization/identity-text-json-serialization.h \
 	lorawan/storage/serialization/identity-text-urn-serialization.h \
 	lorawan/storage/serialization/gateway-text-json-serialization.h \
+    lorawan/storage/serialization/qr-helper.h \
 	lorawan/storage/serialization/service-serialization.h \
 	lorawan/storage/serialization/urn-helper.h \
 	lorawan/storage/service/async-wrapper-gateway-service.h lorawan/storage/service/async-wrapper-identity-service.h \
@@ -70,7 +71,7 @@ nobase_dist_include_HEADERS = \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
 	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c \
 	third-party/argtable3/argtable3.h third-party/strptime.h third-party/daemonize.h \
-	third-party/nayuki/qrcodegen.h
+	third-party/nayuki/qrcodegen.hpp
 
 #
 # liblorawan
@@ -134,6 +135,11 @@ EXTRA_LIB += -lmicrohttpd
 SRC_LIBLORAWAN += lorawan/storage/listener/http-listener.cpp
 endif
 
+if ENABLE_QRCODE
+GATEWAY_DEF += -DENABLE_QRCODE
+SRC_LIBLORAWAN += lorawan/storage/serialization/qr-helper.cpp
+endif
+
 liblorawan_a_SOURCES = $(SRC_LIBLORAWAN)
 liblorawan_a_CPPFLAGS = -fPIC
 
@@ -155,7 +161,7 @@ lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
 lorawan_tag_SOURCES = cli-tag.cpp cli-helper.cpp \
     third-party/nayuki/qrcodegen.cpp \
     $(SRC_ARGTABLE)
-lorawan_tag_LDADD -L. -llorawan $(EXTRA_LIB)
+lorawan_tag_LDADD = -L. -llorawan $(EXTRA_LIB)
 lorawan_tag_CPPFLAGS = $(GATEWAY_DEF)
 
 #

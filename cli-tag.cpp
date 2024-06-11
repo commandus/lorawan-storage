@@ -1,15 +1,15 @@
 #include <string>
 #include <iostream>
-#include <sstream>
 #include <vector>
-#include <climits>
 
 #include "argtable3/argtable3.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/storage/serialization/urn-helper.h"
 #include "lorawan/lorawan-string.h"
+#if ENABLE_QRCODE
 #include "nayuki/qrcodegen.hpp"
+#endif
 #include "lorawan/storage/serialization/qr-helper.h"
 
 const char *programName = "lorawan-tag";
@@ -59,20 +59,7 @@ static int32_t printURN(
     return CODE_OK;
 }
 
-static void printQr2strm(
-    std::ostream &strm,
-    const qrcodegen::QrCode &qr
-) {
-    int border = 1;
-    for (int y = -border; y < qr.getSize() + border; y++) {
-        for (int x = -border; x < qr.getSize() + border; x++) {
-            strm << (qr.getModule(x, y) ? "  " : u8"\u2588\u2588");
-        }
-        strm << "\n";
-    }
-    strm << std::endl;
-}
-
+#if ENABLE_QRCODE
 static int32_t printQR(
     std::string &retVal,
     const CliTagParams &p
@@ -98,15 +85,18 @@ static int32_t printSVG(
     }
     return c;
 }
+#endif
 
 static void run()
 {
     std::string r;
+#if ENABLE_QRCODE
     if (params.svg)
         params.retCode = printSVG(r, params);
     if (params.qr)
         params.retCode = printQR(r, params);
     else
+#endif
         params.retCode = printURN(r, params);
     if (params.retCode)
         std::cerr << ERR_MESSAGE << params.retCode << std::endl;
@@ -122,8 +112,10 @@ int main(int argc, char **argv) {
     struct arg_str* a_serial_number = arg_str0("s", "serial-number", _("<string>"), _("Serial number"));
     struct arg_str* a_proprietary = arg_strn("p", "proprietary", _("<string>"), 0, 50, _("Proprietary value"));
     struct arg_lit *a_crc = arg_lit0("c", "crc", _("add CRC-16"));
+#if ENABLE_QRCODE
     struct arg_lit *a_qr = arg_lit0("q", "qr", _("print QR code to console"));
-    struct arg_lit *a_svg = arg_lit0("g", "svf", _("print QR code as SVG"));
+    struct arg_lit *a_svg = arg_lit0("g", "svg", _("print QR code as SVG"));
+#endif
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
     struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
@@ -131,7 +123,11 @@ int main(int argc, char **argv) {
 	void* argtable[] = {
 		a_join_eui, a_dev_eui, a_profile_id,
         a_owner_token, a_serial_number, a_proprietary,
-        a_crc, a_qr, a_svg,a_verbose,
+        a_crc,
+#if ENABLE_QRCODE
+        a_qr, a_svg,
+#endif
+        a_verbose,
 		a_help, a_end 
 	};
 
@@ -151,8 +147,10 @@ int main(int argc, char **argv) {
     if (a_serial_number->count)
         params.serial_number = *a_serial_number->sval;
     params.crc = a_crc->count > 0;
+#if ENABLE_QRCODE
     params.qr = a_qr->count > 0;
     params.svg = a_svg->count > 0;
+#endif
     params.verbose = a_verbose->count;
     for (int i = 0; i < a_proprietary->count; i++) {
         params.proprietary.emplace_back(a_proprietary->sval[i]);

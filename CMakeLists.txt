@@ -9,6 +9,7 @@
 # -DENABLE_QRCODE=off	enable HTTP QRCode URN service. libmicrohttpd dependency required.
 # -DENABLE_SQLITE=off  	enable SQLITE3 backend (reserved)
 # -DENABLE_IPV6=off   	enable IPv6 (reserved)
+# -DENABLE_JSON=off		Build with JSON file
 #
 # Example:
 # cmake -DENABLE_LIBUV=on

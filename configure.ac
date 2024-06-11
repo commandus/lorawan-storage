@@ -7,6 +7,10 @@
 # --enable-sqlite=no    enable SQLite backend
 # --enable-ipv6=no    	enable IPv6(reserved)
 # --enable-tests=no     enable tests
+
+# --enable-http=no		enable HTTP service. libmicrohttpd dependency required.
+# --enable-qrcode=no	enable HTTP QRCode URN service. libmicrohttpd dependency required.
+
 # Example:
 # ./configure --enable-gen=yes --enable-libuv=yes
 #
@@ -121,6 +125,24 @@ AC_ARG_ENABLE([debug],
 esac],[debug=false])
 AM_CONDITIONAL([ENABLE_DEBUG], [test x$debug = xtrue])
 
+AC_ARG_ENABLE([http],
+[  --enable-http    enable HTTP service],
+[case "${enableval}" in
+  yes) http=true ;;
+  no)  http=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-http]) ;;
+esac],[http=false])
+AM_CONDITIONAL([ENABLE_HTTP], [test x$http = xtrue])
+
+AC_ARG_ENABLE([qrcode],
+[  --enable-qrcode    enable HTTP QRCode URN service],
+[case "${enableval}" in
+  yes) qrcode=true ;;
+  no)  qrcode=false ;;
+  *) AC_MSG_ERROR([bad value ${enableval} for --enable-qrcode]) ;;
+esac],[qrcode=false])
+AM_CONDITIONAL([ENABLE_QRCODE], [test x$qrcode = xtrue])
+
 build_mac=no
 # Detect the target system
 case "${host_os}" in
@@ -140,6 +162,11 @@ CFLAGS="$CFLAGS -I/usr/local/include"
 if test "$sqlite" = "true"; then
 AC_CHECK_HEADERS(sqlite3.h)
 AC_CHECK_LIB(sqlite3,sqlite3_close)
+fi
+
+if test "$http" = "true"; then
+AC_CHECK_HEADERS(microhttpd.h)
+AC_CHECK_LIB(MHD_create_response_from_buffer)
 fi
 
 AC_OUTPUT
