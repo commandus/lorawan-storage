@@ -38,7 +38,8 @@ SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
 nobase_dist_include_HEADERS = \
 	lorawan/lorawan-const.h lorawan/lorawan-conv.h lorawan/lorawan-date.h lorawan/lorawan-error.h \
-	lorawan/lorawan-mac.h lorawan/lorawan-msg.h lorawan/lorawan-string.h lorawan/lorawan-types.h \
+	lorawan/lorawan-mac.h lorawan/lorawan-msg.h lorawan/lorawan-packet-storage.h \
+	lorawan/lorawan-string.h lorawan/lorawan-types.h \
 	lorawan/helper/aes-helper.h lorawan/helper/file-helper.h lorawan/helper/ip-address.h lorawan/helper/ip-helper.h \
 	lorawan/helper/key128gen.h lorawan/helper/sqlite-helper.h lorawan/helper/uv-mem.h \
 	lorawan/helper/crc-helper.h \
@@ -71,7 +72,8 @@ nobase_dist_include_HEADERS = \
 	third-party/system/crypto/aes.h third-party/system/crypto/cmac.h \
 	third-party/system/crypto/aes.c third-party/system/crypto/cmac.c \
 	third-party/argtable3/argtable3.h third-party/strptime.h third-party/daemonize.h \
-	third-party/nayuki/qrcodegen.hpp
+	third-party/nayuki/qrcodegen.hpp \
+	third-party/nlohmann/json.hpp
 
 #
 # liblorawan
@@ -196,7 +198,8 @@ dist_config_DATA = \
 	third-party/argtable3/README \
 	tests/test-parse-packet.cpp \
 	examples/example-direct.cpp examples/example-gen.cpp examples/example-gw-mem.cpp examples/example-mem.cpp \
-	third-party/nayuki/README.nayuki
+	third-party/nayuki/README.nayuki \
+	third-party/nlohmann/README.nlohmann.md
 #
 # Tests
 #
