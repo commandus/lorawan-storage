@@ -25,7 +25,7 @@ This is a simple example of a gateway database service for a tlns project.
 Make sure you have automake or CMake installed:
 
 ```
-apt install autoconf libtool build-essential 
+apt install autoconf automake libtool build-essential 
 ```
 
 or 

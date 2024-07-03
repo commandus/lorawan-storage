@@ -82,15 +82,14 @@ SRC_LIBLORAWAN = \
     lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp lorawan/lorawan-error.cpp lorawan/lorawan-mac.cpp \
     lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp \
     lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp \
-    lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp lorawan/helper/uv-mem.cpp \
+    lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp \
     lorawan/helper/crc-helper.cpp \
     lorawan/storage/gateway-identity.cpp lorawan/storage/network-identity.cpp \
     lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp \
     lorawan/storage/client/plugin-query-client.cpp \
     lorawan/storage/client/query-client.cpp lorawan/storage/client/service-client.cpp \
-    lorawan/storage/client/udp-client.cpp lorawan/storage/client/uv-client.cpp \
+    lorawan/storage/client/udp-client.cpp \
     lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp \
-    lorawan/storage/listener/uv-listener.cpp \
     lorawan/storage/serialization/serialization.cpp lorawan/storage/serialization/gateway-serialization.cpp \
 	lorawan/storage/serialization/identity-binary-serialization.cpp lorawan/storage/serialization/gateway-binary-serialization.cpp \
     lorawan/storage/serialization/identity-serialization.cpp \
@@ -109,6 +108,7 @@ SRC_LIBLORAWAN = \
 EXTRA_LIB =
 
 if ENABLE_LIBUV
+SRC_LIBLORAWAN += lorawan/helper/uv-mem.cpp lorawan/storage/client/uv-client.cpp lorawan/storage/listener/uv-listener.cpp
 GATEWAY_DEF += -DENABLE_LIBUV
 EXTRA_LIB += -luv
 endif
