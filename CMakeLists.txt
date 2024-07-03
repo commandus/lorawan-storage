@@ -2,11 +2,11 @@
 # On Windows set correct path to the VCPKG includes at line 16
 #
 # Options:
-# -DENABLE_LIBUV=off   	enable libuv UDP/TCP. Default UDP only
+# -DENABLE_LIBUV=off   	enable libuv UDP/TCP. Default UDP only. libuv dependency required.
 # -DENABLE_DEBUG=off   	enable debugging output
 # -DENABLE_GEN=on   	enable key generator (default in memory storage)
 # -DENABLE_HTTP=off		enable HTTP service. libmicrohttpd dependency required.
-# -DENABLE_QRCODE=off	enable HTTP QRCode URN service. libmicrohttpd dependency required.
+# -DENABLE_QRCODE=off	enable HTTP QRCode URN service.
 # -DENABLE_SQLITE=off  	enable SQLITE3 backend (reserved)
 # -DENABLE_IPV6=off   	enable IPv6 (reserved)
 # -DENABLE_JSON=off		Build with JSON file
@@ -114,16 +114,15 @@ else()
 		lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp lorawan/lorawan-error.cpp lorawan/lorawan-mac.cpp
 		lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp
 		lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp
-		lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp lorawan/helper/uv-mem.cpp
+		lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp
 		lorawan/helper/crc-helper.cpp
 		lorawan/storage/gateway-identity.cpp lorawan/storage/network-identity.cpp
 		lorawan/storage/client/direct-client.cpp lorawan/storage/client/plugin-client.cpp
 		lorawan/storage/client/plugin-query-client.cpp
 		lorawan/storage/client/query-client.cpp lorawan/storage/client/service-client.cpp
-		lorawan/storage/client/udp-client.cpp lorawan/storage/client/uv-client.cpp
+		lorawan/storage/client/udp-client.cpp
 		lorawan/storage/client/sync-query-client.cpp lorawan/storage/client/sync-response-client.cpp
 		lorawan/storage/listener/storage-listener.cpp lorawan/storage/listener/udp-listener.cpp
-		lorawan/storage/listener/uv-listener.cpp
 		lorawan/storage/serialization/serialization.cpp
 		lorawan/storage/serialization/gateway-serialization.cpp
 		lorawan/storage/serialization/gateway-binary-serialization.cpp
@@ -164,6 +163,9 @@ else()
 	endif()
 
 	if (ENABLE_LIBUV)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN} lorawan/helper/uv-mem.cpp 
+			lorawan/storage/client/uv-client.cpp lorawan/storage/listener/uv-listener.cpp
+		)
 		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_LIBUV)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			set(LIBUV LibUV)
@@ -172,7 +174,6 @@ else()
 			set(LIBUV LibUV)
 			set(LIBUVA LibUV::LibUV)
 		endif()
-
 		find_package(${LIBUV})
 	endif()
 

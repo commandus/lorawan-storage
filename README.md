@@ -108,7 +108,6 @@ cd lorawan-gateway-storage
 mkdir build
 cd build
 export CC=/usr/bin/clang;export CXX=/usr/bin/clang++;cmake ..
-export CC=/usr/bin/clang;export CXX=/usr/bin/clang++;cmake -DENABLE_WS=on -DENABLE_JWT=on -DENABLE_PKT2=on -DENABLE_MQTT=on -DENABLE_LOGGER_HUFFMAN=on ..
 make
 ```
 
