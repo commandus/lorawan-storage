@@ -214,9 +214,26 @@ Static library:
 
 ### lorawan-identity-service
 
-LoRaWAN identity UDP service.
+LoRaWAN identity UDP service. Identities stored in JSON text files:
 
-Command line arguments:
+- identity.json devices list
+- gateway.json gateway list
+
+The file names above are the default.
+
+If project define ENABLE_SQLITE=on identities stored in SQLite3 databases:
+
+- identity.db devices list
+- gateway.db gateway list
+
+The database file names above are the default.
+
+To change names use command line arguments:
+
+- -f, --db=<database file>    database file name. Default identity.json (or identity.db in SQLite3 version)
+- -g, --gateway-db=<database file> database file name. Default gateway.json (or gateway.db in SQLite3 version)
+
+Other command line arguments:
 
 - ipaddr:port                 UDP listener Default *:4244 (all interfaces, port 4244)
 - -c, --code=<number>         Code decimal number. Default 42. 0x - hex number prefix
@@ -225,6 +242,32 @@ Command line arguments:
 - -d, --daemonize             run as daemon
 - -p, --pidfile=<file>        Check whether a process has created the file pidfile. Default none.
 - -h, --help                  Show help screen
+
+In SQLite3 version if database file name does not exist, it creates database from scratch.
+
+If SQLite3 database already exist, database must have table "device" with fields:
+
+- activation
+- deviceclass
+- deveui
+- nwkskey
+- appskey
+- version
+- appeui
+- appkey
+- nwkkey
+- devnonce
+- joinnonce
+- name
+- addr
+
+and table "gateway" with fields:
+
+- id
+- addr
+
+If you want implement backend in other database override IdentityService abstract class in same manner as
+SqliteIdentityService do. Refer to lorawan/storage/service/identity-service-sqlite.cpp for example.
 
 ### lorawan-identity-query
 

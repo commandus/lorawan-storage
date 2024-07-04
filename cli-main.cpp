@@ -22,8 +22,6 @@
 #define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK false
 #else
 
-
-
 #include "lorawan/storage/listener/udp-listener.h"
 #define DAEMONIZE_CLOSE_FILE_DESCRIPTORS_AFTER_FORK true
 #endif

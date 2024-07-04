@@ -340,7 +340,7 @@ int main(int argc, char **argv) {
     struct arg_str *a_access_code = arg_str0("a", "access", _("<hex>"), _("Default 2a (42 decimal)"));
 	struct arg_lit *a_tcp = arg_lit0("t", "tcp", _("use TCP protocol. Default UDP"));
     struct arg_int *a_offset = arg_int0("o", "offset", _("<0..>"), _("list offset. Default 0. Max 4294967295"));
-    struct arg_int *a_size = arg_int0("z", "size", _("<number>"), _("list size limit. Default 10. Max 256"));
+    struct arg_int *a_size = arg_int0("z", "size", _("<number>"), _("list size limit. Default 10. Max 255"));
     struct arg_lit *a_verbose = arg_litn("v", "verbose", 0, 2, _("-v verbose -vv debug"));
     struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);

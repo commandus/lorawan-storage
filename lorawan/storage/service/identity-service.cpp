@@ -1,5 +1,5 @@
 #include <cstring>
-#include "identity-service.h"
+#include "lorawan/storage/service/identity-service.h"
 #include "lorawan/lorawan-conv.h"
 
 IdentityService::IdentityService()
