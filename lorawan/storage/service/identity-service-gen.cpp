@@ -1,10 +1,11 @@
 #include <regex>
 
-#include "identity-service-gen.h"
+#include "lorawan/storage/service/identity-service-gen.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/key128gen.h"
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
+#include "lorawan/lorawan-key.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
@@ -59,8 +60,17 @@ int GenIdentityService::get(
     retval.activation = ABP;	///< activation type: ABP or OTAA
     retval.deviceclass = CLASS_A;
     euiGen((uint8_t *) &retval.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, devaddr.u);
-    keyGen((uint8_t *) &retval.nwkSKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, devaddr.u);
-    keyGen((uint8_t *) &retval.appSKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, devaddr.u);
+    keyGen((uint8_t *) &retval.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, devaddr.u);
+
+    keyGen((uint8_t *) &retval.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, devaddr.u);
+    keyGen((uint8_t *) &retval.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, devaddr.u);
+
+    retval.joinNonce = {};
+    retval.devNonce = {};
+
+    deriveOptNegFNwkSIntKey(retval.nwkSKey, key, retval.appEUI, retval.joinNonce, retval.devNonce);
+    deriveOptNegFNwkSIntKey(retval.appSKey, key, retval.appEUI, retval.joinNonce, retval.devNonce);
+
     retval.version = { 1, 0, 0 };
     string2DEVICENAME(retval.name, DEVADDR2string(devaddr).c_str());
 #ifdef ENABLE_DEBUG
@@ -96,9 +106,20 @@ int GenIdentityService::list(
             break;
         NETWORKIDENTITY v;
         v.devaddr = DEVADDR(netid, a);
+
+
         euiGen((uint8_t *) &v.devid.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, v.devaddr.u);
-        keyGen((uint8_t *) &v.devid.nwkSKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, v.devaddr.u);
-        keyGen((uint8_t *) &v.devid.appSKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, v.devaddr.u);
+        keyGen((uint8_t *) &v.devid.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, v.devaddr.u);
+
+        keyGen((uint8_t *) &v.devid.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, v.devaddr.u);
+        keyGen((uint8_t *) &v.devid.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, v.devaddr.u);
+
+        v.devid.joinNonce = {};
+        v.devid.devNonce = {};
+
+        deriveOptNegFNwkSIntKey(v.devid.nwkSKey, v.devid.nwkKey, v.devid.appEUI, v.devid.joinNonce, v.devid.devNonce);
+        deriveOptNegFNwkSIntKey(v.devid.appSKey, v.devid.appKey, v.devid.appEUI, v.devid.joinNonce, v.devid.devNonce);
+
         v.devid.version = { 1, 0, 0 };
         string2DEVICENAME(v.devid.name, DEVADDR2string(v.devaddr).c_str());
         retVal.push_back(v);

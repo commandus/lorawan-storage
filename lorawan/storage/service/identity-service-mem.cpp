@@ -1,6 +1,6 @@
 #include <sstream>
 #include <iostream>
-#include "identity-service-mem.h"
+#include "lorawan/storage/service/identity-service-mem.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/file-helper.h"
@@ -11,9 +11,9 @@
 #include "platform-defs.h"
 #endif
 
-ClientUDPIdentityService::ClientUDPIdentityService() = default;
+MemoryIdentityService::MemoryIdentityService() = default;
 
-ClientUDPIdentityService::~ClientUDPIdentityService() = default;
+MemoryIdentityService::~MemoryIdentityService() = default;
 
 /**
  * request device identifier by network address. Return 0 if success, retval = EUI and keys
@@ -21,7 +21,7 @@ ClientUDPIdentityService::~ClientUDPIdentityService() = default;
  * @param devaddr network address
  * @return CODE_OK- success
  */
-int ClientUDPIdentityService::get(
+int MemoryIdentityService::get(
     DEVICEID &retVal,
     const DEVADDR &request
 )
@@ -35,7 +35,7 @@ int ClientUDPIdentityService::get(
 }
 
 // List entries
-int ClientUDPIdentityService::list(
+int MemoryIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
     uint32_t offset,
     uint8_t size
@@ -57,7 +57,7 @@ int ClientUDPIdentityService::list(
 }
 
 // Entries count
-size_t ClientUDPIdentityService::size()
+size_t MemoryIdentityService::size()
 {
     return storage.size();
 }
@@ -68,7 +68,7 @@ size_t ClientUDPIdentityService::size()
 * @param eui device EUI
 * @return CODE_OK- success
 */
-int ClientUDPIdentityService::getNetworkIdentity(
+int MemoryIdentityService::getNetworkIdentity(
     NETWORKIDENTITY &retVal,
     const DEVEUI &eui
 )
@@ -88,7 +88,7 @@ int ClientUDPIdentityService::getNetworkIdentity(
  * @param request gateway identifier or address
  * @return 0- success
  */
-int ClientUDPIdentityService::put(
+int MemoryIdentityService::put(
     const DEVADDR &devAddr,
     const DEVICEID &id
 )
@@ -97,7 +97,7 @@ int ClientUDPIdentityService::put(
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::rm(
+int MemoryIdentityService::rm(
     const DEVADDR &addr
 )
 {
@@ -110,7 +110,7 @@ int ClientUDPIdentityService::rm(
     return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
 }
 
-int ClientUDPIdentityService::init(
+int MemoryIdentityService::init(
     const std::string &databaseName,
     void *database
 )
@@ -118,11 +118,11 @@ int ClientUDPIdentityService::init(
     return CODE_OK;
 }
 
-void ClientUDPIdentityService::flush()
+void MemoryIdentityService::flush()
 {
 }
 
-void ClientUDPIdentityService::done()
+void MemoryIdentityService::done()
 {
     storage.clear();
 }
@@ -131,14 +131,14 @@ void ClientUDPIdentityService::done()
  * Return next network address if available
  * @return 0- success, ERR_CODE_ADDR_SPACE_FULL- no address available
  */
-int ClientUDPIdentityService::next(
+int MemoryIdentityService::next(
     NETWORKIDENTITY &retval
 )
 {
     return ERR_CODE_ADDR_SPACE_FULL;
 }
 
-void ClientUDPIdentityService::setOption(
+void MemoryIdentityService::setOption(
     int option,
     void *value
 )
@@ -149,11 +149,11 @@ void ClientUDPIdentityService::setOption(
 
 EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService()
 {
-    return new ClientUDPIdentityService;
+    return new MemoryIdentityService;
 }
 
 // ------------------- asynchronous imitation -------------------
-int ClientUDPIdentityService::cGet(const DEVADDR &request)
+int MemoryIdentityService::cGet(const DEVADDR &request)
 {
     IdentityGetResponse r;
     r.response.devaddr = request;
@@ -163,7 +163,7 @@ int ClientUDPIdentityService::cGet(const DEVADDR &request)
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cGetNetworkIdentity(const DEVEUI &eui)
+int MemoryIdentityService::cGetNetworkIdentity(const DEVEUI &eui)
 {
     IdentityGetResponse r;
     getNetworkIdentity(r.response, eui);
@@ -172,7 +172,7 @@ int ClientUDPIdentityService::cGetNetworkIdentity(const DEVEUI &eui)
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &id)
+int MemoryIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &id)
 {
     IdentityOperationResponse r;
     r.response = put(devAddr, id);
@@ -181,7 +181,7 @@ int ClientUDPIdentityService::cPut(const DEVADDR &devAddr, const DEVICEID &id)
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cRm(const DEVADDR &devAddr)
+int MemoryIdentityService::cRm(const DEVADDR &devAddr)
 {
     IdentityOperationResponse r;
     r.response = rm(devAddr);
@@ -190,7 +190,7 @@ int ClientUDPIdentityService::cRm(const DEVADDR &devAddr)
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cList(
+int MemoryIdentityService::cList(
     uint32_t offset,
     uint8_t size
 )
@@ -203,7 +203,7 @@ int ClientUDPIdentityService::cList(
    return CODE_OK;
 }
 
-int ClientUDPIdentityService::cSize()
+int MemoryIdentityService::cSize()
 {
     IdentityOperationResponse r;
     r.size = (uint8_t) size();
@@ -212,7 +212,7 @@ int ClientUDPIdentityService::cSize()
     return CODE_OK;
 }
 
-int ClientUDPIdentityService::cNext()
+int MemoryIdentityService::cNext()
 {
     IdentityGetResponse r;
     next(r.response);

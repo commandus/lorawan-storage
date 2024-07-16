@@ -1,15 +1,15 @@
 #ifndef IDENTITY_SERVICE_MEM_H_
 #define IDENTITY_SERVICE_MEM_H_ 1
 
-#include "identity-service.h"
+#include "lorawan/storage/service/identity-service.h"
 #include "platform-specific.h"
 
-class ClientUDPIdentityService: public IdentityService {
+class MemoryIdentityService: public IdentityService {
 protected:
     std::map<DEVADDR, DEVICEID> storage;
 public:
-    ClientUDPIdentityService();
-    ~ClientUDPIdentityService() override;
+    MemoryIdentityService();
+    ~MemoryIdentityService() override;
 
     // synchronous
     int get(DEVICEID &retVal, const DEVADDR &request) override;

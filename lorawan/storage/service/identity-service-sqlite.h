@@ -3,7 +3,7 @@
 
 #include <sqlite3.h>
 #include "platform-specific.h"
-#include "identity-service.h"
+#include "lorawan/storage/service/identity-service.h"
 
 class SqliteIdentityService: public IdentityService {
 protected:

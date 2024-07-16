@@ -2,10 +2,10 @@
 #define IDENTITY_SERVICE_JSON_H_ 1
 
 #include "third-party/nlohmann/json.hpp"
-#include "identity-service-mem.h"
+#include "lorawan/storage/service/identity-service-mem.h"
 #include "platform-specific.h"
 
-class JsonIdentityService: public ClientUDPIdentityService {
+class JsonIdentityService: public MemoryIdentityService {
 private:
     bool load();
     bool store();

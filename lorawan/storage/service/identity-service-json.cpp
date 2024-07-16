@@ -1,7 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include <fstream>
-#include "identity-service-json.h"
+#include "lorawan/storage/service/identity-service-json.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/file-helper.h"

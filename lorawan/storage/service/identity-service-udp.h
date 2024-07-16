@@ -1,7 +1,7 @@
-#ifndef IDENTITY_SERVICE_MEM_H_
-#define IDENTITY_SERVICE_MEM_H_ 1
+#ifndef IDENTITY_SERVICE_UDP_H_
+#define IDENTITY_SERVICE_UDP_H_ 1
 
-#include "identity-service.h"
+#include "lorawan/storage/service/identity-service.h"
 #include "platform-specific.h"
 #include "lorawan/storage/client/query-client.h"
 #include "cli-helper.h"

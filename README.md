@@ -169,9 +169,9 @@ Flash
 idf.py flash -p /dev/ttyUSB0
 ```
 Visual Studio Code
-- Press F1; select ESP-IDF: Set Espressif device target; select lorawan-storage; select ESP32; select ESP32 chip (via ESP USB bridge)
-- Press F1; select ESP-IDF: Build your project
-- Press F1; select ESP-IDF: Flush your project
+- Press ``F1``- select ESP-IDF: Set Espressif device target; select lorawan-storage; select ESP32; select ESP32 chip (via ESP USB bridge)
+- Press ``F1`` select ESP-IDF: Build your project
+- Press ``F1`` select ESP-IDF: Flush your project
 
 ### Dependencies
 
@@ -422,6 +422,7 @@ Print LoRaWAN packet
 
 There are some example source code in the examples/ subdirectory:
 
+- example-direct.cpp device generator based on pass phrase
 - example-mem.cpp in-memory device storage
 - example-gen.cpp device generator based on pass phrase 
 - example-gw-mem.cpp gateway in-memory storage
@@ -429,7 +430,10 @@ There are some example source code in the examples/ subdirectory:
 shows how to compile source with liblorawan.a static library, for instance using gcc:
 
 ```
+cd example
 g++ -o example-direct -I.. example-direct.cpp -L../cmake-build-debug -llorawan
+g++ -o example-mem -I.. example-mem.cpp -L../cmake-build-debug -llorawan
+g++ -o example-json -I.. example-json.cpp -L../cmake-build-debug -llorawan
 ```
 
 where -L../cmake-build-debug is a path to the directory where liblorawan.a resides. 

@@ -49,6 +49,7 @@ nobase_dist_include_HEADERS = \
     lorawan/lorawan-conv.h \
     lorawan/lorawan-date.h \
     lorawan/lorawan-error.h \
+    lorawan/lorawan-key.h \
     lorawan/lorawan-mac.h \
     lorawan/lorawan-msg.h \
     lorawan/lorawan-packet-storage.h \
@@ -117,6 +118,7 @@ SRC_LIBLORAWAN = \
     lorawan/lorawan-conv.cpp \
     lorawan/lorawan-date.cpp \
     lorawan/lorawan-error.cpp \
+    lorawan/lorawan-key.cpp \
     lorawan/lorawan-mac.cpp \
     lorawan/lorawan-msg.cpp \
     lorawan/lorawan-string.cpp \

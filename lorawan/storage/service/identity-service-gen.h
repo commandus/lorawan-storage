@@ -4,7 +4,7 @@
 #include <vector>
 #include <mutex>
 #include <map>
-#include "identity-service.h"
+#include "lorawan/storage/service/identity-service.h"
 
 #include "platform-specific.h"
 

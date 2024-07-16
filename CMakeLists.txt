@@ -112,7 +112,7 @@ else()
 
 	set(SRC_LIBLORAWAN
 		lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp lorawan/lorawan-error.cpp lorawan/lorawan-mac.cpp
-		lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp
+		lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp lorawan/lorawan-key.cpp
 		lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp
 		lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp
 		lorawan/helper/crc-helper.cpp

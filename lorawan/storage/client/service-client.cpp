@@ -31,7 +31,7 @@ ServiceClient::ServiceClient(
             svcGateway = new MemoryGatewayService;
         } else {
             if (name == "mem") {
-                svcIdentity = new ClientUDPIdentityService;
+                svcIdentity = new MemoryIdentityService;
                 svcGateway = new MemoryGatewayService;
             } else {
 #ifdef ENABLE_SQLITE
