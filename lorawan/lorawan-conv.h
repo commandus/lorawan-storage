@@ -1,3 +1,6 @@
+#ifndef LORAWAN_CONV_H_
+#define LORAWAN_CONV_H_	1
+
 #include "lorawan-types.h"
 
 /*
@@ -98,15 +101,33 @@ void int2APPNONCE(APPNONCE& retVal, int value);
 #ifdef IS_LITTLE_ENDIAN
 void ntoh_DEVADDR(DEVADDR &value);
 void ntoh_DEVEUI(DEVEUI &value);
+void ntoh_DEVNONCE(DEVNONCE &value);
 void ntoh_RFM_HEADER(RFM_HEADER *value);
 void ntoh_SEMTECH_PREFIX_GW(SEMTECH_PREFIX_GW &value);
+void ntoh_JOIN_REQUEST_HEADER(JOIN_REQUEST_HEADER &value);
+void ntoh_JOIN_REQUEST_FRAME(JOIN_REQUEST_FRAME &value);
+void ntoh_JOIN_ACCEPT_FRAME_HEADER(JOIN_ACCEPT_FRAME_HEADER &value);
+void ntoh_JOIN_ACCEPT_FRAME(JOIN_ACCEPT_FRAME &value);
+void ntoh_RFM_HEADER(RFM_HEADER &value);
+void ntoh_FHDR(FHDR &value);
+
 #else
 #define ntoh_DEVADDR(a) {}
 #define ntoh_DEVEUI(e) {}
+#define ntoh_DEVNONCE(v) {}
 #define ntoh_RFM_HEADER(v) {}
 #define ntoh_SEMTECH_PREFIX_GW(v) {}
+#define ntoh_JOIN_REQUEST_HEADER(v) {}
+#define ntoh_JOIN_REQUEST_FRAME(v) {}
+#define ntoh_JOIN_ACCEPT_FRAME(v) {}
+#define ntoh_RFM_HEADER(v) {}
+#define ntoh_FHDR(FHDR v) {}
 #endif
 
 BANDWIDTH int2BANDWIDTH(int value);
 
 BANDWIDTH double2BANDWIDTH(double value);
+
+void applyNetworkByteOrder(void *buf, size_t size);
+
+#endif

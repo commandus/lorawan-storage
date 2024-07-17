@@ -57,12 +57,12 @@ public:
     int32_t retCode;
 
     CliPrintParams()
-        : port(DEF_PORT), code(42), accessCode(42), netid(0), verbose(0), retCode(0)
+        : svcOrPlugin(0), port(DEF_PORT), useTcp(false), code(42), accessCode(42), netid(0), verbose(0), retCode(0)
     {
 
     }
 
-    std::string toString() {
+    std::string toString() const {
         std::stringstream ss;
         switch (svcOrPlugin) {
             case 0:
@@ -272,11 +272,11 @@ static void printPacket(
             strm << mtype2string((MTYPE) mhdr->f.mtype) << DLMT;
             return;
         }
-        RFM_HEADER *rfm = (RFM_HEADER *) payload.c_str();
+        auto *rfm = (RFM_HEADER *) payload.c_str();
         strm << rfm_header2string(rfm) << DLMT
-             << mac2string((void *) (payload.c_str() + SIZE_RFM_HEADER), rfm->fctrl.f.foptslen, sz - SIZE_RFM_HEADER);
+             << mac2string((void *) (payload.c_str() + SIZE_RFM_HEADER), rfm->fhdr.fctrl.f.foptslen, sz - SIZE_RFM_HEADER);
 
-        DEVADDR a(rfm->devaddr);
+        DEVADDR a(rfm->fhdr.devaddr);
 
         if (hasFPort((void *) payload.c_str(), sz)) {
             strm << DLMT << (int) getFPort((void *) payload.c_str());
@@ -285,18 +285,18 @@ static void printPacket(
                 strm << DLMT << _("n/a");
             else {
                 DEVICEID deviceId;
-                std::string payload (pl, sz - (pl - (char *) rfm) - SIZE_MIC);
-                if (getDeviceByAddr(deviceId, rfm->devaddr)) {
+                std::string pld(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
+                if (getDeviceByAddr(deviceId, rfm->fhdr.devaddr)) {
                     strm
-                        << DLMT << _("fcnt: ") << (int) rfm->fcnt
+                        << DLMT << _("fcnt: ") << (int) rfm->fhdr.fcnt
                         << DLMT << _("direction: ") << (int) (rfm->macheader.f.mtype & 1)
-                        << DLMT << _("devAddr: ") << DEVADDR2string(rfm->devaddr)
+                        << DLMT << _("devAddr: ") << DEVADDR2string(rfm->fhdr.devaddr)
                         << DLMT << _("appSKey: ") << KEY2string(deviceId.appSKey);
-                    decryptPayload(payload, rfm->fcnt, rfm->macheader.f.mtype & 1, rfm->devaddr, deviceId.appSKey);
+                    decryptPayload(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
                     strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
-                         << hexString(payload);
+                         << hexString(pld);
                 } else
-                    strm << DLMT << _("n/a") << DLMT << hexString(payload);
+                    strm << DLMT << _("n/a") << DLMT << hexString(pld);
             }
         }
         strm << std::endl;
@@ -304,14 +304,14 @@ static void printPacket(
     } else {
         if (sz < SIZE_RFM_HEADER)
             return;
-        RFM_HEADER *rfm = (RFM_HEADER *) payload.c_str();
+        auto *rfm = (RFM_HEADER *) payload.c_str();
         strm << mtype2string((MTYPE) rfm->macheader.f.mtype)
-             << DLMT << DEVADDR2string(rfm->devaddr);
-        if (rfm->fctrl.f.foptslen == 0)
+             << DLMT << DEVADDR2string(rfm->fhdr.devaddr);
+        if (rfm->fhdr.fctrl.f.foptslen == 0)
             strm << DLMT << _("n/a");
         else
             strm << DLMT
-                 << mac2string((void *) (payload.c_str() + SIZE_RFM_HEADER), rfm->fctrl.f.foptslen, sz - SIZE_RFM_HEADER);
+                 << mac2string((void *) (payload.c_str() + SIZE_RFM_HEADER), rfm->fhdr.fctrl.f.foptslen, sz - SIZE_RFM_HEADER);
 
         if (!hasFPort((void *) payload.c_str(), sz))
             strm << DLMT << _("n/a");
@@ -322,20 +322,20 @@ static void printPacket(
             strm << DLMT << _("n/a");
         else {
             DEVICEID deviceId;
-            std::string payload(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
-            if (getDeviceByAddr(deviceId, rfm->devaddr)) {
-                decryptPayload(payload, rfm->fcnt, rfm->macheader.f.mtype & 1, rfm->devaddr, deviceId.appSKey);
+            std::string pld(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
+            if (getDeviceByAddr(deviceId, rfm->fhdr.devaddr)) {
+                decryptPayload(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
                 strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
-                     << hexString(payload);
+                     << hexString(pld);
             } else
-                strm << DLMT << _("n/a") << DLMT << hexString(payload);
+                strm << DLMT << _("n/a") << DLMT << hexString(pld);
         }
     }
 }
 
 static void run()
 {
-    for (auto p : params.payload) {
+    for (const auto& p : params.payload) {
         printPacket(std::cout, p, params.verbose);
         std::cout << std::endl;
     }
