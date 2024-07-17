@@ -394,7 +394,7 @@ Because plugin use direct calls there no --code --accesscode options available.
 
 ### lorawan-identity-print
 
-Print 
+Print radio packet and explain
 
 ```shell
 Usage: lorawan-identity-print
