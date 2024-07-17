@@ -285,7 +285,7 @@ static void printPacket(
                 strm << DLMT << _("n/a");
             else {
                 DEVICEID deviceId;
-                std::string pld(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
+                std::string pld(pl, payloadSize((void *) payload.c_str(), sz));
                 if (getDeviceByAddr(deviceId, rfm->fhdr.devaddr)) {
                     strm
                         << DLMT << _("fcnt: ") << (int) rfm->fhdr.fcnt
