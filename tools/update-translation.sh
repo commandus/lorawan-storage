@@ -7,8 +7,13 @@ for f in $(ls po/*.po) ; do
     code="${BASH_REMATCH[2]}"
 
     case $fn in
-      'lorawan-service') FM='cli-main.cpp';;
-      'lorawan-query') FM='cli-query-main.cpp';;
+      'lorawan-identity-query') FM='cli-query-main.cpp';;
+      'lorawan-identity-service') FM='cli-main.cpp';;
+      'lorawan-identity-direct') FM='cli-query-plugin-main.cpp';;
+      'lorawan-identity-print') FM='cli-print.cpp';;
+      'lorawan-tag') FM='cli-tag.cpp';;
+      
+      
       *) FM='*';;
     esac
 
