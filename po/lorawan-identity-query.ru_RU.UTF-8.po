@@ -1,99 +1,99 @@
 #: cli-query-main.cpp:60
 msgid "Service: "
-msgstr ""
+msgstr "Сервис: "
 
 #: cli-query-main.cpp:61
 msgid "command: "
-msgstr ""
+msgstr "команда: "
 
 #: cli-query-main.cpp:61
 msgid ", code: "
-msgstr ""
+msgstr ", код: "
 
 #: cli-query-main.cpp:61
 msgid ", access code: "
-msgstr ""
+msgstr ", код доступа: "
 
 #: cli-query-main.cpp:62
 msgid "offset: "
-msgstr ""
+msgstr "смещение: "
 
 #: cli-query-main.cpp:62
 msgid ", size: "
-msgstr ""
+msgstr ", размер: "
 
 #: cli-query-main.cpp:98
 msgid ", errno: "
-msgstr ""
+msgstr ", код ошибки: "
 
 #: cli-query-main.cpp:133 cli-query-main.cpp:179
 msgid " completed\n"
-msgstr ""
+msgstr " завершено\n"
 
 #: cli-query-main.cpp:241
 msgid "disconnected\n"
-msgstr ""
+msgstr "отсоединен\n"
 
 #: cli-query-main.cpp:336
 msgid "<command | id | address:port>"
-msgstr ""
+msgstr "<команда | идентификатор | адрес:порт>"
 
 #: cli-query-main.cpp:338
 msgid "<ipaddr:port>"
-msgstr ""
+msgstr "<IP адрес:порт>"
 
 #: cli-query-main.cpp:338
 msgid "Default localhost:4244"
-msgstr ""
+msgstr "По умолчанию localhost:4244"
 
 #: cli-query-main.cpp:339 cli-query-main.cpp:343
 msgid "<number>"
-msgstr ""
+msgstr "<число>"
 
 #: cli-query-main.cpp:339
 msgid "Default 42. 0x - hex number prefix"
-msgstr ""
+msgstr "По умолчанию 42. 0x - префикс шестнадцатиричного числа"
 
 #: cli-query-main.cpp:340
 msgid "<hex>"
-msgstr ""
+msgstr "<шестнадцатиричное число>"
 
 #: cli-query-main.cpp:340
 msgid "Default 2a (42 decimal)"
-msgstr ""
+msgstr "По умолчанию 2a (42 десятичное)"
 
 #: cli-query-main.cpp:341
 msgid "use TCP protocol. Default UDP"
-msgstr ""
+msgstr "использовать TCP протокол. По умолчанию UDP"
 
 #: cli-query-main.cpp:342
 msgid "<0..>"
-msgstr ""
+msgstr "<0..>"
 
 #: cli-query-main.cpp:342
 msgid "list offset. Default 0. Max 4294967295"
-msgstr ""
+msgstr "смещение списка. По умолчанию 0. Максимальное значение 4294967295"
 
 #: cli-query-main.cpp:343
 msgid "list size limit. Default 10. Max 255"
-msgstr ""
+msgstr "лимит числа строк в списке. По умолчанию 10. Максимально допустимое значение 255"
 
 #: cli-query-main.cpp:344
 msgid "-v verbose -vv debug"
-msgstr ""
+msgstr "-v детальные сообщения -vv отладочная информация"
 
 #: cli-query-main.cpp:345
 msgid "Show this help"
-msgstr ""
+msgstr "Показать эту справку"
 
 #: cli-query-main.cpp:467
 msgid "Usage: "
-msgstr ""
+msgstr "Использование: "
 
 #: cli-query-main.cpp:469
 msgid "LoRaWAN storage query"
-msgstr ""
+msgstr "Запросы к хранилищу удостоверений LoRaWAN"
 
 #: cli-query-main.cpp:471
 msgid "Commands:\n"
-msgstr ""
+msgstr "Команды:\n"
