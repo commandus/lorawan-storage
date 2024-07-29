@@ -25,6 +25,7 @@ std::string hexString(const std::string &data);
 
 std::string hex2string(const std::string &hex);
 std::string toUpperCase(const std::string &value);
+std::string firstCharToUpperCase(const std::string &value);
 
 std::string DEVICENAME2string(const DEVICENAME &value);
 std::string gatewayId2str(uint64_t value);
@@ -82,6 +83,21 @@ void string2DEVICENAME(DEVICENAME &retval, const char *str);
 void string2JOINNONCE(JOINNONCE &retval, const std::string &value);
 void string2NETID(NETID &retVal, const char *str);
 void string2FREQUENCY(FREQUENCY &retVal, const char *value);
+
+/**
+ * @return  LoRa datarate identifier e.g. "SF7BW125"
+ */
+std::string DATA_RATE2string(
+    const DATA_RATE &value
+);
+
+std::string DATA_RATE2string(
+    BANDWIDTH bandwidth,
+    SPREADING_FACTOR spreadingFactor
+);
+
+std::string frequency2string(const FREQUENCY &value);
+std::string freq2string(const uint32_t value);
 void string2JOINNONCE(JOINNONCE &retval, const char *value);
 void string2APPNONCE(APPNONCE& retval, const std::string& value);
 uint64_t string2gatewayId(const std::string& value);
@@ -103,26 +119,43 @@ std::string datr2string(
     SPREADING_FACTOR spreadingFactor,
     BANDWIDTH bandwidth
 );
+/**
+ * @param retVal return value
+ * @param value LoRa data rate identifier e.g. "SF7BW125"
+ */
+void string2DATA_RATE(
+    DATA_RATE &retVal,
+    const std::string &value
+);
 
 /**
  * @param LoRa LoRa ECC coding rate identifier e.g. "4/6"
+ * @return  coding rate
  */
-CODING_RATE string2codingRate(const std::string &value);
+CODING_RATE string2codingRate(
+    const std::string &value
+);
 
 /**
  * Return LoRa ECC coding rate identifier e.g. "4/6"
  * @param codingRate index
  * @return LoRa ECC coding rate identifier e.g. "4/6"
  */
-std::string codingRate2string(CODING_RATE codingRate);
+std::string codingRate2string(
+    CODING_RATE codingRate
+);
 
-std::string SEMTECH_PROTOCOL_METADATA_RX2string(const SEMTECH_PROTOCOL_METADATA_RX &value);
+std::string SEMTECH_PROTOCOL_METADATA_RX2string(
+    const SEMTECH_PROTOCOL_METADATA_RX &value
+);
 /**
  * Return JSON string
  * @param value
  * @return JSON string
  */
-std::string SEMTECH_PROTOCOL_METADATA_TX2string(const SEMTECH_PROTOCOL_METADATA_TX &value);
+std::string SEMTECH_PROTOCOL_METADATA_TX2string(
+    const SEMTECH_PROTOCOL_METADATA_TX &value
+);
 
 std::string REGIONAL_PARAMETERS_VERSION2string(
     REGIONAL_PARAMETERS_VERSION value
