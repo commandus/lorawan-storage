@@ -48,8 +48,6 @@ public:
 
     std::string pluginName;
     std::string pluginFilePath;
-    std::string pluginIdentityClassName;
-    std::string pluginGatewayClassName;
     std::string passPhrase;
     NETID netid;
     std::string db;
@@ -70,7 +68,7 @@ public:
                     << _(" code: ") << std::hex << code << _(" access code: ")  << accessCode;
                 break;
             case 1:
-                ss << _("Plugin: ") << pluginFilePath << ":" << pluginIdentityClassName << ":" << pluginGatewayClassName;
+                ss << _("Plugin: ") << pluginFilePath;
                 break;
             default:
                 ss << _("Identity source: ") << pluginName;
@@ -215,13 +213,12 @@ static bool getDeviceByAddr(
                 return false;
         }
         case 1: {
-            auto c = PluginClient(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
+            auto c = PluginClient(params.pluginFilePath);
             if (!c.svcIdentity || !c.svcGateway) {
                 std::cerr
                     << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
                     << ERR_LOAD_PLUGINS_FAILED
                     << params.pluginFilePath
-                    << ":" << params.pluginIdentityClassName << ":" << params.pluginGatewayClassName
                     << std::endl;
                 params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
                 return false;
@@ -394,22 +391,19 @@ int main(int argc, char **argv) {
             params.svcOrPlugin = 0;
         } else {
             // try load shared library
-            if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName,
-                (a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN)))
-            {
-                if (ServiceClient::hasStaticPlugin(*a_plugin_file_n_class->sval)) {
+            if (!params.pluginFilePath.empty()) {
+                if (ServiceClient::hasStaticPlugin(params.pluginFilePath)) {
                     // "load" from static by name: "gen", "mem", "sqlite"
-                    params.pluginName = *a_plugin_file_n_class->sval;
+                    params.pluginName = params.pluginFilePath;
+                    params.svcOrPlugin = 2;
                 } else {
-                    if (a_plugin_file_n_class->count) {
-                        std::cerr << _("Invalid \"static\" plugin \"") << *a_plugin_file_n_class->sval << "\"" << std::endl;
-                        errorCount++;
-                    }
-                    params.pluginName = DEF_PLUGIN;
+                    params.pluginName = "";
+                    params.svcOrPlugin = 1;
                 }
+            } else {
                 params.svcOrPlugin = 2;
-            } else
-                params.svcOrPlugin = 1;
+                params.pluginName = DEF_PLUGIN;
+            }
         }
     }
 

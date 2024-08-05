@@ -33,8 +33,6 @@ public:
     size_t queryPos;
     int verbose;
     std::string pluginFilePath;
-    std::string pluginIdentityClassName;
-    std::string pluginGatewayClassName;
     std::string svcName;
     size_t offset;
     size_t size;
@@ -55,7 +53,7 @@ public:
     std::string toString() {
         std::stringstream ss;
         if (svcName.empty()) {
-            ss << _("Plugin: ") << pluginFilePath << ":" << pluginIdentityClassName;
+            ss << _("Plugin: ") << pluginFilePath;
         } else
             ss << _("Direct service: ") << svcName;
         if (!db.empty())
@@ -93,7 +91,7 @@ static void run()
 {
     DirectClient *c = nullptr;
     if (params.svcName.empty())
-        c = new PluginClient(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName);
+        c = new PluginClient(params.pluginFilePath);
     else
         c = new ServiceClient(params.svcName);
     if (!c || !c->svcIdentity ) {
@@ -111,7 +109,6 @@ static void run()
     if (!c->svcIdentity || !c->svcGateway) {
         std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": "
             << ERR_LOAD_PLUGINS_FAILED << " " << params.svcName
-            << ":" << params.pluginIdentityClassName << ":" << params.pluginGatewayClassName
             << std::endl;
         params.retCode = ERR_CODE_LOAD_PLUGINS_FAILED;
         return;
@@ -271,14 +268,9 @@ int main(int argc, char **argv) {
 
     // try load shared library
     std::string s(a_plugin_file_n_class->count ? std::string(*a_plugin_file_n_class->sval) : DEF_PLUGIN);
-    if (!splitFileClass(params.pluginFilePath, params.pluginIdentityClassName, params.pluginGatewayClassName, s)) {
-        if (ServiceClient::hasStaticPlugin(s)) {
-            // "load" from static by name: "json", "gen", "mem", "sqlite"
-            params.svcName = s;
-        } else {
-            std::cerr << ERR_MESSAGE << ERR_CODE_LOAD_PLUGINS_FAILED << ": " << ERR_LOAD_PLUGINS_FAILED << std::endl;
-            errorCount++;
-        }
+    if (ServiceClient::hasStaticPlugin(s)) {
+        // "load" from static by name: "json", "gen", "mem", "sqlite"
+        params.svcName = s;
     }
 
     if (a_pass_phrase->count)
