@@ -47,12 +47,25 @@ int PluginClient::load(
 
     handleSvc = dlopen(fn.c_str(), RTLD_LAZY);
     if (handleSvc) {
-        auto fI = (makeIdentityServiceFunc) dlsym(handleSvc, "makeIdentityClient");
-        auto fG = (makeGatewayServiceFunc) dlsym(handleSvc, "makeGatewayClient");
-        if (fI && fG) {
-            svcIdentity = fI();
-            svcGateway = fG();
+        auto fI0 = (makeIdentityServiceFunc) dlsym(handleSvc, "makeIdentityClient");
+        auto fG0 = (makeGatewayServiceFunc) dlsym(handleSvc, "makeGatewayClient");
+        if (fI0 && fG0) {
+            svcIdentity = fI0();
+            svcGateway = fG0();
             return CODE_OK;
+        }
+        // in case of static linking function name differs by last number 1..9
+        for (int i = 1; i < 10; i++) {
+            std::string n = std::to_string(i);
+            std::string funcNameI = "makeIdentityClient" + n;
+            std::string funcNameG = "makeGatewayClient" + n;
+            auto fI = (makeIdentityServiceFunc) dlsym(handleSvc, funcNameI.c_str());
+            auto fG = (makeGatewayServiceFunc) dlsym(handleSvc, funcNameG.c_str());
+            if (fI && fG) {
+                svcIdentity = fI();
+                svcGateway = fG();
+                return CODE_OK;
+            }
         }
     }
     return ERR_CODE_LOAD_PLUGINS_FAILED;
@@ -72,12 +85,21 @@ void PluginClient::unload()
 }
 
 PluginClient::PluginClient(
-    const std::string &fileName
+    const std::string &libFileName
 )
-	: DirectClient(), handleSvc(nullptr)
+	: DirectClient(), handleSvc(nullptr), fileName(libFileName)
 {
     load(fileName);
 }
+
+PluginClient::PluginClient(
+    const PluginClient &value
+)
+    : DirectClient(), handleSvc(nullptr), fileName(value.fileName)
+{
+    load(fileName);
+}
+
 
 PluginClient::~PluginClient()
 {

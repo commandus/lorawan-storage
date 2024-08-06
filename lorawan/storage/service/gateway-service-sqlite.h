@@ -29,6 +29,6 @@ public:
     void setOption(int option, void *value) override;
 };
 
-EXPORT_SHARED_C_FUNC GatewayService* makeSqliteGatewayService();
+EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService();
 
 #endif

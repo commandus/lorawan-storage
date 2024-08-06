@@ -33,6 +33,6 @@ public:
     void setOption(int option, void *value) override;
 };
 
-EXPORT_SHARED_C_FUNC GatewayService* makeJsonGatewayService();
+EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService1();
 
 #endif

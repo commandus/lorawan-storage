@@ -216,7 +216,7 @@ void JsonIdentityService::setOption(
     // nothing to do
 }
 
-EXPORT_SHARED_C_FUNC IdentityService* makeJsonIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService1()
 {
     return new JsonIdentityService;
 }

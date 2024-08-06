@@ -245,7 +245,7 @@ void SqliteGatewayService::setOption(
     // nothing to do
 }
 
-EXPORT_SHARED_C_FUNC GatewayService* makeSqliteGatewayService()
+EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService()
 {
     return new SqliteGatewayService;
 }

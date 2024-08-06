@@ -185,7 +185,7 @@ void JsonGatewayService::setOption(
     // nothing to do
 }
 
-EXPORT_SHARED_C_FUNC GatewayService* makeJsonGatewayService()
+EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService1()
 {
     return new JsonGatewayService;
 }

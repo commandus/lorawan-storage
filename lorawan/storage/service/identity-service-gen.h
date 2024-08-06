@@ -60,6 +60,6 @@ int init(const std::string &option, void *data) override;
     void setOption(int option, void *value) override;
 };
 
-EXPORT_SHARED_C_FUNC IdentityService * makeGenIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService * makeIdentityService();
 
 #endif

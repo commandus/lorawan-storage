@@ -369,7 +369,7 @@ int SqliteIdentityService::cNext()
     return CODE_OK;
 }
 
-EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService3()
 {
     return new SqliteIdentityService;
 }

@@ -363,7 +363,7 @@ int ClientUDPIdentityService::cNext()
     return CODE_OK;
 }
 
-EXPORT_SHARED_C_FUNC IdentityService* makeClientUDPIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService4()
 {
     return new ClientUDPIdentityService;
 }

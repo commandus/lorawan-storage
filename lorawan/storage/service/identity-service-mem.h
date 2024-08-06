@@ -34,6 +34,6 @@ public:
     void setOption(int option, void *value) override;
 };
 
-EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService2();
 
 #endif

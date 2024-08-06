@@ -47,6 +47,6 @@ public:
     void setOption(int option, void *value) override;
 };
 
-EXPORT_SHARED_C_FUNC IdentityService* makeClientUDPIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService4();
 
 #endif

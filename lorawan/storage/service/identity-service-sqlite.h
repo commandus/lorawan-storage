@@ -37,6 +37,6 @@ public:
     void setOption(int option, void *value) override;
 };
 
-EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService();
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService3();
 
 #endif

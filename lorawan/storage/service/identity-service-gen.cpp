@@ -272,7 +272,7 @@ int GenIdentityService::cNext()
     return CODE_OK;
 }
 
-EXPORT_SHARED_C_FUNC IdentityService* makeGenIdentityService()
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService()
 {
     return new GenIdentityService;
 }

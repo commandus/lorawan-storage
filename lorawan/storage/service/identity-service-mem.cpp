@@ -220,3 +220,8 @@ int MemoryIdentityService::cNext()
         responseClient->onIdentityGet(nullptr, &r);
     return CODE_OK;
 }
+
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService2()
+{
+    return new MemoryIdentityService;
+}

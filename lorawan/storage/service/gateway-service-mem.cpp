@@ -140,7 +140,7 @@ void MemoryGatewayService::setOption(
     // nothing to do
 }
 
-EXPORT_SHARED_C_FUNC GatewayService* makeMemoryGatewayService()
+EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService()
 {
     return new MemoryGatewayService;
 }
