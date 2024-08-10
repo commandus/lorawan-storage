@@ -136,10 +136,10 @@ public:
         const IdentityGetResponse *response
     ) override {
         if (response) {
-            if (!response->response.devid.empty()) {
+            if (!response->response.devid.empty())
                 promiseResponse.set_value(response);
-            }
-            promiseResponse.set_value(nullptr);
+            else
+                promiseResponse.set_value(nullptr);
         }
         client->stop();
     }
