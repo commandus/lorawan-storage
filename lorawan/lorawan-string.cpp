@@ -739,6 +739,7 @@ void string2KEY(
         i++;
         if (i > 15)
             break;
+        str++;
     }
 }
 
