@@ -102,7 +102,7 @@ nobase_dist_include_HEADERS = \
     cli-helper.h \
     config.h \
     log.h \
-    platform-specific.h
+    lorawan/helper/plugin-helper.h
 
 #
 # liblorawan
