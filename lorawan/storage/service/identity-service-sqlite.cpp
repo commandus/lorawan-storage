@@ -11,7 +11,6 @@
 #include "platform-defs.h"
 #endif
 
-#include "platform-specific.h"
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
 
 #define FIELD_LIST "activation, deviceclass, deveui, nwkskey, appskey, version, appeui, appkey, nwkkey, devnonce, joinnonce, name, addr"

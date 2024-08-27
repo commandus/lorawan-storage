@@ -5,7 +5,7 @@
 #include <mutex>
 #include <map>
 #include "lorawan/storage/service/gateway-service.h"
-#include "platform-specific.h"
+#include "lorawan/helper/plugin-helper.h"
 
 class MemoryGatewayService: public GatewayService {
 protected:

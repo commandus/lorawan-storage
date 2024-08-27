@@ -3,7 +3,7 @@
 
 #include "lorawan/storage/service/gateway-service.h"
 #include "sqlite3.h"
-#include "platform-specific.h"
+#include "lorawan/helper/plugin-helper.h"
 
 class SqliteGatewayService: public GatewayService {
 protected:

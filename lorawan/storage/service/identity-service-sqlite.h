@@ -2,8 +2,8 @@
 #define IDENTITY_SERVICE_SQLITE_H_ 1
 
 #include <sqlite3.h>
-#include "platform-specific.h"
 #include "lorawan/storage/service/identity-service.h"
+#include "lorawan/helper/plugin-helper.h"
 
 class SqliteIdentityService: public IdentityService {
 protected:

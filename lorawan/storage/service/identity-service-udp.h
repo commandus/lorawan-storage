@@ -2,11 +2,11 @@
 #define IDENTITY_SERVICE_UDP_H_ 1
 
 #include "lorawan/storage/service/identity-service.h"
-#include "platform-specific.h"
 #include "lorawan/storage/client/query-client.h"
 #include "cli-helper.h"
 #include "lorawan/lorawan-msg.h"
 #include "lorawan/storage/client/sync-query-client.h"
+#include "lorawan/helper/plugin-helper.h"
 
 class ClientUDPIdentityService: public IdentityService {
 public:

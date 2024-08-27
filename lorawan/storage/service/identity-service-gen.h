@@ -6,7 +6,7 @@
 #include <map>
 #include "lorawan/storage/service/identity-service.h"
 
-#include "platform-specific.h"
+#include "lorawan/helper/plugin-helper.h"
 
 class GenIdentityService: public IdentityService {
 private:
