@@ -64,4 +64,16 @@ bool sameSocketAddress(
     const struct sockaddr *b
 );
 
+bool isAddrStringIPv6(
+    const char *hostAddr
+);
+
+bool isIPv6(
+    const struct sockaddr *addr
+);
+
+bool isIP(
+    const struct sockaddr *addr
+);
+
 #endif

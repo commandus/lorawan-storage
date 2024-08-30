@@ -17,7 +17,6 @@
     #define write _write
     #define close closesocket
 #else
-    #define SOCKET int
     #define INVALID_SOCKET (-1)
     #ifdef ESP_PLATFORM
         #include "esp_log.h"
@@ -37,7 +36,7 @@
 #include "lorawan/lorawan-string.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-msg.h"
-#include "lorawan/helper/ip-helper.h"
+#include "lorawan/helper/ip-address.h"
 
 #define DEF_KEEPALIVE_SECS 60
 

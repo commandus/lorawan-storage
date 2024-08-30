@@ -8,7 +8,7 @@
 #include <sys/socket.h>
 #endif
 
-#include "storage-listener.h"
+#include "lorawan/storage/listener/storage-listener.h"
 
 class UDPListener : public StorageListener {
 private:
