@@ -122,7 +122,7 @@ static int match_string(const char **buf, const char **strs)
 const int tm_year_base = 1900;
 
 /*
-* Return TRUE if 'year' was a leap year.
+* Return TRUE iff `year' was a leap year.
 */
 
 static int
@@ -132,7 +132,7 @@ is_leap_year(int year)
 }
 
 /*
-* Return the weekday [0,6] (0 = Sunday) of the first day of 'year'
+* Return the weekday [0,6] (0 = Sunday) of the first day of `year'
 */
 
 static int
@@ -443,4 +443,4 @@ strptime(const char *buf, const char *format, struct tm *timeptr)
 	return (char *)buf;
 }
 
-#endif /* _MSC_VER */
+#endif
