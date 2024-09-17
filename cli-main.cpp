@@ -56,7 +56,7 @@
 #include "lorawan/storage/service/gateway-service-json.h"
 #define DEF_DB  "identity.json"
 #else
-#include "lorawan/storage/service/identity-service-mem.h"
+#include "lorawan/storage/service/identity-service-udp.h"
 #include "lorawan/storage/service/gateway-service-mem.h"
 #endif
 

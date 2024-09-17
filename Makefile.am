@@ -37,6 +37,7 @@ bin_PROGRAMS = lorawan-service lorawan-query lorawan-query-direct lorawan-tag
 SRC_ARGTABLE = third-party/argtable3/argtable3.c
 
 nobase_dist_include_HEADERS = \
+    lorawan/helper/aes-const.h \
     lorawan/helper/aes-helper.h \
     lorawan/helper/crc-helper.h \
     lorawan/helper/file-helper.h \
@@ -56,12 +57,15 @@ nobase_dist_include_HEADERS = \
     lorawan/lorawan-packet-storage.h \
     lorawan/lorawan-string.h \
     lorawan/lorawan-types.h \
+    lorawan/storage/service/identity-service-udp.h \
     lorawan/storage/client/direct-client.h \
     lorawan/storage/client/plugin-client.h \
     lorawan/storage/client/plugin-query-client.h \
     lorawan/storage/client/query-client.h \
     lorawan/storage/client/response-client.h \
     lorawan/storage/client/service-client.h \
+    lorawan/storage/client/sync-query-client.h \
+    lorawan/storage/client/sync-response-client.h \
     lorawan/storage/client/udp-client.h \
     lorawan/storage/client/uv-client.h \
     lorawan/storage/gateway-identity.h \
@@ -93,6 +97,7 @@ nobase_dist_include_HEADERS = \
     lorawan/storage/service/identity-service-json.h \
     lorawan/storage/service/identity-service-mem.h \
     lorawan/storage/service/identity-service-sqlite.h \
+    lorawan/task/task-platform.h \
     third-party/argtable3/argtable3.h \
     third-party/daemonize.h \
     third-party/nayuki/qrcodegen.hpp \
@@ -127,11 +132,14 @@ SRC_LIBLORAWAN = \
     lorawan/lorawan-packet-storage.cpp \
     lorawan/lorawan-string.cpp \
     lorawan/lorawan-types.cpp \
+    lorawan/storage/service/identity-service-udp.cpp \
     lorawan/storage/client/direct-client.cpp \
     lorawan/storage/client/plugin-client.cpp \
     lorawan/storage/client/plugin-query-client.cpp \
     lorawan/storage/client/query-client.cpp \
     lorawan/storage/client/service-client.cpp \
+    lorawan/storage/client/sync-query-client.cpp \
+    lorawan/storage/client/sync-response-client.cpp \
     lorawan/storage/client/udp-client.cpp \
     lorawan/storage/gateway-identity.cpp \
     lorawan/storage/listener/storage-listener.cpp \

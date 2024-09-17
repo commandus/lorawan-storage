@@ -136,6 +136,7 @@ endif()
 		lorawan/storage/service/identity-service.cpp
 		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-json.cpp
 		lorawan/storage/service/identity-service-mem.cpp
+		lorawan/storage/service/identity-service-udp.cpp
 		third-party/base64/base64.cpp
 		third-party/strptime.cpp
 		${AES_SRC}
