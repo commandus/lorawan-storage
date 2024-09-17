@@ -112,6 +112,7 @@ endif()
 	set(SRC_LIBLORAWAN
 		lorawan/lorawan-conv.cpp lorawan/lorawan-date.cpp lorawan/lorawan-error.cpp lorawan/lorawan-mac.cpp
 		lorawan/lorawan-msg.cpp lorawan/lorawan-string.cpp lorawan/lorawan-types.cpp lorawan/lorawan-key.cpp
+		lorawan/lorawan-mic.cpp lorawan/lorawan-packet-storage.cpp
 		lorawan/helper/aes-helper.cpp lorawan/helper/file-helper.cpp lorawan/helper/ip-address.cpp lorawan/helper/ip-helper.cpp
 		lorawan/helper/key128gen.cpp lorawan/helper/sqlite-helper.cpp
 		lorawan/helper/crc-helper.cpp
@@ -135,6 +136,7 @@ endif()
 		lorawan/storage/service/identity-service.cpp
 		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-json.cpp
 		lorawan/storage/service/identity-service-mem.cpp
+		third-party/base64/base64.cpp
 		third-party/strptime.cpp
 		${AES_SRC}
 	)
@@ -268,6 +270,7 @@ endif()
 	set(LORAWAN_IDENTITY_SERVICE_SRC
 		cli-main.cpp cli-helper.cpp
 		third-party/daemonize.cpp
+		lorawan/storage/network-identity.cpp lorawan/helper/aes-helper.cpp
 		${ARGTABLE}
 	)
 
@@ -279,7 +282,10 @@ endif()
 	#
 	# lorawan-identity-query
 	#
-	add_executable(lorawan-identity-query cli-query-main.cpp cli-helper.cpp ${ARGTABLE})
+	add_executable(lorawan-identity-query cli-query-main.cpp cli-helper.cpp
+		lorawan/storage/network-identity.cpp lorawan/helper/aes-helper.cpp
+		${ARGTABLE}
+	)
 	target_link_libraries(lorawan-identity-query PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${LIBUVA} lorawan)
 	target_compile_definitions(lorawan-identity-query PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-identity-query PRIVATE "." "third-party" ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
@@ -287,7 +293,10 @@ endif()
 	#
 	# lorawan-query-identity-direct
 	#
-	add_executable(lorawan-query-identity-direct cli-query-plugin-main.cpp cli-helper.cpp ${ARGTABLE})
+	add_executable(lorawan-query-identity-direct cli-query-plugin-main.cpp cli-helper.cpp
+		lorawan/storage/network-identity.cpp lorawan/helper/aes-helper.cpp
+		${ARGTABLE}
+	)
 	target_link_libraries(lorawan-query-identity-direct PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
 	target_compile_definitions(lorawan-query-identity-direct PRIVATE ${GATEWAY_DEF})
 	target_include_directories(lorawan-query-identity-direct PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
@@ -295,7 +304,9 @@ endif()
 	#
 	# lorawan-identity-print
 	#
-	add_executable(lorawan-identity-print cli-print.cpp cli-helper.cpp ${ARGTABLE})
+	add_executable(lorawan-identity-print cli-print.cpp cli-helper.cpp
+		${ARGTABLE}
+	)
 	target_link_libraries(lorawan-identity-print PRIVATE ${OS_SPECIFIC_LIBS} ${LIBINTL} ${BACKEND_DB_LIB} lorawan)
 	target_include_directories(lorawan-identity-print PRIVATE "." "third-party" ${VCPKG_INC} ${BACKEND_DB_INC} ${Intl_INCLUDE_DIRS})
 

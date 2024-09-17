@@ -289,7 +289,7 @@ static void printPacket(
                         << DLMT << _("direction: ") << (int) (rfm->macheader.f.mtype & 1)
                         << DLMT << _("devAddr: ") << DEVADDR2string(rfm->fhdr.devaddr)
                         << DLMT << _("appSKey: ") << KEY2string(deviceId.appSKey);
-                    decryptPayload(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
+                    decryptPayloadString(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
                     strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
                          << hexString(pld);
                 } else
@@ -321,7 +321,7 @@ static void printPacket(
             DEVICEID deviceId;
             std::string pld(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
             if (getDeviceByAddr(deviceId, rfm->fhdr.devaddr)) {
-                decryptPayload(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
+                decryptPayloadString(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
                 strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
                      << hexString(pld);
             } else

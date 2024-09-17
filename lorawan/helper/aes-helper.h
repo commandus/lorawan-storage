@@ -4,31 +4,45 @@
 #include <string>
 #include "lorawan/lorawan-types.h"
 
+#define LORAWAN_UPLINK 1
+#define LORAWAN_DOWNLINK  0
+
 /**
  * @see 4.3.3 MAC Frame Payload Encryption (FRMPayload)
  * @see https://os.mbed.com/teams/Semtech/code/LoRaWAN-lib//file/2426a05fe29e/LoRaMacCrypto.cpp/
  */
 void encryptPayload(
-    std::string &payload,
-    const unsigned int frameCounter,
-    const unsigned char direction,
+    void *payload,
+    size_t size,
+    unsigned int frameCounter,
+    unsigned char direction,
     const DEVADDR &devAddr,
     const KEY128 &appSKey
 );
 
-void decryptPayload(
+void encryptPayloadString(
     std::string &payload,
-    const unsigned int frameCounter,
-    const unsigned char direction,
+    unsigned int frameCounter,
+    unsigned char direction,
     const DEVADDR &devAddr,
     const KEY128 &appSKey
 );
+
+#define decryptPayload(payload, size, frameCounter, direction, devAddr,appSKey) encryptPayload(payload, size, frameCounter, direction, devAddr,appSKey)
+#define encryptPayloadString(payload, frameCounter, direction, devAddr,appSKey) encryptPayload((void *) payload.c_str(), payload.size(), frameCounter, direction, devAddr,appSKey)
+#define decryptPayloadString(payload, frameCounter, direction, devAddr,appSKey) encryptPayloadString(payload, frameCounter, direction, devAddr,appSKey)
 
 /**
  * Decrypt Join Accept LoRaWAN message
  * @see 6.2.3 Join-accept message
  */
-std::string decryptJoinAccept(
+void decryptJoinAccept(
+    void *payload,
+    size_t size,
+    const KEY128 &key
+);
+
+void decryptJoinAcceptString(
     const std::string &payload,
     const KEY128 &key
 );

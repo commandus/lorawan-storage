@@ -51,6 +51,7 @@ nobase_dist_include_HEADERS = \
     lorawan/lorawan-error.h \
     lorawan/lorawan-key.h \
     lorawan/lorawan-mac.h \
+    lorawan/lorawan-mic.h \
     lorawan/lorawan-msg.h \
     lorawan/lorawan-packet-storage.h \
     lorawan/lorawan-string.h \
@@ -96,6 +97,7 @@ nobase_dist_include_HEADERS = \
     third-party/daemonize.h \
     third-party/nayuki/qrcodegen.hpp \
     third-party/nlohmann/json.hpp \
+    third-party/base64/base64.h \
     third-party/strptime.h \
     third-party/system/crypto/aes.h \
     third-party/system/crypto/cmac.h \
@@ -119,8 +121,10 @@ SRC_LIBLORAWAN = \
     lorawan/lorawan-date.cpp \
     lorawan/lorawan-error.cpp \
     lorawan/lorawan-key.cpp \
+    lorawan/lorawan-mic.cpp \
     lorawan/lorawan-mac.cpp \
     lorawan/lorawan-msg.cpp \
+    lorawan/lorawan-packet-storage.cpp \
     lorawan/lorawan-string.cpp \
     lorawan/lorawan-types.cpp \
     lorawan/storage/client/direct-client.cpp \
@@ -150,6 +154,7 @@ SRC_LIBLORAWAN = \
     lorawan/storage/service/identity-service-gen.cpp \
     lorawan/storage/service/identity-service-json.cpp \
     lorawan/storage/service/identity-service-mem.cpp \
+    third-party/base64/base64.cpp \
     third-party/strptime.cpp \
     ${AES_SRC}
 
@@ -199,6 +204,7 @@ liblorawan_a_CPPFLAGS = -fPIC
 
 lorawan_query_SOURCES = \
     cli-query-main.cpp cli-helper.cpp \
+    lorawan/storage/network-identity.cpp lorawan/helper/aes-helper.cpp \
 	$(SRC_ARGTABLE)
 lorawan_query_LDADD = -L. -llorawan $(EXTRA_LIB)
 lorawan_query_CPPFLAGS = $(GATEWAY_DEF)
@@ -207,6 +213,7 @@ lorawan_service_SOURCES = \
     cli-main.cpp \
     cli-helper.cpp \
     third-party/daemonize.cpp \
+    lorawan/storage/network-identity.cpp lorawan/helper/aes-helper.cpp \
     $(SRC_ARGTABLE)
 lorawan_service_LDADD = -L. -llorawan $(EXTRA_LIB)
 lorawan_service_CPPFLAGS = $(GATEWAY_DEF) -DLNS_VERSION=$(VERSION)
@@ -214,6 +221,7 @@ lorawan_service_CPPFLAGS = $(GATEWAY_DEF) -DLNS_VERSION=$(VERSION)
 lorawan_query_direct_SOURCES = \
     cli-query-plugin-main.cpp \
     cli-helper.cpp \
+    lorawan/storage/network-identity.cpp lorawan/helper/aes-helper.cpp \
     $(SRC_ARGTABLE)
 lorawan_query_direct_LDADD = -L. -llorawan $(EXTRA_LIB) 
 lorawan_query_direct_CPPFLAGS = $(GATEWAY_DEF)
@@ -267,8 +275,10 @@ dist_config_DATA = \
 	tests/test-parse-packet.cpp \
 	examples/example-direct.cpp examples/example-gen.cpp examples/example-gw-mem.cpp examples/example-mem.cpp \
 	third-party/argtable3/README \
+	third-party/base64/README.base64 \
     third-party/nayuki/README.nayuki \
 	third-party/nlohmann/README.nlohmann.md
+
 #
 # Tests
 #
