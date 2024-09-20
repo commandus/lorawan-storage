@@ -337,7 +337,6 @@ endif()
 	set(CPACK_PACKAGE_VERSION_MINOR "1")
 	include(CPack)
 
-
 	# Print config
 	message("")
 	message("Options (on- enabled, off- disabled):")
