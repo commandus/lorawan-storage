@@ -774,7 +774,7 @@ class MacPtr {
 	public:
 		std::vector<MAC_COMMAND* > mac;
 		int errorcode;
-		// clientSide: true transmitted by the server client side, falae- MAC command transmitted by end-device (server side) 
+		// clientSide: true- transmitted by the server client side, false- MAC command transmitted by end-device (server side)
 		bool clientSide;
         MacPtr(
             const char* parseData,
