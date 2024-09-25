@@ -266,6 +266,14 @@ endif()
 	set_target_properties(storage-udp PROPERTIES SOVERSION ${VERSION_INFO})
 
 	#
+	# C to C++ connector to identity serialization routines
+	#
+	add_library(identity-c SHARED lorawan/wrapper/connector-identity-serialization.cpp)
+	target_link_libraries(identity-c PRIVATE lorawan)
+	target_include_directories(identity-c PRIVATE ".")
+	set_target_properties(identity-c PROPERTIES SOVERSION ${VERSION_INFO})
+
+	#
 	# lorawan-identity-service
 	#
 	set(LORAWAN_IDENTITY_SERVICE_SRC
