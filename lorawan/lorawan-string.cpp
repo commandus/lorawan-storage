@@ -319,22 +319,32 @@ std::string DOWNLINK_STORAGE2String(
 )
 {
     std::stringstream ss;
-    int payloadSize = size - SIZE_DOWNLINK_EMPTY_STORAGE;
+    int payloadSize = size - value.f.foptslen;
     if (payloadSize > 255)
         payloadSize = 255;
-    else
-    if (payloadSize < 0)
-        payloadSize = 0;
     ss << R"({"addr": ")" << DEVADDR2string(value.devaddr)
         << R"(", "foptslen": )" << (int) value.f.foptslen
         << ", \"fpending\": " << (value.f.fpending ? "true" : "false")
         << ", \"ack\": " << (value.f.ack ? "true" : "false")
         << ", \"rfu\": " << (int) value.f.rfu
         << ", \"adr\": " << (value.f.adr ? "true" : "false")
-        << ", \"fcnt\": " << value.fcnt
-        << R"(, "fopts": ")" << hexString((const char *) value.fopts(), (int) value.f.foptslen)
-        << R"(", "payload": ")" << hexString(value.payload(), payloadSize)
-        << "\"}";
+        << ", \"fcnt\": " << value.fcnt;
+
+    if (value.f.foptslen) {
+        ss << R"(, "fopts": ")" << hexString((const char *) value.fopts(), (int) value.f.foptslen);
+        MacPtr macPtr((const char *) value.fopts(), value.f.foptslen, true);
+        ss << "\", \"mac\": " << (macPtr.toJSONString());
+        if (macPtr.errorcode) {
+            // ignore
+        }
+    }
+    if (payloadSize) {
+        ss
+                << R"(, "fport": ")" << (int) value.fport()
+                << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize)
+                << "\"}";
+    }
+    ss << "\"}";
     return ss.str();
 }
 
@@ -344,7 +354,7 @@ std::string UPLINK_STORAGE2String(
 )
 {
     std::stringstream ss;
-    int payloadSize = size - SIZE_UPLINK_EMPTY_STORAGE;
+    int payloadSize = size - value.f.foptslen;
     if (payloadSize > 255)
         payloadSize = 255;
     else
@@ -356,10 +366,21 @@ std::string UPLINK_STORAGE2String(
         << ", \"ack\": " << (value.f.ack ? "true" : "false")
         << ", \"addrackreq\": " << (int) value.f.addrackreq
         << ", \"adr\": " << (value.f.adr ? "true" : "false")
-        << ", \"fcnt\": " << value.fcnt
-        << R"(, "fopts": ")" << hexString((const char *) value.fopts(), (int) value.f.foptslen)
-        << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize)
-        << "\"}";
+        << ", \"fcnt\": " << value.fcnt;
+    if (value.f.foptslen) {
+        ss << R"(, "fopts": ")" << hexString((const char *) value.fopts(), (int) value.f.foptslen);
+        MacPtr macPtr((const char *) value.fopts(), value.f.foptslen, false);
+        ss << "\", \"mac\": " << (macPtr.toJSONString());
+        if (macPtr.errorcode) {
+            // ignore
+        }
+    }
+    if (payloadSize) {
+        ss
+            << R"(, "fport": ")" << (int) value.fport()
+            << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize);
+    }
+    ss << "\"}";
     return ss.str();
 }
 
@@ -535,7 +556,7 @@ static bool isUplink(
 #define DLMT    ", "
 
 std::string fctrl2string(
-        const RFM_HEADER* hdr
+    const RFM_HEADER* hdr
 )
 {
     if (!hdr)

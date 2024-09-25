@@ -358,7 +358,10 @@ int parseClientSidePtr(
 		PTR_MAC(DEVICEMODE)	// same
 		break;
 	default:
-		return ERR_CODE_MAC_INVALID;
+        if ((uint8_t) *value < 0x80)
+            return ERR_CODE_MAC_INVALID;
+        // 0x80-0xff proprietary MAC commands, 0x0e-0x7f- reserved
+        return ERR_CODE_MAC_UNKNOWN_EXTENSION;
 	}
 	return r;
 }
@@ -444,7 +447,10 @@ int parseServerSidePtr(
 		PTR_MAC(DEVICEMODE)	// same
 		break;
 	default:
-		return ERR_CODE_MAC_INVALID;
+        if ((uint8_t) *value < 0x80)
+		    return ERR_CODE_MAC_INVALID;
+        // 0x80-0xff proprietary MAC commands, 0x0e-0x7f- reserved
+        return ERR_CODE_MAC_UNKNOWN_EXTENSION;
 	}
 	return r;
 }
@@ -1810,15 +1816,6 @@ MacDataDeviceMode::MacDataDeviceMode(
 }
 
 MacPtr::MacPtr(
-	const std::string &parseData,
-	const bool aClientSide
-)
-	: clientSide(aClientSide)
-{
-	parse(parseData.c_str(), parseData.size());
-}
-
-MacPtr::MacPtr(
     const char* parseData,
     size_t size,
     const bool aClientSide
@@ -1839,15 +1836,16 @@ void MacPtr::parse(
 	MAC_COMMAND *m;
 	int r;
 	const char *p = parseData;
+    mac.clear();
 	while (size > 0) {
 		if (clientSide)
 			r = parseClientSidePtr(&m, p, size);
 		else
 			r = parseServerSidePtr(&m, p, size);
-		if (r < 0)
+        if (r < 0)
 			break;
 		size -= r;
-		p += size;
+		p += r;
 		mac.push_back(m);
 	}
 	errorcode = r < 0 ? r : 0;
