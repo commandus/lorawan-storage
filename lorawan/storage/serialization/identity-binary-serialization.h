@@ -140,7 +140,7 @@ public:
 };
 
 /**
- * Return request object or  NULL if packet is invalid
+ * Return request object or NULL if packet is invalid
  * @param buf buffer
  * @param sz buffer size
  * @return return NULL if packet is invalid
@@ -168,6 +168,17 @@ bool isIdentityTag(
  * @return query tag
  */
 enum IdentityQueryTag validateIdentityQuery(
+    const unsigned char *buffer,
+    size_t size
+);
+
+/**
+ * Check does it serialized response in the buffer
+ * @param buffer buffer to check
+ * @param size buffer size
+ * @return query tag
+ */
+enum IdentityQueryTag validateIdentityResponse(
     const unsigned char *buffer,
     size_t size
 );
