@@ -4,7 +4,6 @@
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
-#include "lorawan/lorawan-conv.h"
 
 #ifdef __cplusplus
 extern "C" {
