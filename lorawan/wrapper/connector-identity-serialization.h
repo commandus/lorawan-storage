@@ -17,7 +17,6 @@ EXPORT_SHARED_C_FUNC int binaryIdentityEUIRequest(
     uint64_t accessCode
 );
 
-
 EXPORT_SHARED_C_FUNC int binaryIdentityAddrRequest(
     char *retBuf,
     size_t bufSize,
