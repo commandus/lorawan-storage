@@ -118,7 +118,7 @@ int UDPListener::run()
         if (sock == INVALID_SOCKET) {
             if (log) {
                 log->strm(LOG_ERR) << ERR_SOCKET_CREATE
-                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
+                    << MSG_SPACE << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
             r = ERR_CODE_SOCKET_CREATE;
@@ -134,7 +134,7 @@ int UDPListener::run()
         if (setsockopt(sock, IPPROTO_IP, IP_PKTINFO, (const char*) &enable, sizeof(enable))) {
             if (log) {
                 log->strm(LOG_ERR) << ERR_SOCKET_SET
-                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
+                    << MSG_SPACE << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
         }
@@ -156,7 +156,7 @@ int UDPListener::run()
         if (setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*) &timeout, sizeof timeout)) {
             if (log) {
                 log->strm(LOG_ERR) << ERR_SOCKET_SET
-                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
+                    << MSG_SPACE << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
         }
@@ -164,7 +164,7 @@ int UDPListener::run()
         if (bind(sock, (struct sockaddr *) &destAddr, sizeof(destAddr)) < 0) {
             if (log) {
                 log->strm(LOG_ERR) << ERR_SOCKET_BIND
-                    << " " << ERR_MESSAGE << SOCKET_ERRNO;
+                    << MSG_SPACE << ERR_MESSAGE << SOCKET_ERRNO;
                 log->flush();
             }
             shutdown(sock, 0);
@@ -185,7 +185,7 @@ int UDPListener::run()
                 }
                 if (log) {
                     log->strm(LOG_ERR) << ERR_SOCKET_READ
-                        << " " << ERR_MESSAGE << SOCKET_ERRNO;
+                        << MSG_SPACE << ERR_MESSAGE << SOCKET_ERRNO;
                     log->flush();
                 }
                 continue;
@@ -207,20 +207,20 @@ int UDPListener::run()
                     if (sendto(sock, (const char *) rBuf, (int) sz, 0, (struct sockaddr *) &source_addr, sizeof(source_addr)) < 0) {
                         if (log) {
                             log->strm(LOG_ERR) << ERR_SOCKET_WRITE
-                                << " " << ERR_MESSAGE << SOCKET_ERRNO;
+                                << MSG_SPACE << ERR_MESSAGE << SOCKET_ERRNO;
                             log->flush();
                         }
                     } else {
                         if (log && verbose > 1) {
                             log->strm(LOG_INFO) << MSG_SENT
-                                << sz << " " << MSG_BYTES << ": " << hexString(rBuf, sz);
+                                << sz << MSG_SPACE << MSG_BYTES << ": " << hexString(rBuf, sz);
                             log->flush();
                         }
                     }
                 } else {
                     if (log && verbose) {
                         log->strm(LOG_ERR) << ERR_INVALID_PACKET << ": " << hexString(rxBuf, len)
-                            << " (" << len << " " << MSG_BYTES << ")";
+                            << " (" << len << MSG_SPACE << MSG_BYTES << ")";
                         log->flush();
                     }
                 }

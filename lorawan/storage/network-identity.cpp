@@ -126,7 +126,7 @@ uint32_t calculateMIC(
         case MTYPE_CONFIRMED_DATA_UP: {
             if (size < SIZE_MHDR + SIZE_FHDR )
                 return 0;
-            return calculateMICFrmPayload(b, size,
+            return calculateMICFrmPayload(b, (unsigned char) size,
                 ((FHDR *) (b + 1))->fcnt, 0, identity.devaddr, identity.nwkSKey
             );
         }
@@ -134,7 +134,7 @@ uint32_t calculateMIC(
         case MTYPE_CONFIRMED_DATA_DOWN: {
             if (size < SIZE_MHDR + SIZE_FHDR )
                 return 0;
-            return calculateMICFrmPayload(b, size,
+            return calculateMICFrmPayload(b, (unsigned char) size,
                 ((FHDR *) (b + 1))->fcnt, 1, identity.devaddr, identity.nwkSKey
             );
         }

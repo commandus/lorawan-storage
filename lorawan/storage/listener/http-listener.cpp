@@ -6,7 +6,6 @@
 #include "http-listener.h"
 
 #include "lorawan/lorawan-string.h"
-#include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-error.h"
 
 #include <sys/stat.h>
@@ -23,7 +22,7 @@
 #include "lorawan/storage/serialization/urn-helper.h"
 #endif
 
-#define MHD_START_FLAGS 	MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO
+#define MHD_START_FLAGS 	(MHD_USE_POLL | MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_SUPPRESS_DATE_NO_CLOCK | MHD_USE_TCP_FASTOPEN | MHD_USE_TURBO)
 #define DEF_HTML_INDEX_FILE_NAME "index.html"
 
 const static char *CE_GZIP = "gzip";
@@ -55,13 +54,15 @@ const static char *CT_BIN = "application/octet";
 #define MHD_HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN "Access-Control-Allow-Origin"
 #endif
 
+#define DEF_HTTP_PORT 4248
+
 HTTPListener::HTTPListener(
     IdentitySerialization* aIdentitySerialization,
     GatewaySerialization* aSerializationWrapper,
     const std::string &aHTMLRootDir
 )
     : StorageListener(aIdentitySerialization, aSerializationWrapper),
-      log(nullptr), verbose(0), flags(MHD_START_FLAGS),
+      port(DEF_HTTP_PORT), log(nullptr), verbose(0), flags(MHD_START_FLAGS),
       threadCount(1), connectionLimit(32768), descriptor(nullptr),
       mimeType(aIdentitySerialization ? aIdentitySerialization->mimeType() : serializationKnownType2MimeType(SKT_BINARY)),
       htmlRootDir(aHTMLRootDir)
@@ -131,10 +132,7 @@ static const char *mimeTypeByFileExtension(const std::string &filename)
 {
     std::string ext = filename.substr(filename.find_last_of('.') + 1);
     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-    if (ext == "html")
-        return CT_HTML;
-    else
-    if (ext == "htm")
+    if (ext == "html" || ext == "htm")
         return CT_HTML;
     else
     if (ext == "js")
@@ -142,13 +140,11 @@ static const char *mimeTypeByFileExtension(const std::string &filename)
     else
     if (ext == "css")
         return CT_CSS;
+    else
     if (ext == "png")
         return CT_PNG;
     else
-    if (ext == "jpg")
-        return CT_JPEG;
-    else
-    if (ext == "jpeg")
+    if (ext == "jpg" || ext == "jpeg")
         return CT_JPEG;
     else
     if (ext == "kml")
@@ -163,14 +159,21 @@ static const char *mimeTypeByFileExtension(const std::string &filename)
         return CT_BIN;
 }
 
-static ssize_t file_reader_callback(void *cls, uint64_t pos, char *buf, size_t max)
+static ssize_t file_reader_callback(
+    void *cls,
+    uint64_t pos,
+    char *buf,
+    size_t max
+)
 {
     FILE *file = (FILE *) cls;
     (void) fseek (file, (long) pos, SEEK_SET);
     return fread (buf, 1, max, file);
 }
 
-static void free_file_reader_callback(void *cls)
+static void free_file_reader_callback(
+    void *cls
+)
 {
     fclose ((FILE *) cls);
 }
@@ -202,7 +205,7 @@ static MHD_Result processFile(
     struct MHD_Response *response;
     MHD_Result ret;
     FILE *file;
-    struct stat buf;
+    struct stat buf {};
 
     const char *localFileName = filename.c_str();
     bool gzipped = false;
@@ -245,7 +248,7 @@ static enum MHD_Result getAllQueryString(
     const char *value
 )
 {
-    std::string *s = (std::string *) cls;
+    auto *s = (std::string *) cls;
     if (key)
         s->append(key);
     if (value) {

@@ -38,7 +38,7 @@ size_t GatewayTextJSONSerialization::query(
     nlohmann::json js;
     try {
         js = nlohmann::json::parse(request, request + sz);
-    } catch (nlohmann::json::exception &exception) {
+    } catch (nlohmann::json::exception &) {
         return 0;
     }
     if (!js.is_object())

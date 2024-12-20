@@ -186,6 +186,7 @@ EXPORT_SHARED_C_FUNC int binaryIdentityGetResponse(
             }
             // added for searching
             if (name) {
+                // strncpy_s(*name, sizeof(gr.response.devid.name.c), gr.response.devid.name.c, sizeof(gr.response.devid.name.c));
                 strncpy(*name, gr.response.devid.name.c, sizeof(gr.response.devid.name.c));
             }
         }
@@ -217,7 +218,7 @@ EXPORT_SHARED_C_FUNC int binaryIdentityListResponse(
                 if (sz < bufSize)
                     *retBuf[sz] = '\0';
             }
-            return sz;
+            return (int) sz;
         }
         default:
             return ERR_CODE_INVALID_PACKET;

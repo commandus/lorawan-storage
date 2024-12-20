@@ -35,7 +35,7 @@ size_t IdentityTextJSONSerialization::query(
     nlohmann::json js;
     try {
         js = nlohmann::json::parse(request, request + sz);
-    } catch (nlohmann::json::exception &exception) {
+    } catch (nlohmann::json::exception &) {
 #ifdef ENABLE_DEBUG
         std::cerr << ERR_ACCESS_DENIED << " " << exception.what() << std::endl;
 #endif
