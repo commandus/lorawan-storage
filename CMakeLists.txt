@@ -96,9 +96,6 @@ endif()
 	option(ENABLE_SQLITE "Build with SQLite" OFF)
 	option(ENABLE_JSON "Build with JSON file" ON)
 
-	set(THREADS_PREFER_PTHREAD_FLAG ON)
-	find_package(Threads REQUIRED)
-
 	set(ARGTABLE "third-party/argtable3/argtable3.c")
 	set(AES_SRC third-party/system/crypto/aes.c third-party/system/crypto/cmac.c)
 
@@ -195,6 +192,7 @@ endif()
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			find_package(unofficial-sqlite3 CONFIG REQUIRED)
 			set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
+			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
 		else ()
 			find_package(SQLite3 REQUIRED)
 			set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
