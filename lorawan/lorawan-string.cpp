@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <chrono>
+#include <algorithm>
 
 #include "lorawan/lorawan-conv.h"
 #include "lorawan/lorawan-string.h"
@@ -17,6 +18,42 @@
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #pragma warning(disable: 4996)
 #endif
+
+/**
+ * @see https://stackoverflow.com/questions/216823/whats-the-best-way-to-trim-stdstring
+ */
+// trim from start
+inline void ltrim(std::string &s) {
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }));
+}
+
+// trim from end
+inline void rtrim(std::string &s) {
+    s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) {
+        return !std::isspace(ch);
+    }).base(), s.end());
+}
+
+// trim from both ends
+std::string &trim(std::string &s) {
+    ltrim(s);
+    rtrim(s);
+    return s;
+}
+
+// Concatenate two words and place ONE space between them
+std::string concatenateWordsWithSpace(
+    const std::string &sLeft,
+    const std::string &sRight
+) {
+    std::string s1(sLeft);
+    rtrim(s1);
+    std::string s2(sRight);
+    ltrim(s2);
+    return s1 + ' ' + s2;
+}
 
 /**
  * @see https://stackoverflow.com/questions/2896600/how-to-replace-all-occurrences-of-a-character-in-string
@@ -48,6 +85,17 @@ bool isHex(
     const std::string &value
 ) {
     return value.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
+}
+
+bool isDec(
+    const std::string &value
+) {
+    return !value.empty()
+        && std::find_if(value.begin(), value.end(),
+        [] (unsigned char c) {
+            return !std::isdigit(c);
+        }
+    ) == value.end();
 }
 
 // http://stackoverflow.com/questions/673240/how-do-i-print-an-unsigned-char-as-hex-in-c-using-ostream
@@ -85,8 +133,8 @@ static void bufferPrintHex(
 }
 
 std::string hexString(
-        const void *buffer,
-        size_t size
+    const void *buffer,
+    size_t size
 )
 {
     std::stringstream r;
@@ -100,14 +148,14 @@ std::string hexString(
  * @return
  */
 std::string hexString(
-        const std::string &data
+    const std::string &data
 )
 {
     return hexString((void *) data.c_str(), data.size());
 }
 
 static std::string readHex(
-        std::istream &s
+    std::istream &s
 )
 {
     std::stringstream r;
@@ -123,7 +171,7 @@ static std::string readHex(
 }
 
 std::string hex2string(
-        const std::string &hex
+    const std::string &hex
 )
 {
     std::stringstream ss(hex);
@@ -164,7 +212,7 @@ std::string firstCharToUpperCase(
 }
 
 std::string DEVICENAME2string(
-        const DEVICENAME &value
+    const DEVICENAME &value
 )
 {
     size_t sz = strnlen(value.c, sizeof(DEVICENAME::c));
@@ -172,7 +220,7 @@ std::string DEVICENAME2string(
 }
 
 std::string gatewayId2str(
-        uint64_t value
+    uint64_t value
 ) {
     std::stringstream ss;
     ss << std::hex << value;
@@ -192,7 +240,7 @@ std::string MHDR2String(
 }
 
 std::string MIC2String(
-        uint32_t value
+    uint32_t value
 )
 {
     // hex string is MSB first, swap if need it
@@ -201,7 +249,7 @@ std::string MIC2String(
 }
 
 std::string DEVADDR2string(
-        const DEVADDR &value
+    const DEVADDR &value
 )
 {
     uint32_t v = value.u;
@@ -211,7 +259,7 @@ std::string DEVADDR2string(
 }
 
 std::string DEVEUI2string(
-        const DEVEUI &value
+    const DEVEUI &value
 )
 {
     // EUI stored in memory as 8-bit integer x86 LSB first, ARM MSB first
@@ -223,28 +271,28 @@ std::string DEVEUI2string(
 }
 
 std::string KEY2string(
-        const KEY128 &value
+    const KEY128 &value
 )
 {
     return hexString(&value, sizeof(value));
 }
 
 std::string DEVNONCE2string(
-        const DEVNONCE &value
+    const DEVNONCE &value
 )
 {
     return hexString(&value, sizeof(value));
 }
 
 std::string JOINNONCE2string(
-        const JOINNONCE &value
+    const JOINNONCE &value
 )
 {
     return hexString(&value, sizeof(value));
 }
 
 DEVNONCE string2DEVNONCE(
-        const std::string &value
+    const std::string &value
 )
 {
     DEVNONCE r;
@@ -340,11 +388,11 @@ std::string DOWNLINK_STORAGE2String(
     }
     if (payloadSize) {
         ss
-                << R"(, "fport": ")" << (int) value.fport()
-                << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize)
-                << "\"}";
+            << R"(, "fport": ")" << (int) value.fport()
+            << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize)
+            << "\"";
     }
-    ss << "\"}";
+    ss << "}";
     return ss.str();
 }
 
@@ -378,9 +426,10 @@ std::string UPLINK_STORAGE2String(
     if (payloadSize) {
         ss
             << R"(, "fport": ")" << (int) value.fport()
-            << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize);
+            << R"(", "payload": ")" << hexString((const char *) value.payload(), payloadSize)
+            << "\"";
     }
-    ss << "\"}";
+    ss << "}";
     return ss.str();
 }
 
@@ -1389,4 +1438,45 @@ void string2DATA_RATE(
             retVal.bandwidth = BANDWIDTH_INDEX_250KHZ;
             break;
     }
+}
+
+#define NIP_COUNT 13
+static const char *NETWORK_IDENTITY_PROPERTY_NAMES[NIP_COUNT] {
+    "",
+    "activation",     ///< activation type: ABP or OTAA
+    "class",          ///< A, B, C
+    "deveui",	      ///< device identifier 8 bytes (ABP device may not store EUI)
+    "nwkskey",		  ///< shared session key 16 bytes
+    "appskey",        ///< private key 16 bytes
+    "version",
+    // OTAA
+    "appeui",		  ///< OTAA application identifier
+    "appkey",		  ///< OTAA application private key
+    "nwkkey",         ///< OTAA network key
+    "devnonce",       ///< last device nonce
+    "joinnonce",     ///< last Join nonce
+    // added for searching
+    "name"
+};
+
+const char *NETWORK_IDENTITY_PROPERTY2string(
+    NETWORK_IDENTITY_PROPERTY p
+)
+{
+    if ((int) p >= NIP_COUNT || (int) p < 0)
+        p = NIP_NONE;
+    return NETWORK_IDENTITY_PROPERTY_NAMES[(int) p];
+}
+
+NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
+    const char *value
+)
+{
+    auto f = std::find_if(NETWORK_IDENTITY_PROPERTY_NAMES, NETWORK_IDENTITY_PROPERTY_NAMES + NIP_COUNT,
+      [value](const char *v) {
+          return strcmp(value, v) == 0;
+    });
+    if (f == NETWORK_IDENTITY_PROPERTY_NAMES + NIP_COUNT)
+        return NIP_NONE;
+    return (NETWORK_IDENTITY_PROPERTY) (f - NETWORK_IDENTITY_PROPERTY_NAMES);
 }

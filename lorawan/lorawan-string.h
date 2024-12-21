@@ -2,9 +2,27 @@
 #include "lorawan/lorawan-types.h"
 #include "lorawan/lorawan-packet-storage.h"
 
+std::string &trim(std::string &s);
+
+// Concatenate two words and place ONE space between them
+std::string concatenateWordsWithSpace(
+    const std::string &sLeft,
+    const std::string &sRight
+);
+
+/**
+ * Text representation helper functions. Most of them return text representation for LoRaWAN values like
+ * keys, EUI, spreading factor, frequency etc.
+ * @param str
+ * @param from
+ * @param to
+ * @return
+ */
 std::string replaceAll(std::string str, const std::string& from, const std::string& to);
 
 std::string uint64_t2string(const uint64_t &value);
+
+bool isDec(const std::string &value);
 
 bool isHex(const std::string &value);
 
@@ -30,7 +48,7 @@ std::string firstCharToUpperCase(const std::string &value);
 std::string DEVICENAME2string(const DEVICENAME &value);
 std::string gatewayId2str(uint64_t value);
 std::string MHDR2String(const MHDR &value);
-std::string MIC2String(uint16_t value);
+std::string MIC2String(uint32_t value);
 std::string DEVADDR2string(const DEVADDR &value);
 std::string DEVEUI2string(const DEVEUI &value);
 std::string KEY2string(const KEY128 &value);
@@ -173,3 +191,6 @@ bool string2file(
     const std::string &filename,
     const std::string &value
 );
+
+const char *NETWORK_IDENTITY_PROPERTY2string(NETWORK_IDENTITY_PROPERTY p);
+NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(const char *value);

@@ -356,4 +356,6 @@ endif()
 	message("-DENABLE_IPV6=${ENABLE_IPV6} \t enable IPv6 (reserved)")
 	message("-DENABLE_JSON=${ENABLE_JSON} \t build with JSON file backend. -DENABLE_HTTP=on required")
 	message("")
+
+	add_subdirectory(tests)
 endif()
