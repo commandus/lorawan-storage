@@ -23,6 +23,7 @@ protected:
       * @return 0- success, ERR_ADDR_SPACE_FULL- no address available
       */
     int nextBruteForce(NETWORKIDENTITY &retVal);
+    void gen(NETWORKIDENTITY &retVal, uint32_t nwkAddr);
 public:
     int errCode;
     std::string errMessage;
@@ -50,8 +51,19 @@ public:
     int cSize() override;
     int cNext() override;
 
-    int filter(std::vector<NETWORKIDENTITY> &retVal, const std::vector<NETWORK_IDENTITY_FILTER> &filters, uint32_t offset, uint8_t size) override;
-    int cFilter(const std::vector<NETWORK_IDENTITY_FILTER> &filters, uint32_t offset, uint8_t size) override;
+    int filter(
+        std::vector<NETWORKIDENTITY> &retVal,
+        const NETWORKIDENTITY &compareWith,
+        const std::vector<NETWORK_IDENTITY_FILTER> &filters,
+        uint32_t offset,
+        uint8_t size
+    ) override;
+    int cFilter(
+        const NETWORKIDENTITY &compareWith,
+        const std::vector<NETWORK_IDENTITY_FILTER> &filters,
+        uint32_t offset,
+        uint8_t size
+    ) override;
 
     int init(const std::string &option, void *data) override;
     void flush() override;

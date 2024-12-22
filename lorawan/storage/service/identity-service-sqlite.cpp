@@ -368,6 +368,53 @@ int SqliteIdentityService::cNext()
     return CODE_OK;
 }
 
+int SqliteIdentityService::filter(
+    std::vector<NETWORKIDENTITY> &retVal,
+    const NETWORKIDENTITY &compareWith,
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters,
+    uint32_t offset,
+    uint8_t size
+)
+{
+    if (!db)
+        return ERR_CODE_DB_DATABASE_NOT_FOUND;
+    char *zErrMsg = nullptr;
+    std::stringstream statement;
+    statement << "SELECT " FIELD_LIST " FROM device LIMIT " << size << " OFFSET " << offset;
+    std::vector<std::vector<std::string>> table;
+    int r = sqlite3_exec(db, statement.str().c_str(), tableCallback, &table, &zErrMsg);
+    if (r != SQLITE_OK) {
+        if (zErrMsg) {
+            sqlite3_free(zErrMsg);
+        }
+        return ERR_CODE_DB_SELECT;
+    }
+    for (auto row : table) {
+        if (row.size() < 2)
+            continue;
+        NETWORKIDENTITY ni;
+        row2DEVICEID(ni.devid, row);
+        ni.devaddr = row[12];
+        retVal.push_back(ni);
+    }
+    return CODE_OK;
+}
+
+int SqliteIdentityService::cFilter(
+    const NETWORKIDENTITY &compareWith,
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters,
+    uint32_t offset,
+    uint8_t size
+)
+{
+    IdentityListResponse r;
+    r.response = filter(r.identities, compareWith, filters, offset, size);
+    r.size = (uint8_t) r.identities.size();
+    if (responseClient)
+        responseClient->onIdentityList(nullptr, &r);
+    return CODE_OK;
+}
+
 EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService3()
 {
     return new SqliteIdentityService;

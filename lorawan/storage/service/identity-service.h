@@ -121,6 +121,7 @@ public:
     /**
      * synchronous list entries with filter(s)
      * @param retVal return values
+     * @param compareWith identity to compare
      * @param filters filters
      * @param offset 0..
      * @param size 0- all
@@ -128,6 +129,7 @@ public:
      */
     virtual int filter(
         std::vector<NETWORKIDENTITY> &retVal,
+        const NETWORKIDENTITY &compareWith,
         const std::vector<NETWORK_IDENTITY_FILTER> &filters,
         uint32_t offset,
         uint8_t size
@@ -145,10 +147,13 @@ public:
 
     /**
      * asynchronous list entries with filter(s)
+     * @param compareWith identity to compare
+     * @param filters filters
      * @param offset 0..
      * @param size 0- all
      */
     virtual int cFilter(
+        const NETWORKIDENTITY &compareWith,
         const std::vector<NETWORK_IDENTITY_FILTER> &filters,
         uint32_t offset,
         uint8_t size

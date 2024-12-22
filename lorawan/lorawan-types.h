@@ -18,6 +18,7 @@
 #include <map>
 #include <ctime>
 #include <cinttypes>
+#include <vector>
 
 #include "lorawan-const.h"
 
@@ -585,6 +586,7 @@ enum NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR {
 
 enum NETWORK_IDENTITY_PROPERTY {
     NIP_NONE = 0,
+    NIP_ADDRESS,
     NIP_ACTIVATION,     ///< activation type: ABP or OTAA
     NIP_DEVICE_CLASS,   ///< A, B, C
     NIP_DEVEUI,		    ///< device identifier 8 bytes (ABP device may not store EUI)
@@ -769,5 +771,31 @@ public:
     void setFSK(uint32_t bps);
     std::string toString() const;
 };
+
+bool isIdentityFiltered(
+    const NETWORKIDENTITY &identity,
+    const NETWORKIDENTITY &identityCmp,
+    const NETWORK_IDENTITY_FILTER &filter
+);
+
+bool isIdentityFiltered2(
+    const DEVADDR &addr,
+    const DEVICEID &deviceId,
+    const NETWORKIDENTITY &identityCmp,
+    const NETWORK_IDENTITY_FILTER &filter
+);
+
+bool isIdentityFilteredV(
+    const NETWORKIDENTITY &identity,
+    const NETWORKIDENTITY &identityCmp,
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters
+);
+
+bool isIdentityFilteredV2(
+    const DEVADDR &addr,
+    const DEVICEID &deviceId,
+    const NETWORKIDENTITY &identityCmp,
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters
+);
 
 #endif

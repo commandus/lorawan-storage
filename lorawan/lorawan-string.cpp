@@ -1440,9 +1440,10 @@ void string2DATA_RATE(
     }
 }
 
-#define NIP_COUNT 13
+#define NIP_COUNT 14
 static const char *NETWORK_IDENTITY_PROPERTY_NAMES[NIP_COUNT] {
     "",
+    "addr",           ///< address
     "activation",     ///< activation type: ABP or OTAA
     "class",          ///< A, B, C
     "deveui",	      ///< device identifier 8 bytes (ABP device may not store EUI)
@@ -1452,8 +1453,8 @@ static const char *NETWORK_IDENTITY_PROPERTY_NAMES[NIP_COUNT] {
     // OTAA
     "appeui",		  ///< OTAA application identifier
     "appkey",		  ///< OTAA application private key
-    "nwkkey",         ///< OTAA network key
-    "devnonce",       ///< last device nonce
+    "nwkkey",        ///< OTAA network key
+    "devnonce",      ///< last device nonce
     "joinnonce",     ///< last Join nonce
     // added for searching
     "name"

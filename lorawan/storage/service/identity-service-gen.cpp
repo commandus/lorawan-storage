@@ -93,6 +93,29 @@ int GenIdentityService::getNetworkIdentity(
     return ERR_CODE_DEVICE_EUI_NOT_FOUND;
 }
 
+void GenIdentityService::gen(
+    NETWORKIDENTITY &retVal,
+    uint32_t nwkAddr
+)
+{
+    retVal.devaddr = DEVADDR(netid, nwkAddr);
+
+    euiGen((uint8_t *) &retVal.devid.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, retVal.devaddr.u);
+    keyGen((uint8_t *) &retVal.devid.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, retVal.devaddr.u);
+
+    keyGen((uint8_t *) &retVal.devid.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, retVal.devaddr.u);
+    keyGen((uint8_t *) &retVal.devid.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, retVal.devaddr.u);
+
+    retVal.devid.joinNonce = {};
+    retVal.devid.devNonce = {};
+
+    deriveOptNegFNwkSIntKey(retVal.devid.nwkSKey, retVal.devid.nwkKey, retVal.devid.appEUI, retVal.devid.joinNonce, retVal.devid.devNonce);
+    deriveOptNegFNwkSIntKey(retVal.devid.appSKey, retVal.devid.appKey, retVal.devid.appEUI, retVal.devid.joinNonce, retVal.devid.devNonce);
+
+    retVal.devid.version = {1, 0, 0 };
+    string2DEVICENAME(retVal.devid.name, DEVADDR2string(retVal.devaddr).c_str());
+}
+
 // List entries
 int GenIdentityService::list(
     std::vector<NETWORKIDENTITY> &retVal,
@@ -105,23 +128,7 @@ int GenIdentityService::list(
         if (a > sz)
             break;
         NETWORKIDENTITY v;
-        v.devaddr = DEVADDR(netid, a);
-
-
-        euiGen((uint8_t *) &v.devid.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, v.devaddr.u);
-        keyGen((uint8_t *) &v.devid.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, v.devaddr.u);
-
-        keyGen((uint8_t *) &v.devid.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, v.devaddr.u);
-        keyGen((uint8_t *) &v.devid.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, v.devaddr.u);
-
-        v.devid.joinNonce = {};
-        v.devid.devNonce = {};
-
-        deriveOptNegFNwkSIntKey(v.devid.nwkSKey, v.devid.nwkKey, v.devid.appEUI, v.devid.joinNonce, v.devid.devNonce);
-        deriveOptNegFNwkSIntKey(v.devid.appSKey, v.devid.appKey, v.devid.appEUI, v.devid.joinNonce, v.devid.devNonce);
-
-        v.devid.version = { 1, 0, 0 };
-        string2DEVICENAME(v.devid.name, DEVADDR2string(v.devaddr).c_str());
+        gen(v, a);
         retVal.push_back(v);
         a++;
     }
@@ -274,15 +281,30 @@ int GenIdentityService::cNext()
 
 int GenIdentityService::filter(
     std::vector<NETWORKIDENTITY> &retVal,
+    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
 )
 {
-    return list(retVal, offset, size);
+    // logically incorrect to avoid infinite loop
+    uint32_t a = offset;
+    size_t sz = netid.size();
+    for (int i = 0; i < size; i++) {
+        if (a > sz)
+            break;
+        NETWORKIDENTITY v;
+        gen(v, a);
+        if (!isIdentityFilteredV(v, compareWith, filters))
+            continue;
+        retVal.push_back(v);
+        a++;
+    }
+    return CODE_OK;
 }
 
 int GenIdentityService::cFilter(
+    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size

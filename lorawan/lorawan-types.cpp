@@ -1992,3 +1992,218 @@ std::string DataRate::toString() const
        << "}";
     return ss.str();
 }
+
+static const char *getDeviceIdPropertyPtr(
+    const DEVICEID &deviceId,
+    enum NETWORK_IDENTITY_PROPERTY p
+) {
+    switch (p) {
+        case NIP_ACTIVATION:
+            return (char *) &deviceId.activation;
+        case NIP_DEVICE_CLASS:
+            return (char *) &deviceId.deviceclass;
+        case NIP_DEVEUI:
+            return (char *) &deviceId.devEUI.u;
+        case NIP_NWKSKEY:
+            return (char *) &deviceId.nwkSKey.u;
+        case NIP_APPSKEY:
+            return (char *) &deviceId.appSKey.u;
+        case NIP_LORAWAN_VERSION:
+            return (char *) &deviceId.version.c;
+            // OTAA
+        case NIP_APPEUI:
+            return (char *) &deviceId.appEUI.u;
+        case NIP_APPKEY:
+            return (char *) &deviceId.appKey.u;
+        case NIP_NWKKEY:
+            return (char *) &deviceId.nwkKey.u;
+        case NIP_DEVNONCE:
+            return (char *) &deviceId.devNonce.c;
+        case NIP_JOINNONCE:
+            return (char *) &deviceId.joinNonce.c;
+            // added for searching
+        case NIP_DEVICENAME:
+            return (char *) &deviceId.name.c;
+        default:
+            return (char *) &deviceId.activation;
+    }
+}
+
+static const char *getNetworkIdentityPropertyPtr(
+    const NETWORKIDENTITY &identity,
+    enum NETWORK_IDENTITY_PROPERTY p
+)
+{
+    switch (p) {
+        case NIP_ADDRESS:
+            return (char *) &identity.devaddr.u;
+        case NIP_ACTIVATION:
+            return (char *) &identity.devid.activation;
+        case NIP_DEVICE_CLASS:
+            return (char *) &identity.devid.deviceclass;
+        case NIP_DEVEUI:
+            return (char *) &identity.devid.devEUI.u;
+        case NIP_NWKSKEY:
+            return (char *) &identity.devid.nwkSKey.u;
+        case NIP_APPSKEY:
+            return (char *) &identity.devid.appSKey.u;
+        case NIP_LORAWAN_VERSION:
+            return (char *) &identity.devid.version.c;
+        // OTAA
+        case NIP_APPEUI:
+            return (char *) &identity.devid.appEUI.u;
+        case NIP_APPKEY:
+            return (char *) &identity.devid.appKey.u;
+        case NIP_NWKKEY:
+            return (char *) &identity.devid.nwkKey.u;
+        case NIP_DEVNONCE:
+            return (char *) &identity.devid.devNonce.c;
+        case NIP_JOINNONCE:
+            return (char *) &identity.devid.joinNonce.c;
+        // added for searching
+        case NIP_DEVICENAME:
+            return (char *) &identity.devid.name.c;
+        default:
+            return (char *) &identity.devaddr.u;
+    }
+}
+
+#define NIP_SIZE_COUNT 14
+
+static size_t NETWORK_IDENTITY_PROPERTY_SIZES[NIP_SIZE_COUNT] {
+    0,
+    sizeof(NETWORKIDENTITY::devaddr.u),
+    sizeof(NETWORKIDENTITY::devid.activation),
+    sizeof(NETWORKIDENTITY::devid.deviceclass),
+    sizeof(NETWORKIDENTITY::devid.devEUI.u),
+    sizeof(NETWORKIDENTITY::devid.nwkSKey.u),
+    sizeof(NETWORKIDENTITY::devid.appSKey.u),
+    sizeof(NETWORKIDENTITY::devid.version.c),
+    // OTAA
+    sizeof(NETWORKIDENTITY::devid.appEUI.u),
+    sizeof(NETWORKIDENTITY::devid.appKey.u),
+    sizeof(NETWORKIDENTITY::devid.nwkKey.u),
+    sizeof(NETWORKIDENTITY::devid.devNonce.u),
+    sizeof(NETWORKIDENTITY::devid.joinNonce.c),
+    // added for searching
+    sizeof(NETWORKIDENTITY::devid.name.c)
+};
+
+static size_t getNetworkIdentityPropertySize(
+    enum NETWORK_IDENTITY_PROPERTY p
+)
+{
+    if ((int) p < 0 || (int) p >= NIP_SIZE_COUNT)
+        return 0;
+    return NETWORK_IDENTITY_PROPERTY_SIZES[(int) p];
+}
+
+
+bool isIdentityFiltered(
+    const NETWORKIDENTITY &identity,
+    const NETWORKIDENTITY &identityCmp,
+    const NETWORK_IDENTITY_FILTER &filter
+)
+{
+    auto sz = getNetworkIdentityPropertySize(filter.property);
+    if (filter.length < sz)
+        sz = filter.length;
+    auto c = memcmp(
+        getNetworkIdentityPropertyPtr(identity, filter.property),
+        getNetworkIdentityPropertyPtr(identityCmp, filter.property),
+        sz
+    );
+
+    switch (filter.comparisonOperator) {
+        case NICO_EQ:
+            return c == 0;
+        case NICO_GT:
+            return c > 0;
+        case NICO_LT:
+            return c < 0;
+        case NICO_GE:
+            return c >= 0;
+        case NICO_LE:
+            return c <= 0;
+        case NICO_NE:
+            return c != 0;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool isIdentityFiltered2(
+    const DEVADDR &addr,
+    const DEVICEID &deviceId,
+    const NETWORKIDENTITY &identityCmp,
+    const NETWORK_IDENTITY_FILTER &filter
+)
+{
+    auto sz = getNetworkIdentityPropertySize(filter.property);
+    if (filter.length < sz)
+        sz = filter.length;
+    int c = 0;
+
+    if (filter.property == NIP_ADDRESS)
+        c = memcmp(&addr.u, &identityCmp.devaddr.u, sz);
+    else
+        c = memcmp(getDeviceIdPropertyPtr(deviceId, filter.property), getDeviceIdPropertyPtr(identityCmp.devid, filter.property),sz);
+
+    switch (filter.comparisonOperator) {
+        case NICO_EQ:
+            return c == 0;
+        case NICO_GT:
+            return c > 0;
+        case NICO_LT:
+            return c < 0;
+        case NICO_GE:
+            return c >= 0;
+        case NICO_LE:
+            return c <= 0;
+        case NICO_NE:
+            return c != 0;
+        default:
+            break;
+    }
+    return false;
+}
+
+bool isIdentityFilteredV(
+    const NETWORKIDENTITY &identity,
+    const NETWORKIDENTITY &identityCmp,
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters
+)
+{
+    bool r = true;
+    for (auto &f : filters) {
+        bool c = isIdentityFiltered(identity, identityCmp, f);
+        if (f.pre == NICO_OR)
+            r |= c;
+        else
+            r &= c;
+        if (!r)
+            break;
+    }
+    return r;
+}
+
+bool isIdentityFilteredV2(
+    const DEVADDR &addr,
+    const DEVICEID &deviceId,
+    const NETWORKIDENTITY &identityCmp,
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters
+)
+{
+    bool r = true;
+    for (auto &f : filters) {
+        bool c = isIdentityFiltered2(addr, deviceId, identityCmp, f);
+        if (f.pre == NICO_OR)
+            r |= c;
+        else
+            r &= c;
+        if (!r)
+            break;
+    }
+    return r;
+}

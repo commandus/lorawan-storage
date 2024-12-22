@@ -364,21 +364,27 @@ int ClientUDPIdentityService::cNext()
 
 int ClientUDPIdentityService::filter(
     std::vector<NETWORKIDENTITY> &retVal,
+    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
 )
 {
-    return list(retVal, offset, size);
+    IdentityOperationRequest req(QUERY_IDENTITY_FILTER, offset, size, code, accessCode);
+    syncClient.request(&req);
+    return CODE_OK;
 }
 
 int ClientUDPIdentityService::cFilter(
+    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
 )
 {
-    return cList(offset, size);
+    IdentityOperationRequest req(QUERY_IDENTITY_FILTER, offset, size, code, accessCode);
+    client->request(&req);
+    return CODE_OK;
 }
 
 EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService4()
