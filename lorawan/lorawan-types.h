@@ -568,6 +568,21 @@ typedef PACK( struct {
 
 #define SIZE_REGIONAL_PARAMETERS_VERSION 1
 
+enum NETWORK_IDENTITY_COMPARISON_OPERATOR {
+    NICO_NONE = 0,
+    NICO_EQ,
+    NICO_NE,
+    NICO_GT,
+    NICO_LT,
+    NICO_GE,
+    NICO_LE
+};
+
+enum NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR {
+    NICO_AND = 0,
+    NICO_OR
+};
+
 enum NETWORK_IDENTITY_PROPERTY {
     NIP_NONE = 0,
     NIP_ACTIVATION,     ///< activation type: ABP or OTAA
@@ -585,6 +600,19 @@ enum NETWORK_IDENTITY_PROPERTY {
     // added for searching
     NIP_DEVICENAME
 };
+
+typedef PACK( struct {
+    enum NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR pre;  ///< and/or previous statement
+    enum NETWORK_IDENTITY_PROPERTY property;
+    enum NETWORK_IDENTITY_COMPARISON_OPERATOR comparisonOperator;
+    uint8_t length; // 0..16
+    char filterData[16];
+} ) NETWORK_IDENTITY_FILTER;    // 20 bytes long
+
+typedef PACK( struct {
+    uint8_t length;                     ///< filers count: 1..255
+    NETWORK_IDENTITY_FILTER filters[1]; ///< filters 1..255
+} ) NETWORK_IDENTITY_FILTERS;   // 21, 41, .. 5101
 
 class NETWORKIDENTITY;
 PACK(class DEVICEID {
