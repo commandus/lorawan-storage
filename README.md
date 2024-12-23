@@ -183,7 +183,7 @@ Install dependencies.
 
 Linux:
 ```
-sudo apt install libuv1-dev gettext libmicrohttpd-dev
+sudo apt install libuv1-dev gettext libmicrohttpd-dev sqlite3 libsqlite3-dev
 ```
 
 Windows:
