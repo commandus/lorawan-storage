@@ -388,7 +388,7 @@ int SqliteIdentityService::filter(
         bool isFirst = true;
         for (auto &f : filters)
         {
-            statement << NETWORK_IDENTITY_FILTER2string(f, compareWith, isFirst) << ' ';
+            statement << NETWORK_IDENTITY_FILTER2string(f, isFirst) << ' ';
             isFirst = false;
         }
     }

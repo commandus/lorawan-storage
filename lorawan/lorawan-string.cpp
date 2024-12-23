@@ -449,7 +449,7 @@ static const char *ACTIVATION_NAMES[2] = {
 };
 
 std::string activation2string(
-        ACTIVATION value
+    ACTIVATION value
 )
 {
     if ((unsigned int) value > OTAA)
@@ -458,7 +458,7 @@ std::string activation2string(
 }
 
 std::string MODULATION2String(
-        MODULATION value
+    MODULATION value
 )
 {
     switch (value) {
@@ -472,7 +472,7 @@ std::string MODULATION2String(
 }
 
 std::string BANDWIDTH2String(
-        BANDWIDTH value
+    BANDWIDTH value
 ) {
     switch (value) {
         case BANDWIDTH_INDEX_7KHZ:
@@ -781,16 +781,16 @@ void string2DEVADDR(
 }
 
 void string2DEVEUI(
-        DEVEUI &retval,
-        const std::string &value
+    DEVEUI &retval,
+    const std::string &value
 )
 {
     retval.u = strtoull(value.c_str(), nullptr, 16);
 }
 
 void string2DEVEUI(
-        DEVEUI &retval,
-        const char *value
+    DEVEUI &retval,
+    const char *value
 )
 {
     retval.u = strtoull(value, nullptr, 16);
@@ -1502,6 +1502,49 @@ NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
     return (NETWORK_IDENTITY_PROPERTY) (f - NETWORK_IDENTITY_PROPERTY_NAMES);
 }
 
+static std::string filterValue2string(
+    const NETWORK_IDENTITY_FILTER &filter
+)
+{
+    std::string r;
+    switch (filter.property) {
+        case NIP_ADDRESS:
+            r = DEVADDR2string(*(DEVADDR*) &filter.filterData);
+            break;
+        case NIP_ACTIVATION:
+            r = activation2string(*(ACTIVATION *) &filter.filterData);
+            break;
+        case NIP_DEVICE_CLASS:
+            r = deviceclass2string(*(DEVICECLASS *) &filter.filterData);
+            break;
+        case NIP_DEVEUI:
+        case NIP_APPEUI:
+            r = DEVEUI2string(*(DEVEUI *) &filter.filterData);
+            break;
+        case NIP_NWKSKEY:
+        case NIP_APPSKEY:
+        case NIP_APPKEY:
+        case NIP_NWKKEY:
+            r = KEY2string(*(KEY128 *) &filter.filterData);
+            break;
+        case NIP_LORAWAN_VERSION:
+            r = LORAWAN_VERSION2string(*(LORAWAN_VERSION *) &filter.filterData);
+            break;
+        case NIP_DEVNONCE:
+            r = DEVNONCE2string(*(DEVNONCE *) &filter.filterData);
+            break;
+        case NIP_JOINNONCE:
+            r = JOINNONCE2string(*(JOINNONCE *) &filter.filterData);
+            break;
+        case NIP_DEVICENAME:
+            r = DEVICENAME2string(*(DEVICENAME *) &filter.filterData);
+            break;
+        default:
+            break;
+    }
+    return r;
+}
+
 std::string NETWORK_IDENTITY_FILTER2string(
     const NETWORK_IDENTITY_FILTER &filter,
     bool isFirst
@@ -1515,8 +1558,9 @@ std::string NETWORK_IDENTITY_FILTER2string(
         else
             ss << "and ";
     }
-    ss << NETWORK_IDENTITY_PROPERTY2string(filter.property) << ' ' << NETWORK_IDENTITY_COMPARISON_OPERATOR(filter.comparisonOperator);
-    // filter.filterData
+    ss << NETWORK_IDENTITY_PROPERTY2string(filter.property)
+        << ' ' << NETWORK_IDENTITY_COMPARISON_OPERATOR2string(filter.comparisonOperator)
+        << " '" << filterValue2string(filter) << "' ";
     // compareWith.
     return ss.str();
 }
