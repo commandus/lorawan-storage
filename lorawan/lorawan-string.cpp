@@ -1469,6 +1469,26 @@ const char *NETWORK_IDENTITY_PROPERTY2string(
     return NETWORK_IDENTITY_PROPERTY_NAMES[(int) p];
 }
 
+#define NETWORK_IDENTITY_COMPARISON_OPERATOR_STRING_SIZE    7
+const char *NETWORK_IDENTITY_COMPARISON_OPERATOR_STRING [NETWORK_IDENTITY_COMPARISON_OPERATOR_STRING_SIZE] {
+    "",
+    "=",
+    "<>",
+    ">",
+    "<",
+    ">=",
+    "<="
+};
+
+static const char *NETWORK_IDENTITY_COMPARISON_OPERATOR2string(
+    NETWORK_IDENTITY_COMPARISON_OPERATOR value
+)
+{
+    if ((int) value >= NETWORK_IDENTITY_COMPARISON_OPERATOR_STRING_SIZE)
+       value = NICO_NONE;
+    return NETWORK_IDENTITY_COMPARISON_OPERATOR_STRING[value];
+}
+
 NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
     const char *value
 )
@@ -1480,4 +1500,23 @@ NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
     if (f == NETWORK_IDENTITY_PROPERTY_NAMES + NIP_COUNT)
         return NIP_NONE;
     return (NETWORK_IDENTITY_PROPERTY) (f - NETWORK_IDENTITY_PROPERTY_NAMES);
+}
+
+std::string NETWORK_IDENTITY_FILTER2string(
+    const NETWORK_IDENTITY_FILTER &filter,
+    const NETWORKIDENTITY &compareWith,
+    bool isFirst
+)
+{
+    std::stringstream ss;
+    if (!isFirst)
+    {
+        if (filter.pre ==NICO_OR)
+            ss << "or ";
+        else
+            ss << "and ";
+    }
+    ss << NETWORK_IDENTITY_PROPERTY2string(filter.property) << ' ' << NETWORK_IDENTITY_COMPARISON_OPERATOR(filter.comparisonOperator);
+    // compareWith.
+    return ss.str();
 }

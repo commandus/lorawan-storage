@@ -13,7 +13,7 @@
 
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
 
-#define FIELD_LIST "activation, deviceclass, deveui, nwkskey, appskey, version, appeui, appkey, nwkkey, devnonce, joinnonce, name, addr"
+#define FIELD_LIST "addr, activation, class, deveui, nwkskey, appskey, version, appeui, appkey, nwkkey, devnonce, joinnonce, name"
 
 SqliteIdentityService::SqliteIdentityService()
     : db(nullptr)
@@ -141,7 +141,8 @@ int SqliteIdentityService::getNetworkIdentity(
 
 /**
  * UPSERT SQLite >= 3.24.0
- * @param request gateway identifier or address
+ * @param devAddr device address
+ * @param id device identifier
  * @return 0- success
  */
 int SqliteIdentityService::put(
@@ -155,7 +156,8 @@ int SqliteIdentityService::put(
     std::stringstream statement;
 
     statement << "INSERT INTO device(" FIELD_LIST ") VALUES ('"
-        << activation2string(id.activation) << "', "
+        << DEVADDR2string(devAddr) << "', "
+        << "'" << activation2string(id.activation) << "', "
         << "'" << deviceclass2string(id.deviceclass) << "', "
         << "'" << DEVEUI2string(id.devEUI) << "', "
         << "'" << KEY2string(id.nwkSKey) << "', "
@@ -166,10 +168,9 @@ int SqliteIdentityService::put(
         << "'" << KEY2string(id.nwkKey) << "', "
         << "'" << DEVNONCE2string(id.devNonce) << "', "
         << "'" << JOINNONCE2string(id.joinNonce) << "', "
-        << "'" << DEVICENAME2string(id.name) << "', "
-        << "'" << DEVADDR2string(devAddr)
+        << "'" << DEVICENAME2string(id.name)
         << "') ON CONFLICT(addr) DO UPDATE SET "
-        "activation=excluded.activation, deviceclass=excluded.deviceclass, deveui=excluded.deveui, "
+        "activation=excluded.activation, class=excluded.class, deveui=excluded.deveui, "
         "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
         "appeui=excluded.appeui, appkey=excluded.appkey, nwkkey=excluded.nwkkey, "
         "devnonce=excluded.devnonce, joinnonce=excluded.joinnonce, name=excluded.name";
@@ -207,8 +208,8 @@ int SqliteIdentityService::rm(
  * "CREATE DATABASE IF NOT EXISTS \"device\" USE \"db_name\"",
  */
 static std::string SCHEMA_STATEMENT[] {
-    "CREATE TABLE \"device\" (\"addr\" TEXT NOT NULL PRIMARY KEY, \"activation\" TEXT, \"deviceclass\" TEXT, \"deveui\" TEXT, \"nwkskey\" TEXT, \"appskey\" TEXT, \"version\" TEXT, \"appeui\" TEXT, \"appkey\" TEXT, \"nwkkey\" TEXT, \"devnonce\" TEXT, \"joinnonce\" TEXT, \"name\" TEXT)",
-    "CREATE INDEX \"device_key_deveui\" ON \"device\" (\"deveui\")"
+    R"(CREATE TABLE "device" ("addr" TEXT NOT NULL PRIMARY KEY, "activation" TEXT, "class" TEXT, "deveui" TEXT, "nwkskey" TEXT, "appskey" TEXT, "version" TEXT, "appeui" TEXT, "appkey" TEXT, "nwkkey" TEXT, "devnonce" TEXT, "joinnonce" TEXT, "name" TEXT))",
+    R"(CREATE INDEX "device_key_deveui" ON "device" ("deveui"))"
 };
 
 static int createDatabaseFile(
@@ -220,7 +221,7 @@ static int createDatabaseFile(
     if (r)
         return r;
     char *zErrMsg = nullptr;
-    for (auto s : SCHEMA_STATEMENT) {
+    for (auto &s : SCHEMA_STATEMENT) {
         r = sqlite3_exec(db, s.c_str(), nullptr, nullptr, &zErrMsg);
         if (r != SQLITE_OK) {
             if (zErrMsg) {
@@ -255,9 +256,9 @@ int SqliteIdentityService::init(
         return ERR_CODE_DB_DATABASE_OPEN;
     }
     // validate objects
-    r = sqlite3_exec(db, "SELECT * FROM device WHERE addr = ''", nullptr, nullptr, nullptr);
+    r = sqlite3_exec(db, "SELECT " FIELD_LIST " FROM device WHERE addr = ''", nullptr, nullptr, nullptr);
     if (r != SQLITE_OK) {
-        int r = createDatabaseFile(dbName);
+        r = createDatabaseFile(dbName);
         if (r)
             return r;
     }
@@ -275,7 +276,8 @@ void SqliteIdentityService::flush()
 
 void SqliteIdentityService::done()
 {
-    int r = sqlite3_close(db);
+    // int r =
+    sqlite3_close(db);
     db = nullptr;
 }
 
@@ -380,7 +382,19 @@ int SqliteIdentityService::filter(
         return ERR_CODE_DB_DATABASE_NOT_FOUND;
     char *zErrMsg = nullptr;
     std::stringstream statement;
-    statement << "SELECT " FIELD_LIST " FROM device LIMIT " << size << " OFFSET " << offset;
+    statement << "SELECT " FIELD_LIST " FROM device ";
+    if (!filters.empty())
+    {
+        statement << "WHERE ";
+        bool isFirst = true;
+        for (auto &f : filters)
+        {
+            statement << NETWORK_IDENTITY_FILTER2string(f, compareWith, isFirst) << ' ';
+            isFirst = false;
+        }
+    }
+    statement << " LIMIT " << size << " OFFSET " << offset;
+
     std::vector<std::vector<std::string>> table;
     int r = sqlite3_exec(db, statement.str().c_str(), tableCallback, &table, &zErrMsg);
     if (r != SQLITE_OK) {
