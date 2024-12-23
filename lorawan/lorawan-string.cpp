@@ -1504,7 +1504,6 @@ NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
 
 std::string NETWORK_IDENTITY_FILTER2string(
     const NETWORK_IDENTITY_FILTER &filter,
-    const NETWORKIDENTITY &compareWith,
     bool isFirst
 )
 {
@@ -1517,6 +1516,7 @@ std::string NETWORK_IDENTITY_FILTER2string(
             ss << "and ";
     }
     ss << NETWORK_IDENTITY_PROPERTY2string(filter.property) << ' ' << NETWORK_IDENTITY_COMPARISON_OPERATOR(filter.comparisonOperator);
+    // filter.filterData
     // compareWith.
     return ss.str();
 }

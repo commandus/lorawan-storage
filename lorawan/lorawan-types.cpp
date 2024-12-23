@@ -2101,7 +2101,6 @@ static size_t getNetworkIdentityPropertySize(
 
 bool isIdentityFiltered(
     const NETWORKIDENTITY &identity,
-    const NETWORKIDENTITY &identityCmp,
     const NETWORK_IDENTITY_FILTER &filter
 )
 {
@@ -2110,7 +2109,7 @@ bool isIdentityFiltered(
         sz = filter.length;
     auto c = memcmp(
         getNetworkIdentityPropertyPtr(identity, filter.property),
-        getNetworkIdentityPropertyPtr(identityCmp, filter.property),
+        filter.filterData,
         sz
     );
 
@@ -2136,7 +2135,6 @@ bool isIdentityFiltered(
 bool isIdentityFiltered2(
     const DEVADDR &addr,
     const DEVICEID &deviceId,
-    const NETWORKIDENTITY &identityCmp,
     const NETWORK_IDENTITY_FILTER &filter
 )
 {
@@ -2146,9 +2144,9 @@ bool isIdentityFiltered2(
     int c = 0;
 
     if (filter.property == NIP_ADDRESS)
-        c = memcmp(&addr.u, &identityCmp.devaddr.u, sz);
+        c = memcmp(&addr.u, &filter.filterData, sz);
     else
-        c = memcmp(getDeviceIdPropertyPtr(deviceId, filter.property), getDeviceIdPropertyPtr(identityCmp.devid, filter.property),sz);
+        c = memcmp(getDeviceIdPropertyPtr(deviceId, filter.property), filter.filterData,sz);
 
     switch (filter.comparisonOperator) {
         case NICO_EQ:
@@ -2171,13 +2169,12 @@ bool isIdentityFiltered2(
 
 bool isIdentityFilteredV(
     const NETWORKIDENTITY &identity,
-    const NETWORKIDENTITY &identityCmp,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters
 )
 {
     bool r = true;
     for (auto &f : filters) {
-        bool c = isIdentityFiltered(identity, identityCmp, f);
+        bool c = isIdentityFiltered(identity, f);
         if (f.pre == NICO_OR)
             r |= c;
         else
@@ -2191,13 +2188,12 @@ bool isIdentityFilteredV(
 bool isIdentityFilteredV2(
     const DEVADDR &addr,
     const DEVICEID &deviceId,
-    const NETWORKIDENTITY &identityCmp,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters
 )
 {
     bool r = true;
     for (auto &f : filters) {
-        bool c = isIdentityFiltered2(addr, deviceId, identityCmp, f);
+        bool c = isIdentityFiltered2(addr, deviceId, f);
         if (f.pre == NICO_OR)
             r |= c;
         else

@@ -198,7 +198,6 @@ const char *NETWORK_IDENTITY_PROPERTY2string(
 
 std::string NETWORK_IDENTITY_FILTER2string(
     const NETWORK_IDENTITY_FILTER &filter,
-    const NETWORKIDENTITY &compareWith,
     bool isFirst
 );
 

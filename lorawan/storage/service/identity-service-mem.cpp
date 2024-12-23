@@ -205,7 +205,6 @@ int MemoryIdentityService::cList(
 
 int MemoryIdentityService::filter(
     std::vector<NETWORKIDENTITY> &retVal,
-    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
@@ -214,7 +213,7 @@ int MemoryIdentityService::filter(
     size_t o = 0;
     size_t sz = 0;
     for (auto & it : storage) {
-        if (!isIdentityFilteredV2(it.first, it.second, compareWith, filters))
+        if (!isIdentityFilteredV2(it.first, it.second, filters))
             continue;
         if (o < offset) {
             // skip first
@@ -230,14 +229,13 @@ int MemoryIdentityService::filter(
 }
 
 int MemoryIdentityService::cFilter(
-    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
 )
 {
     IdentityListResponse r;
-    r.response = filter(r.identities, compareWith, filters, offset, size);
+    r.response = filter(r.identities, filters, offset, size);
     r.size = (uint8_t) r.identities.size();
     if (responseClient)
         responseClient->onIdentityList(nullptr, &r);

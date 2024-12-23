@@ -774,27 +774,23 @@ public:
 
 bool isIdentityFiltered(
     const NETWORKIDENTITY &identity,
-    const NETWORKIDENTITY &identityCmp,
     const NETWORK_IDENTITY_FILTER &filter
 );
 
 bool isIdentityFiltered2(
     const DEVADDR &addr,
     const DEVICEID &deviceId,
-    const NETWORKIDENTITY &identityCmp,
     const NETWORK_IDENTITY_FILTER &filter
 );
 
 bool isIdentityFilteredV(
     const NETWORKIDENTITY &identity,
-    const NETWORKIDENTITY &identityCmp,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters
 );
 
 bool isIdentityFilteredV2(
     const DEVADDR &addr,
     const DEVICEID &deviceId,
-    const NETWORKIDENTITY &identityCmp,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters
 );
 

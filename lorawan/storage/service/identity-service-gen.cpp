@@ -281,7 +281,6 @@ int GenIdentityService::cNext()
 
 int GenIdentityService::filter(
     std::vector<NETWORKIDENTITY> &retVal,
-    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
@@ -295,7 +294,7 @@ int GenIdentityService::filter(
             break;
         NETWORKIDENTITY v;
         gen(v, a);
-        if (!isIdentityFilteredV(v, compareWith, filters))
+        if (!isIdentityFilteredV(v, filters))
             continue;
         retVal.push_back(v);
         a++;
@@ -304,7 +303,6 @@ int GenIdentityService::filter(
 }
 
 int GenIdentityService::cFilter(
-    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size

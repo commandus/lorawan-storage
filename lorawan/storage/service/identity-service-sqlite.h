@@ -33,13 +33,11 @@ public:
 
     int filter(
         std::vector<NETWORKIDENTITY> &retVal,
-        const NETWORKIDENTITY &compareWith,
         const std::vector<NETWORK_IDENTITY_FILTER> &filters,
         uint32_t offset,
         uint8_t size
     ) override;
     int cFilter(
-        const NETWORKIDENTITY &compareWith,
         const std::vector<NETWORK_IDENTITY_FILTER> &filters,
         uint32_t offset,
         uint8_t size

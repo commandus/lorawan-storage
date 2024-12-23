@@ -372,7 +372,6 @@ int SqliteIdentityService::cNext()
 
 int SqliteIdentityService::filter(
     std::vector<NETWORKIDENTITY> &retVal,
-    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
@@ -415,14 +414,13 @@ int SqliteIdentityService::filter(
 }
 
 int SqliteIdentityService::cFilter(
-    const NETWORKIDENTITY &compareWith,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters,
     uint32_t offset,
     uint8_t size
 )
 {
     IdentityListResponse r;
-    r.response = filter(r.identities, compareWith, filters, offset, size);
+    r.response = filter(r.identities, filters, offset, size);
     r.size = (uint8_t) r.identities.size();
     if (responseClient)
         responseClient->onIdentityList(nullptr, &r);
