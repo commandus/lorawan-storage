@@ -40,12 +40,6 @@
 
 #define DEF_DB_GATEWAY_JSON  "gateway.json"
 
-#ifdef ENABLE_SQLITE
-#include "lorawan/storage/service/identity-service-sqlite.h"
-#include "lorawan/storage/service/gateway-service-sqlite.h"
-#define DEF_DB  "lorawan.db"
-#endif
-
 #ifdef ENABLE_GEN
 #include "lorawan/storage/service/identity-service-gen.h"
 #define DEF_DB  "gen"
@@ -58,6 +52,12 @@
 #else
 #include "lorawan/storage/service/identity-service-udp.h"
 #include "lorawan/storage/service/gateway-service-mem.h"
+#endif
+
+#ifdef ENABLE_SQLITE
+#include "lorawan/storage/service/identity-service-sqlite.h"
+#include "lorawan/storage/service/gateway-service-sqlite.h"
+#define DEF_DB  "lorawan.db"
 #endif
 
 #ifndef DEF_DB

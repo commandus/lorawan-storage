@@ -128,7 +128,8 @@ endif()
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/serialization/urn-helper.cpp
 		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
-		lorawan/storage/service/gateway-service.cpp lorawan/storage/service/gateway-service-json.cpp
+		lorawan/storage/service/gateway-service.cpp
+		lorawan/storage/service/gateway-service-json.cpp
 		lorawan/storage/service/gateway-service-mem.cpp
 		lorawan/storage/service/identity-service.cpp
 		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-json.cpp
@@ -222,7 +223,7 @@ endif()
 	# liblorawan
 	#
 	add_library(lorawan STATIC ${SRC_LIBLORAWAN})
-	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} ${LIBMICROHTTPD})
+	target_link_libraries(lorawan PRIVATE ${OS_SPECIFIC_LIBS} ${LIBMICROHTTPD} ${BACKEND_DB_LIB})
 	target_include_directories(lorawan PRIVATE "third-party" "." ${VCPKG_INC} ${Intl_INCLUDE_DIRS})
 	# enable qr code generation by conditional variable
 	target_compile_definitions(lorawan PRIVATE ${GATEWAY_DEF})
@@ -231,7 +232,7 @@ endif()
 	#
 	# Plugins
 	#
-	add_library(storage-mem SHARED lorawan/storage/service/identity-service-mem.cpp lorawan/storage/service/gateway-service-mem.cpp)
+	add_library(storage-mem SHARED lorawan/storage/service/identity-service-mem.cpp)
 	target_link_libraries(storage-mem PRIVATE lorawan)
 	target_include_directories(storage-mem PRIVATE ".")
 	set_target_properties(storage-mem PROPERTIES SOVERSION ${VERSION_INFO})
@@ -241,7 +242,7 @@ endif()
 	target_include_directories(storage-json PRIVATE "." "third-party")
 	set_target_properties(storage-json PROPERTIES SOVERSION ${VERSION_INFO})
 
-	add_library(storage-gen SHARED lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/gateway-service-mem.cpp lorawan/helper/key128gen.cpp ${AES_SRC})
+	add_library(storage-gen SHARED lorawan/storage/service/identity-service-gen.cpp lorawan/helper/key128gen.cpp ${AES_SRC})
 	target_link_libraries(storage-gen PRIVATE lorawan)
 	target_include_directories(storage-gen PRIVATE "." "third-party")
 	set_target_properties(storage-gen PROPERTIES SOVERSION ${VERSION_INFO})

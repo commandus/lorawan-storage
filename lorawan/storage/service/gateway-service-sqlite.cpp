@@ -1,6 +1,6 @@
 #include <sstream>
 #include <iostream>
-#include "gateway-service-sqlite.h"
+#include "lorawan/storage/service/gateway-service-sqlite.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/ip-address.h"
@@ -245,7 +245,7 @@ void SqliteGatewayService::setOption(
     // nothing to do
 }
 
-EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService()
+EXPORT_SHARED_C_FUNC GatewayService* makeGatewayService2()
 {
     return new SqliteGatewayService;
 }
