@@ -204,3 +204,9 @@ std::string NETWORK_IDENTITY_FILTER2string(
 NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
     const char *value
 );
+
+int string2NETWORK_IDENTITY_FILTERS(
+    std::vector <NETWORK_IDENTITY_FILTER> &retVal,
+    const char *expression,
+    size_t size
+);

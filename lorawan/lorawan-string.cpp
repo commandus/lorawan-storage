@@ -1564,3 +1564,42 @@ std::string NETWORK_IDENTITY_FILTER2string(
     // compareWith.
     return ss.str();
 }
+
+enum IdentityFiltersParseState
+{
+
+};
+
+int string2NETWORK_IDENTITY_FILTERS(
+    std::vector <NETWORK_IDENTITY_FILTER> &retVal,
+    const char *expression,
+    size_t size
+)
+{
+    size_t start = 0;
+    size_t eolp = size;
+    size_t finish = eolp;
+
+
+    while (start < size)
+    {
+        // skip spaces if exists
+        for (auto p = start; p < eolp; p++) {
+            if (!std::isspace(expression[p])) {
+                start = p;
+                break;
+            }
+        }
+
+        // read token
+        for (auto p = start; p < eolp; p++) {
+            if (!isalnum(expression[p])) {
+                finish = p;
+                break;
+            }
+        }
+
+        std::string token(expression + start, finish - start);
+    }
+}
+
