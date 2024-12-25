@@ -580,27 +580,28 @@ enum NETWORK_IDENTITY_COMPARISON_OPERATOR {
 };
 
 enum NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR {
-    NICO_AND = 0,
-    NICO_OR
+	NILPO_NONE = 0,
+    NILPO_AND,
+    NILPO_OR
 };
 
 enum NETWORK_IDENTITY_PROPERTY {
     NIP_NONE = 0,
-    NIP_ADDRESS,
-    NIP_ACTIVATION,     ///< activation type: ABP or OTAA
-    NIP_DEVICE_CLASS,   ///< A, B, C
-    NIP_DEVEUI,		    ///< device identifier 8 bytes (ABP device may not store EUI)
-    NIP_NWKSKEY,		///< shared session key 16 bytes
-    NIP_APPSKEY,        ///< private key 16 bytes
-    NIP_LORAWAN_VERSION,
+    NIP_ADDRESS = 1,
+    NIP_ACTIVATION = 2,     ///< activation type: ABP or OTAA
+    NIP_DEVICE_CLASS = 3,   ///< A, B, C
+    NIP_DEVEUI = 4,		    ///< device identifier 8 bytes (ABP device may not store EUI)
+    NIP_NWKSKEY = 5,		///< shared session key 16 bytes
+    NIP_APPSKEY = 6,        ///< private key 16 bytes
+    NIP_LORAWAN_VERSION = 7,
     // OTAA
-    NIP_APPEUI,			///< OTAA application identifier
-    NIP_APPKEY,			///< OTAA application private key
-    NIP_NWKKEY,         ///< OTAA network key
-    NIP_DEVNONCE,       ///< last device nonce
-    NIP_JOINNONCE,      ///< last Join nonce
+    NIP_APPEUI = 8,			///< OTAA application identifier
+    NIP_APPKEY = 9,			///< OTAA application private key
+    NIP_NWKKEY = 10,        ///< OTAA network key
+    NIP_DEVNONCE = 11,      ///< last device nonce
+    NIP_JOINNONCE = 12,     ///< last Join nonce
     // added for searching
-    NIP_DEVICENAME
+    NIP_DEVICENAME = 13
 };
 
 typedef PACK( struct {
