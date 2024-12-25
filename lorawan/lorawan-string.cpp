@@ -381,7 +381,7 @@ std::string DOWNLINK_STORAGE2String(
     if (value.f.foptslen) {
         ss << R"(, "fopts": ")" << hexString((const char *) value.fopts(), (int) value.f.foptslen);
         MacPtr macPtr((const char *) value.fopts(), value.f.foptslen, true);
-        ss << "\", \"mac\": " << (macPtr.toJSONString());
+        ss << R"(", "mac": )" << (macPtr.toJSONString());
         if (macPtr.errorcode) {
             // ignore
         }
@@ -418,7 +418,7 @@ std::string UPLINK_STORAGE2String(
     if (value.f.foptslen) {
         ss << R"(, "fopts": ")" << hexString((const char *) value.fopts(), (int) value.f.foptslen);
         MacPtr macPtr((const char *) value.fopts(), value.f.foptslen, false);
-        ss << "\", \"mac\": " << (macPtr.toJSONString());
+        ss << R"(", "mac": )" << (macPtr.toJSONString());
         if (macPtr.errorcode) {
             // ignore
         }
@@ -691,19 +691,19 @@ ACTIVATION pchar2activation(
 }
 
 MODULATION string2MODULATION(
-        const char *value
+    const char *value
 )
 {
     if (strcmp(value, "FSK") == 0)
         return MODULATION_FSK;
     else
-    if (strcmp(value, "LORA") == 0)
-        return MODULATION_LORA;
+        if (strcmp(value, "LORA") == 0)
+            return MODULATION_LORA;
     return MODULATION_UNDEFINED;
 }
 
 BANDWIDTH string2BANDWIDTH(
-        const char *value
+    const char *value
 )
 {
     if (strcmp(value, "7.8") == 0)
@@ -893,10 +893,10 @@ std::string freq2string(
 )
 {
     std::stringstream ss;
-    int mhz = freq / 1000000;
+    int mhz = (int) freq / 1000000;
     ss << mhz << "." << (freq - (mhz * 1000000));
     return ss.str();
-};
+}
 
 uint64_t string2gatewayId(
         const std::string& value
@@ -1255,7 +1255,7 @@ REGIONAL_PARAMETERS_VERSION string2REGIONAL_PARAMETERS_VERSION(
 }
 
 static std::string file2string(
-        std::istream &strm
+    std::istream &strm
 )
 {
     if (!strm)
@@ -1264,7 +1264,7 @@ static std::string file2string(
 }
 
 std::string file2string(
-        const char *filename
+    const char *filename
 )
 {
     if (!filename)
@@ -1274,8 +1274,8 @@ std::string file2string(
 }
 
 bool string2file(
-        const std::string &filename,
-        const std::string &value
+    const std::string &filename,
+    const std::string &value
 )
 {
     FILE* f = fopen(filename.c_str(), "w");
@@ -1595,15 +1595,10 @@ std::string NETWORK_IDENTITY_FILTER2string(
 {
     std::stringstream ss;
     if (!isFirst)
-    {
-        if (filter.pre  == NILPO_OR)
-            ss << "or ";
-        else
-            ss << "and ";
-    }
+        ss << NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR2string(filter.pre) << ' ';
     ss << NETWORK_IDENTITY_PROPERTY2string(filter.property)
         << ' ' << NETWORK_IDENTITY_COMPARISON_OPERATOR2string(filter.comparisonOperator)
-        << " '" << filterValue2string(filter) << "' ";
+        << " '" << filterValue2string(filter) << "'";
     // compareWith.
     return ss.str();
 }
@@ -1616,6 +1611,19 @@ enum IdentityFiltersParseState
     IFPS_AND_OR
 };
 
+static void stripQuotes(
+    std::string &quotedString
+)
+{
+    if (quotedString.empty())
+        return;
+    if (quotedString[0] == '"' || quotedString[0] == '\'')
+        quotedString = quotedString.substr(1);
+    size_t l = quotedString.size();
+    if (quotedString[l] == '"' || quotedString[l] == '\'')
+        quotedString = quotedString.substr(0, l - 1);
+}
+
 int string2NETWORK_IDENTITY_FILTERS(
     std::vector <NETWORK_IDENTITY_FILTER> &retVal,
     const char *expression,
@@ -1624,12 +1632,11 @@ int string2NETWORK_IDENTITY_FILTERS(
 {
     size_t start = 0;
     size_t eolp = size;
-    size_t finish = eolp;
+    size_t finish;
 
     NETWORK_IDENTITY_FILTER f {NILPO_AND, NIP_NONE, NICO_NONE, 0, { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 } };
     IdentityFiltersParseState state = IFPS_PROPERTY;
-    while (start < size)
-    {
+    while (start < size) {
         // skip spaces if exists
         for (auto p = start; p < eolp; p++) {
             if (!std::isspace(expression[p])) {
@@ -1639,8 +1646,9 @@ int string2NETWORK_IDENTITY_FILTERS(
         }
 
         // read token
+        finish = eolp;
         for (auto p = start; p < eolp; p++) {
-            if (!isalnum(expression[p])) {
+            if (isspace(expression[p])) {
                 finish = p;
                 break;
             }
@@ -1650,8 +1658,8 @@ int string2NETWORK_IDENTITY_FILTERS(
 
         if (token.empty())
             break;
-        switch (state)
-        {
+        stripQuotes(token);
+        switch (state) {
         case IFPS_PROPERTY:
             f.property = string2NETWORK_IDENTITY_PROPERTY(token.c_str());
             if (f.property == NIP_NONE)
@@ -1665,61 +1673,61 @@ int string2NETWORK_IDENTITY_FILTERS(
         case IFPS_VALUE:
             switch (f.property) {
                 case NIP_ADDRESS:
-                    string2DEVADDR((DEVADDR&) f.filterData, token);
-                        break;
+                    string2DEVADDR((DEVADDR &) f.filterData, token);
+                    break;
                 case NIP_ACTIVATION:
-                    *(ACTIVATION*) f.filterData = string2activation(token);
-                        break;
+                    *(ACTIVATION *) f.filterData = string2activation(token);
+                    break;
                 case NIP_DEVICE_CLASS:
-                    *(DEVICECLASS*) f.filterData = string2deviceclass(token);
-                        break;
+                    *(DEVICECLASS *) f.filterData = string2deviceclass(token);
+                    break;
                 case NIP_DEVEUI:
-                    string2DEVEUI((DEVEUI&) f.filterData, token);
+                    string2DEVEUI((DEVEUI &) f.filterData, token);
                     break;
                 case NIP_NWKSKEY:
-                    string2KEY((KEY128&) f.filterData, token);
+                    string2KEY((KEY128 &) f.filterData, token);
                     break;
                 case NIP_APPSKEY:
-                    string2KEY((KEY128&) f.filterData, token);
+                    string2KEY((KEY128 &) f.filterData, token);
                     break;
                 case NIP_LORAWAN_VERSION:
-                    *(LORAWAN_VERSION*) f.filterData = string2LORAWAN_VERSION(token);
+                    *(LORAWAN_VERSION *) f.filterData = string2LORAWAN_VERSION(token);
                     break;
                 case NIP_APPEUI:
-                    string2DEVEUI((DEVEUI&) f.filterData, token);
+                    string2DEVEUI((DEVEUI &) f.filterData, token);
                     break;
                 case NIP_APPKEY:
-                    string2KEY((KEY128&) f.filterData, token);
+                    string2KEY((KEY128 &) f.filterData, token);
                     break;
                 case NIP_NWKKEY:
-                    string2KEY((KEY128&) f.filterData, token);
+                    string2KEY((KEY128 &) f.filterData, token);
                     break;
                 case NIP_DEVNONCE:
-                    f.filterData = string2DEVNONCE(token);
+                    (DEVNONCE) f.filterData = string2DEVNONCE(token);
                     break;
                 case NIP_JOINNONCE:
-                    string2JOINNONCE(retVal.devid.joinNonce, token);
+                    string2JOINNONCE((JOINNONCE &) f.filterData, token);
                     break;
                 case NIP_DEVICENAME:
-                    string2DEVICENAME(retVal.devid.name, token.c_str());
+                    string2DEVICENAME((DEVICENAME &) f.filterData, token.c_str());
                     break;
                 default:
                     break;
-
-            setIdentity()f.filterData, f.length
+            }
             retVal.push_back(f);
-            f.property = NIP_NONE
-            state = IFPS_AND_OR
+            f.property = NIP_NONE;
+            state = IFPS_AND_OR;
             break;
         case IFPS_AND_OR:
             f.pre = string2NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR(token.c_str());
-            if (f.pre == NICO_NONE)
+            if (f.pre == NILPO_NONE)
                 break;
             state = IFPS_PROPERTY;
             break;
         default:
             break;
         }
+        start = finish;
     }
+    return 0;
 }
-

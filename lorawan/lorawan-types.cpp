@@ -2175,7 +2175,7 @@ bool isIdentityFilteredV(
     bool r = true;
     for (auto &f : filters) {
         bool c = isIdentityFiltered(identity, f);
-        if (f.pre == NICO_OR)
+        if (f.pre == NILPO_OR)
             r |= c;
         else
             r &= c;
@@ -2194,7 +2194,7 @@ bool isIdentityFilteredV2(
     bool r = true;
     for (auto &f : filters) {
         bool c = isIdentityFiltered2(addr, deviceId, f);
-        if (f.pre == NICO_OR)
+        if (f.pre == NILPO_OR)
             r |= c;
         else
             r &= c;
