@@ -752,16 +752,18 @@ LORAWAN_VERSION string2LORAWAN_VERSION(
 
 
 DEVICECLASS string2deviceclass(
-        const std::string &value
+    const std::string &value
 )
 {
-    if (value == "A")
+    if (value.empty())
+        return CLASS_C;
+    if (value[0] == 'A' || value[0] == 'a')
         return CLASS_A;
     else
-    if (value == "B")
-        return CLASS_B;
-    else
-        return CLASS_C;
+        if (value[0] == 'B' || value[0] == 'b')
+            return CLASS_B;
+        else
+            return CLASS_C;
 }
 
 void string2DEVADDR(
@@ -1531,7 +1533,6 @@ static NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR string2NETWORK_IDENTITY_LOGICAL_PRE
     return NILPO_NONE;
 }
 
-
 NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
     const char *value
 )
@@ -1620,7 +1621,7 @@ static void stripQuotes(
     if (quotedString[0] == '"' || quotedString[0] == '\'')
         quotedString = quotedString.substr(1);
     size_t l = quotedString.size();
-    if (quotedString[l] == '"' || quotedString[l] == '\'')
+    if (quotedString[l - 1] == '"' || quotedString[l - 1] == '\'')
         quotedString = quotedString.substr(0, l - 1);
 }
 
@@ -1658,7 +1659,6 @@ int string2NETWORK_IDENTITY_FILTERS(
 
         if (token.empty())
             break;
-        stripQuotes(token);
         switch (state) {
         case IFPS_PROPERTY:
             f.property = string2NETWORK_IDENTITY_PROPERTY(token.c_str());
@@ -1671,45 +1671,47 @@ int string2NETWORK_IDENTITY_FILTERS(
             state = IFPS_VALUE;
             break;
         case IFPS_VALUE:
+            stripQuotes(token);
             switch (f.property) {
                 case NIP_ADDRESS:
                     string2DEVADDR((DEVADDR &) f.filterData, token);
+                    f.length = sizeof(DEVADDR);
                     break;
                 case NIP_ACTIVATION:
                     *(ACTIVATION *) f.filterData = string2activation(token);
+                    f.length = sizeof(ACTIVATION);
                     break;
                 case NIP_DEVICE_CLASS:
                     *(DEVICECLASS *) f.filterData = string2deviceclass(token);
+                    f.length = sizeof(DEVICECLASS);
                     break;
                 case NIP_DEVEUI:
+                case NIP_APPEUI:
                     string2DEVEUI((DEVEUI &) f.filterData, token);
+                    f.length = sizeof(DEVEUI);
                     break;
                 case NIP_NWKSKEY:
-                    string2KEY((KEY128 &) f.filterData, token);
-                    break;
                 case NIP_APPSKEY:
+                case NIP_APPKEY:
+                case NIP_NWKKEY:
                     string2KEY((KEY128 &) f.filterData, token);
+                    f.length = sizeof(KEY128);
                     break;
                 case NIP_LORAWAN_VERSION:
                     *(LORAWAN_VERSION *) f.filterData = string2LORAWAN_VERSION(token);
-                    break;
-                case NIP_APPEUI:
-                    string2DEVEUI((DEVEUI &) f.filterData, token);
-                    break;
-                case NIP_APPKEY:
-                    string2KEY((KEY128 &) f.filterData, token);
-                    break;
-                case NIP_NWKKEY:
-                    string2KEY((KEY128 &) f.filterData, token);
+                    f.length = sizeof(LORAWAN_VERSION);
                     break;
                 case NIP_DEVNONCE:
                     (DEVNONCE) f.filterData = string2DEVNONCE(token);
+                    f.length = sizeof(DEVNONCE);
                     break;
                 case NIP_JOINNONCE:
                     string2JOINNONCE((JOINNONCE &) f.filterData, token);
+                    f.length = sizeof(JOINNONCE);
                     break;
                 case NIP_DEVICENAME:
                     string2DEVICENAME((DEVICENAME &) f.filterData, token.c_str());
+                    f.length = token.size() < sizeof(DEVICENAME) ? token.size() : sizeof(DEVICENAME);
                     break;
                 default:
                     break;

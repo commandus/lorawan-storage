@@ -38,7 +38,7 @@ static void testFilter() {
     assert(filters[0].property == NIP_LORAWAN_VERSION);
 */
     filters.clear();
-    expression = "version <= 1 or class <> 'A'";
+    expression = "version <= '1' or class <> 'A'";
     r = string2NETWORK_IDENTITY_FILTERS(filters, expression.c_str(), expression.size());
     assert(filters.size() == 2);
     assert(filters[0].pre == NILPO_AND);
