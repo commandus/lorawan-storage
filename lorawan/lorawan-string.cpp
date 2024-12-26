@@ -1604,6 +1604,18 @@ std::string NETWORK_IDENTITY_FILTER2string(
     return ss.str();
 }
 
+std::string NETWORK_IDENTITY_FILTERS2string(
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters
+) {
+    bool isFirst = true;
+    std::stringstream statement;
+    for (auto &f: filters) {
+        statement << NETWORK_IDENTITY_FILTER2string(f, isFirst) << ' ';
+        isFirst = false;
+    }
+    return statement.str();
+}
+
 enum IdentityFiltersParseState
 {
     IFPS_PROPERTY,

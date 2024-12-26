@@ -201,6 +201,10 @@ std::string NETWORK_IDENTITY_FILTER2string(
     bool isFirst
 );
 
+std::string NETWORK_IDENTITY_FILTERS2string(
+    const std::vector<NETWORK_IDENTITY_FILTER> &filters
+);
+
 NETWORK_IDENTITY_PROPERTY string2NETWORK_IDENTITY_PROPERTY(
     const char *value
 );

@@ -383,15 +383,7 @@ int SqliteIdentityService::filter(
     std::stringstream statement;
     statement << "SELECT " FIELD_LIST " FROM device ";
     if (!filters.empty())
-    {
-        statement << "WHERE ";
-        bool isFirst = true;
-        for (auto &f : filters)
-        {
-            statement << NETWORK_IDENTITY_FILTER2string(f, isFirst) << ' ';
-            isFirst = false;
-        }
-    }
+        statement << "WHERE " << NETWORK_IDENTITY_FILTERS2string(filters);
     statement << " LIMIT " << size << " OFFSET " << offset;
 
     std::vector<std::vector<std::string>> table;
