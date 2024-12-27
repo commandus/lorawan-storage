@@ -8,6 +8,11 @@ int main() {
     c_init(o, "test.sqlite.db", NULL);
     C_DEVADDR devAddr = 0x12345678;
     C_DEVICEID devId;
+    devId.activation = 0;
+    devId.deviceclass = 1;
+    devId.version = 1;
+    devId.devEUI = 0x12345678;
+    devId.appEUI = 0x12345678;
     strcpy(&devId.name[0], "name");
     c_put(o, &devAddr, &devId);
     c_get(o, &devId, &devAddr);
