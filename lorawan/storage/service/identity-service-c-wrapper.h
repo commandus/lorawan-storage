@@ -110,6 +110,17 @@ typedef PACK_STRUCT( struct {
     char filterData[16];
 } ) C_NETWORK_IDENTITY_FILTER;    // 20 bytes long
 
+// gen
+void* makeIdentityService0();
+// JSON
+void* makeIdentityService1();
+// memory
+void* makeIdentityService2();
+// Sqlite
+void* makeIdentityService3();
+// UDP
+void* makeIdentityService4();
+
 void* createIdentityServiceC(
     void *instance
 );

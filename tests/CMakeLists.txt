@@ -9,5 +9,12 @@ add_executable(test-parse-packet
 target_include_directories(test-parse-packet PRIVATE .. ../third-party)
 target_link_libraries(test-parse-packet PRIVATE lorawan)
 
+add_executable(test-identity-service
+	test-identity-service.c
+)
+target_include_directories(test-identity-service PRIVATE .. ../third-party)
+target_link_libraries(test-identity-service PRIVATE lorawan)
+
 #
 add_test(NAME test-parse-packet COMMAND "test-parse-packet")
+add_test(NAME test-identity-service COMMAND "test-identity-service")

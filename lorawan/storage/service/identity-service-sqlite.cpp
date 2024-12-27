@@ -419,7 +419,7 @@ int SqliteIdentityService::cFilter(
     return CODE_OK;
 }
 
-EXPORT_SHARED_C_FUNC IdentityService* makeSqliteIdentityService3()
+EXPORT_SHARED_C_FUNC IdentityService* makeIdentityService3()
 {
     return new SqliteIdentityService;
 }

@@ -43,6 +43,15 @@ int c_getNetworkIdentity(
     return ((IdentityService *) o)->getNetworkIdentity((NETWORKIDENTITY &) retVal, (const DEVEUI &) eui);
 }
 
+int c_put(
+    void *o,
+    const C_DEVADDR *devaddr,
+    const C_DEVICEID *id
+)
+{
+    return ((IdentityService *) o)->put((DEVADDR &) devaddr, (const DEVICEID &) id);
+}
+
 int c_rm(
     void *o,
     const C_DEVADDR *addr
@@ -64,7 +73,7 @@ int c_list(
         retVal[i].devaddr = v[i].devaddr.u;
         memmove(&retVal[i].devid.activation, &v[i].devid.activation, sizeof(C_DEVICEID));
     }
-    return r;
+    return r < 0 ? r : (int) v.size();
 }
 
 int c_filter(
@@ -86,7 +95,7 @@ int c_filter(
         retVal[i].devaddr = v[i].devaddr.u;
         memmove(&retVal[i].devid.activation, &v[i].devid.activation, sizeof(C_DEVICEID));
     }
-    return r;
+    return r < 0 ? r : (int) v.size();
 }
 
 size_t c_size(void *o)
