@@ -85,8 +85,10 @@ int SqliteIdentityService::list(
         return ERR_CODE_DB_DATABASE_NOT_FOUND;
     char *zErrMsg = nullptr;
     std::stringstream statement;
-    statement << "SELECT " FIELD_LIST " FROM device LIMIT " << size << " OFFSET " << offset;
+    statement << "SELECT " FIELD_LIST " FROM device LIMIT " << (int) size << " OFFSET " << offset;
     std::vector<std::vector<std::string>> table;
+    // uncomment to check SQL expression
+    // std::cerr << statement.str() << std::endl;
     int r = sqlite3_exec(db, statement.str().c_str(), tableCallback, &table, &zErrMsg);
     if (r != SQLITE_OK) {
         if (zErrMsg) {
@@ -99,7 +101,7 @@ int SqliteIdentityService::list(
             continue;
         NETWORKIDENTITY ni;
         row2DEVICEID(ni.devid, row);
-        ni.devaddr = row[12];
+        ni.devaddr = row[0];
         retVal.push_back(ni);
     }
     return CODE_OK;
@@ -175,7 +177,6 @@ int SqliteIdentityService::put(
         "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
         "appeui=excluded.appeui, appkey=excluded.appkey, nwkkey=excluded.nwkkey, "
         "devnonce=excluded.devnonce, joinnonce=excluded.joinnonce, name=excluded.name";
-    std::cerr << statement.str() << std::endl;
     int r = sqlite3_exec(db, statement.str().c_str(), nullptr, nullptr, &zErrMsg);
     if (r != SQLITE_OK) {
         if (zErrMsg) {
@@ -386,7 +387,7 @@ int SqliteIdentityService::filter(
     statement << "SELECT " FIELD_LIST " FROM device ";
     if (!filters.empty())
         statement << "WHERE " << NETWORK_IDENTITY_FILTERS2string(filters);
-    statement << " LIMIT " << size << " OFFSET " << offset;
+    statement << " LIMIT " << (int) size << " OFFSET " << offset;
 
     std::vector<std::vector<std::string>> table;
     int r = sqlite3_exec(db, statement.str().c_str(), tableCallback, &table, &zErrMsg);

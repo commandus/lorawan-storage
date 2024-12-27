@@ -64,6 +64,50 @@ static void NETWORKIDENTITY2C_NETWORKIDENTITY(
     memmove(&retVal->devid.name, &nid.devid.name, sizeof(C_DEVICENAME));
 }
 
+static void C_NETWORKIDENTITY2NETWORKIDENTITY(
+    NETWORKIDENTITY &retVal,
+    C_NETWORKIDENTITY *nid
+)
+{
+    retVal.devaddr.u = nid->devaddr;
+    retVal.devid.activation = (ACTIVATION) nid->devid.activation;
+    retVal.devid.deviceclass = (DEVICECLASS) nid->devid.deviceclass;
+    retVal.devid.devEUI.u = nid->devid.devEUI;
+    memmove(&retVal.devid.nwkSKey, &nid->devid.nwkSKey, sizeof(KEY128));
+    memmove(&retVal.devid.appSKey, &nid->devid.appSKey, sizeof(KEY128));
+    retVal.devid.version.c = nid->devid.version;
+    retVal.devid.appEUI.u = nid->devid.appEUI;
+    memmove(&retVal.devid.appKey, &nid->devid.appKey, sizeof(KEY128));
+    memmove(&retVal.devid.nwkKey, &nid->devid.nwkKey, sizeof(KEY128));
+    retVal.devid.devNonce.u = nid->devid.devNonce;
+    memmove(&retVal.devid.joinNonce, &nid->devid.joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal.devid.name, &nid->devid.name, sizeof(C_DEVICENAME));
+}
+
+static void C_NETWORK_IDENTITY_FILTER2NETWORK_IDENTITY_FILTER(
+    NETWORK_IDENTITY_FILTER &retVal,
+    C_NETWORK_IDENTITY_FILTER *filter
+)
+{
+
+}
+
+static void JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(
+    C_JOIN_ACCEPT_FRAME_HEADER *retVal,
+    const JOIN_ACCEPT_FRAME_HEADER &hdr
+)
+{
+    retVal->joinNonce[0] = hdr.joinNonce.c[0];
+    retVal->joinNonce[1] = hdr.joinNonce.c[1];
+    retVal->joinNonce[2] = hdr.joinNonce.c[2];
+    retVal->netId[0] = hdr.netId.c[0];
+    retVal->netId[1] = hdr.netId.c[1];
+    retVal->netId[2] = hdr.netId.c[2];
+    retVal->devAddr = hdr.devAddr.u;
+    retVal->dlSettings.c = hdr.dlSettings.c;		    // downlink configuration settings
+    retVal->rxDelay = hdr.rxDelay;
+}
+
 int c_get(
     void *o,
     C_DEVICEID *retVal,
@@ -132,9 +176,11 @@ int c_list(
 {
     std::vector<NETWORKIDENTITY> v;
     int r = ((IdentityService *) o)->list(v, offset, size);
-    for (auto i = 0; i < v.size(); i++) {
-        retVal[i].devaddr = v[i].devaddr.u;
-        memmove(&retVal[i].devid.activation, &v[i].devid.activation, sizeof(C_DEVICEID));
+    if (r >= 0) {
+        for (auto i = 0; i < v.size(); i++) {
+            retVal[i].devaddr = v[i].devaddr.u;
+            NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
+        }
     }
     return r < 0 ? r : (int) v.size();
 }
@@ -151,12 +197,15 @@ int c_filter(
     std::vector<NETWORKIDENTITY> v;
     std::vector<NETWORK_IDENTITY_FILTER> f;
     for (auto i = 0; i < filterSize; i++) {
-        f.emplace_back((const NETWORK_IDENTITY_FILTER&) filters[i]);
+        NETWORK_IDENTITY_FILTER nif;
+        C_NETWORK_IDENTITY_FILTER2NETWORK_IDENTITY_FILTER(nif, &filters[i]);
+        f.emplace_back(nif);
     }
     int r = ((IdentityService *) o)->filter(v, f, offset, size);
     for(auto i = 0; i < v.size(); i++) {
         retVal[i].devaddr = v[i].devaddr.u;
-        memmove(&retVal[i].devid.activation, &v[i].devid.activation, sizeof(C_DEVICEID));
+        NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
+
     }
     return r < 0 ? r : (int) v.size();
 }
@@ -171,7 +220,10 @@ int c_next(
     C_NETWORKIDENTITY *retVal
 )
 {
-    return ((IdentityService *) o)->next((NETWORKIDENTITY &) retVal);
+    NETWORKIDENTITY nid;
+    int r = ((IdentityService *) o)->next(nid);
+    NETWORKIDENTITY2C_NETWORKIDENTITY(retVal, nid);
+    return r;
 }
 
 void c_flush(
@@ -231,7 +283,12 @@ int c_joinAccept(
     C_NETWORKIDENTITY *networkIdentity
 )
 {
-    return ((IdentityService *) o)->joinAccept((JOIN_ACCEPT_FRAME_HEADER &)retVal, (NETWORKIDENTITY &) networkIdentity);
+    NETWORKIDENTITY nid;
+    C_NETWORKIDENTITY2NETWORKIDENTITY(nid, networkIdentity);
+    JOIN_ACCEPT_FRAME_HEADER jafh;
+    int r = ((IdentityService *) o)->joinAccept(jafh, nid);
+    JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(retVal, jafh);
+    return r;
 }
 
 #ifdef __cplusplus

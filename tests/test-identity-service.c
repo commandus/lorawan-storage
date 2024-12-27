@@ -25,7 +25,7 @@ int main() {
 
     C_NETWORKIDENTITY nis[2];
     int c = c_list(o, nis, 0, 2);
-    c_rm(o, &devAddr);
+    // c_rm(o, &devAddr);
     c = c_list(o, nis, 0, 2);
 
     c_done(o);

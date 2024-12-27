@@ -89,9 +89,16 @@ typedef enum C_NETWORK_IDENTITY_PROPERTY {
 } C_NETWORK_IDENTITY_PROPERTY;
 
 typedef PACK_STRUCT( struct {
-    uint8_t RX2DataRate: 4;	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
-    uint8_t RX1DROffset: 3;	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
-    uint8_t optNeg: 1;     	    ///< 1.0- RFU, 1.1- optNeg
+    union
+    {
+        uint8_t c;
+        struct
+        {
+            uint8_t RX2DataRate: 4;	    ///< downlink data rate that serves to communicate with the end-device on the second receive window (RX2)
+            uint8_t RX1DROffset: 3;	    ///< offset between the uplink data rate and the downlink data rate used to communicate with the end-device on the first receive window (RX1)
+            uint8_t optNeg: 1;     	    ///< 1.0- RFU, 1.1- optNeg
+        };
+    };
 } ) C_DLSETTINGS;	        // 1 byte
 
 typedef PACK_STRUCT( struct {
