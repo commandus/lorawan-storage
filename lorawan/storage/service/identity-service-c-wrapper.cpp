@@ -25,15 +25,11 @@ void destroyIdentityServiceC(
         delete (IdentityService*) instance;
 }
 
-int c_get(
-    void *o,
+static void DEVICEID2C_DEVICEID(
     C_DEVICEID *retVal,
-    const C_DEVADDR *devAddr
+    const DEVICEID &did
 )
 {
-    const DEVADDR a(*devAddr);
-    DEVICEID did;
-    int r = ((IdentityService *) o)->get(did, a);
     retVal->activation = did.activation;
     retVal->deviceclass = did.deviceclass;
     retVal->devEUI = did.devEUI.u;
@@ -46,19 +42,14 @@ int c_get(
     retVal->devNonce = did.devNonce.u;
     memmove(&retVal->joinNonce, &did.joinNonce, sizeof(C_JOINNONCE));
     memmove(&retVal->name, &did.name, sizeof(C_DEVICENAME));
-    return r;
 }
 
-int c_getNetworkIdentity(
-    void *o,
+static void NETWORKIDENTITY2C_NETWORKIDENTITY(
     C_NETWORKIDENTITY *retVal,
-    const C_DEVEUI *eui
+    const NETWORKIDENTITY &nid
 )
 {
-    NETWORKIDENTITY nid;
-    const DEVEUI devEui(*eui);
-    int r = ((IdentityService *) o)->getNetworkIdentity(nid, devEui);
-
+    retVal->devaddr = nid.devaddr.u;
     retVal->devid.activation = nid.devid.activation;
     retVal->devid.deviceclass = nid.devid.deviceclass;
     retVal->devid.devEUI = nid.devid.devEUI.u;
@@ -71,6 +62,31 @@ int c_getNetworkIdentity(
     retVal->devid.devNonce = nid.devid.devNonce.u;
     memmove(&retVal->devid.joinNonce, &nid.devid.joinNonce, sizeof(C_JOINNONCE));
     memmove(&retVal->devid.name, &nid.devid.name, sizeof(C_DEVICENAME));
+}
+
+int c_get(
+    void *o,
+    C_DEVICEID *retVal,
+    const C_DEVADDR *devAddr
+)
+{
+    const DEVADDR a(*devAddr);
+    DEVICEID did;
+    int r = ((IdentityService *) o)->get(did, a);
+    DEVICEID2C_DEVICEID(retVal, did);
+    return r;
+}
+
+int c_getNetworkIdentity(
+    void *o,
+    C_NETWORKIDENTITY *retVal,
+    const C_DEVEUI *eui
+)
+{
+    NETWORKIDENTITY nid;
+    const DEVEUI devEui(*eui);
+    int r = ((IdentityService *) o)->getNetworkIdentity(nid, devEui);
+    NETWORKIDENTITY2C_NETWORKIDENTITY(retVal, nid);
     return r;
 }
 
@@ -116,7 +132,7 @@ int c_list(
 {
     std::vector<NETWORKIDENTITY> v;
     int r = ((IdentityService *) o)->list(v, offset, size);
-    for(auto i = 0; i < v.size(); i++) {
+    for (auto i = 0; i < v.size(); i++) {
         retVal[i].devaddr = v[i].devaddr.u;
         memmove(&retVal[i].devid.activation, &v[i].devid.activation, sizeof(C_DEVICEID));
     }
