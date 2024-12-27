@@ -31,7 +31,22 @@ int c_get(
     const C_DEVADDR *devAddr
 )
 {
-    return ((IdentityService *) o)->get((DEVICEID &) retVal, (const DEVADDR &) devAddr);
+    const DEVADDR a(*devAddr);
+    DEVICEID did;
+    int r = ((IdentityService *) o)->get(did, a);
+    retVal->activation = did.activation;
+    retVal->deviceclass = did.deviceclass;
+    retVal->devEUI = did.devEUI.u;
+    memmove(&retVal->nwkSKey, &did.nwkSKey, sizeof(KEY128));
+    memmove(&retVal->appSKey, &did.appSKey, sizeof(KEY128));
+    retVal->version = did.version.c;
+    retVal->appEUI = did.appEUI.u;
+    memmove(&retVal->appKey, &did.appKey, sizeof(KEY128));
+    memmove(&retVal->nwkKey, &did.nwkKey, sizeof(KEY128));
+    retVal->devNonce = did.devNonce.u;
+    memmove(&retVal->joinNonce, &did.joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal->name, &did.name, sizeof(C_DEVICENAME));
+    return r;
 }
 
 int c_getNetworkIdentity(
@@ -40,7 +55,23 @@ int c_getNetworkIdentity(
     const C_DEVEUI *eui
 )
 {
-    return ((IdentityService *) o)->getNetworkIdentity((NETWORKIDENTITY &) retVal, (const DEVEUI &) eui);
+    NETWORKIDENTITY nid;
+    const DEVEUI devEui(*eui);
+    int r = ((IdentityService *) o)->getNetworkIdentity(nid, devEui);
+
+    retVal->devid.activation = nid.devid.activation;
+    retVal->devid.deviceclass = nid.devid.deviceclass;
+    retVal->devid.devEUI = nid.devid.devEUI.u;
+    memmove(&retVal->devid.nwkSKey, &nid.devid.nwkSKey, sizeof(KEY128));
+    memmove(&retVal->devid.appSKey, &nid.devid.appSKey, sizeof(KEY128));
+    retVal->devid.version = nid.devid.version.c;
+    retVal->devid.appEUI = nid.devid.appEUI.u;
+    memmove(&retVal->devid.appKey, &nid.devid.appKey, sizeof(KEY128));
+    memmove(&retVal->devid.nwkKey, &nid.devid.nwkKey, sizeof(KEY128));
+    retVal->devid.devNonce = nid.devid.devNonce.u;
+    memmove(&retVal->devid.joinNonce, &nid.devid.joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal->devid.name, &nid.devid.name, sizeof(C_DEVICENAME));
+    return r;
 }
 
 int c_put(
@@ -49,7 +80,22 @@ int c_put(
     const C_DEVICEID *id
 )
 {
-    return ((IdentityService *) o)->put((DEVADDR &) devaddr, (const DEVICEID &) id);
+    const DEVADDR a(*devaddr);
+    const DEVICEID did(
+        static_cast<ACTIVATION>(id->activation),
+        static_cast<DEVICECLASS>(id->deviceclass),
+        static_cast<DEVEUI>(id->devEUI),
+        *(KEY128*) &id->nwkSKey,
+        *(KEY128*) &id->appSKey,
+        id->version,
+        static_cast<DEVEUI>(id->appEUI),
+        *(KEY128*) &id->appKey,
+        *(KEY128*) &id->nwkKey,
+        static_cast<DEVNONCE>(id->devNonce),
+        *(JOINNONCE*) &id->joinNonce,
+        static_cast<DEVICENAME>(id->name)
+    );
+    return ((IdentityService *) o)->put(a, did);
 }
 
 int c_rm(
@@ -57,7 +103,8 @@ int c_rm(
     const C_DEVADDR *addr
 )
 {
-    return ((IdentityService *) o)->rm((const DEVADDR &) addr);
+    const DEVADDR a(*addr);
+    return ((IdentityService *) o)->rm(a);
 }
 
 int c_list(

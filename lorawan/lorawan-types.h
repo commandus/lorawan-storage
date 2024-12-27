@@ -684,6 +684,7 @@ public:
     );
 
 	DEVICEID(const DEVICEID &value);
+
 	DEVICEID& operator=(const DEVICEID& other);
 	DEVICEID& operator=(const NETWORKIDENTITY& other);
 

@@ -27,18 +27,19 @@ static void row2DEVICEID(
     DEVICEID &retVal,
     const std::vector<std::string> &row
 ) {
-    retVal.activation = string2activation(row[0]);
-    retVal.deviceclass = string2deviceclass(row[1]);
-    string2DEVEUI(retVal.devEUI, row[2]);
-    string2KEY(retVal.nwkSKey, row[3]);
-    string2KEY(retVal.appSKey, row[4]);
-    retVal.version = string2LORAWAN_VERSION(row[5]);
-    string2DEVEUI(retVal.appEUI, row[6]);
-    string2KEY(retVal.appKey, row[7]);
-    string2KEY(retVal.nwkKey, row[8]);
-    retVal.devNonce = string2DEVNONCE(row[9]);
-    string2JOINNONCE(retVal.joinNonce, row[10]);
-    string2DEVICENAME(retVal.name, row[11].c_str());
+    // row 0- address
+    retVal.activation = string2activation(row[1]);
+    retVal.deviceclass = string2deviceclass(row[2]);
+    string2DEVEUI(retVal.devEUI, row[3]);
+    string2KEY(retVal.nwkSKey, row[4]);
+    string2KEY(retVal.appSKey, row[5]);
+    retVal.version = string2LORAWAN_VERSION(row[6]);
+    string2DEVEUI(retVal.appEUI, row[7]);
+    string2KEY(retVal.appKey, row[8]);
+    string2KEY(retVal.nwkKey, row[9]);
+    retVal.devNonce = string2DEVNONCE(row[10]);
+    string2JOINNONCE(retVal.joinNonce, row[11]);
+    string2DEVICENAME(retVal.name, row[12].c_str());
 }
 
 /**
@@ -174,6 +175,7 @@ int SqliteIdentityService::put(
         "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
         "appeui=excluded.appeui, appkey=excluded.appkey, nwkkey=excluded.nwkkey, "
         "devnonce=excluded.devnonce, joinnonce=excluded.joinnonce, name=excluded.name";
+    std::cerr << statement.str() << std::endl;
     int r = sqlite3_exec(db, statement.str().c_str(), nullptr, nullptr, &zErrMsg);
     if (r != SQLITE_OK) {
         if (zErrMsg) {
