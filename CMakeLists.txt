@@ -127,12 +127,15 @@ endif()
 		lorawan/storage/serialization/identity-text-urn-serialization.cpp
 		lorawan/storage/serialization/service-serialization.cpp
 		lorawan/storage/serialization/urn-helper.cpp
-		lorawan/storage/service/async-wrapper-gateway-service.cpp lorawan/storage/service/async-wrapper-identity-service.cpp
+		lorawan/storage/service/async-wrapper-gateway-service.cpp
+		lorawan/storage/service/async-wrapper-identity-service.cpp
 		lorawan/storage/service/gateway-service.cpp
 		lorawan/storage/service/gateway-service-json.cpp
 		lorawan/storage/service/gateway-service-mem.cpp
 		lorawan/storage/service/identity-service.cpp
-		lorawan/storage/service/identity-service-gen.cpp lorawan/storage/service/identity-service-json.cpp
+		lorawan/storage/service/identity-service-c-wrapper.cpp
+		lorawan/storage/service/identity-service-gen.cpp
+		lorawan/storage/service/identity-service-json.cpp
 		lorawan/storage/service/identity-service-mem.cpp
 		lorawan/storage/service/identity-service-udp.cpp
 		third-party/base64/base64.cpp
