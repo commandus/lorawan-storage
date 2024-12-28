@@ -127,6 +127,8 @@ void* makeIdentityService2();
 void* makeIdentityService3();
 // UDP
 void* makeIdentityService4();
+// LMDB
+void* makeIdentityService5();
 
 void* createIdentityServiceC(
     void *instance

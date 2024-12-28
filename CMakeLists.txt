@@ -7,7 +7,8 @@
 # -DENABLE_GEN=on   	enable key generator (default in memory storage)
 # -DENABLE_HTTP=off		enable HTTP service. libmicrohttpd dependency required.
 # -DENABLE_QRCODE=off	enable HTTP QRCode URN service.
-# -DENABLE_SQLITE=off  	enable SQLITE3 backend (reserved)
+# -DENABLE_SQLITE=off  	enable SQLITE3 backend. sqlite3 libsqlite3-dev dependencies required.
+# -DENABLE_LMDB=off  	enable LMDB backend. liblmdb++-dev (and liblmdb-dev) dependencies required.
 # -DENABLE_IPV6=off   	enable IPv6 (reserved)
 # -DENABLE_JSON=off		Build with JSON file
 #
@@ -94,6 +95,7 @@ endif()
 	option(ENABLE_HTTP "Build with HTTP" OFF)
 	option(ENABLE_QRCODE "Build with HTTP QRCode URN" OFF)
 	option(ENABLE_SQLITE "Build with SQLite" OFF)
+	option(ENABLE_LMDB "Build with LMDB" OFF)
 	option(ENABLE_JSON "Build with JSON file" ON)
 
 	set(ARGTABLE "third-party/argtable3/argtable3.c")
@@ -201,6 +203,22 @@ endif()
 			find_package(SQLite3 REQUIRED)
 			set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
 			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
+		endif ()
+	endif()
+
+	if (ENABLE_LMDB)
+		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
+			lorawan/storage/service/identity-service-lmdb.cpp
+			lorawan/storage/service/gateway-service-lmdb.cpp
+		)
+		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+#			find_package(unofficial-lmdb CONFIG REQUIRED)
+#			set(BACKEND_DB_LIB unofficial::lmdb::lmdb)
+#			set(BACKEND_DB_INC ${LMDB_INCLUDE_DIRS})
+		else ()
+#			find_package(lmdb REQUIRED)
+#			set(BACKEND_DB_LIB ${LMDB_LIBRARIES})
+#			set(BACKEND_DB_INC ${LMDB_INCLUDE_DIRS})
 		endif ()
 	endif()
 
@@ -356,7 +374,8 @@ endif()
 	message("-DENABLE_GEN=${ENABLE_GEN} \t enable key generator (default in memory storage)")
 	message("-DENABLE_HTTP=${ENABLE_HTTP} \t enable HTTP service. libmicrohttpd dependency required")
 	message("-DENABLE_QRCODE=${ENABLE_QRCODE} \t enable HTTP QRCode URN service")
-	message("-DENABLE_SQLITE=${ENABLE_SQLITE} \t enable SQLITE3 backend (reserved)")
+	message("-DENABLE_SQLITE=${ENABLE_SQLITE} \t enable SQLite3 backend")
+	message("-DENABLE_LMDB=${ENABLE_LMDB} \t enable LMDB backend")
 	message("-DENABLE_IPV6=${ENABLE_IPV6} \t enable IPv6 (reserved)")
 	message("-DENABLE_JSON=${ENABLE_JSON} \t build with JSON file backend. -DENABLE_HTTP=on required")
 	message("")
