@@ -389,6 +389,9 @@ int SqliteIdentityService::filter(
         statement << "WHERE " << NETWORK_IDENTITY_FILTERS2string(filters);
     statement << " LIMIT " << (int) size << " OFFSET " << offset;
 
+    // uncomment to check SQL expression
+    // std::cerr << statement.str() << std::endl;
+
     std::vector<std::vector<std::string>> table;
     int r = sqlite3_exec(db, statement.str().c_str(), tableCallback, &table, &zErrMsg);
     if (r != SQLITE_OK) {
@@ -402,7 +405,7 @@ int SqliteIdentityService::filter(
             continue;
         NETWORKIDENTITY ni;
         row2DEVICEID(ni.devid, row);
-        ni.devaddr = row[12];
+        ni.devaddr = row[0];
         retVal.push_back(ni);
     }
     return CODE_OK;

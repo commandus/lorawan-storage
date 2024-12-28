@@ -89,7 +89,11 @@ static void C_NETWORK_IDENTITY_FILTER2NETWORK_IDENTITY_FILTER(
     C_NETWORK_IDENTITY_FILTER *filter
 )
 {
-
+    retVal.pre = (NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR) filter->pre;
+    retVal.property = (NETWORK_IDENTITY_PROPERTY) filter->property;
+    retVal.comparisonOperator = (NETWORK_IDENTITY_COMPARISON_OPERATOR) filter->comparisonOperator;
+    retVal.length = filter->length;
+    memmove(retVal.filterData, filter->filterData, sizeof(retVal.filterData));
 }
 
 static void JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(

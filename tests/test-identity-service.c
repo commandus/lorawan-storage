@@ -3,6 +3,7 @@
 #include "lorawan/storage/service/identity-service-c-wrapper.h"
 
 int main() {
+    // sqlite
     void *o = createIdentityServiceC(makeIdentityService3());
 
     c_init(o, "test.sqlite.db", NULL);
@@ -27,6 +28,13 @@ int main() {
     int c = c_list(o, nis, 0, 2);
     // c_rm(o, &devAddr);
     c = c_list(o, nis, 0, 2);
+    C_NETWORK_IDENTITY_FILTER ff = {C_NILPO_AND, C_NIP_ACTIVATION, C_NICO_EQ, 1, 1};
+    C_NETWORK_IDENTITY_FILTER filters[3] = {
+        { C_NILPO_AND, C_NIP_ACTIVATION, C_NICO_EQ, 1, 0 },
+        { C_NILPO_AND, C_NIP_DEVEUI, C_NICO_EQ, sizeof(C_DEVEUI), { 0x78, 0x56, 0x34, 0x12 }},
+        { C_NILPO_AND, C_NIP_DEVICE_CLASS, C_NICO_EQ, 1, 1 }
+    };
+    c = c_filter(o, nis, filters, 3, 0, 2);
 
     c_done(o);
     destroyIdentityServiceC(o);
