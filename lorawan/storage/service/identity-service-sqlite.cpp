@@ -197,7 +197,8 @@ int SqliteIdentityService::rm(
     std::stringstream statement;
     statement << "DELETE FROM device WHERE addr = '" << DEVADDR2string(addr) << "'";
     int r = sqlite3_exec(db, statement.str().c_str(), nullptr, nullptr, &zErrMsg);
-    std::cerr << statement.str() << std::endl;
+    // uncomment to check SQL expression
+    // std::cerr << statement.str() << std::endl;
     if (r != SQLITE_OK) {
         if (zErrMsg) {
             sqlite3_free(zErrMsg);

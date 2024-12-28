@@ -146,7 +146,17 @@ int c_filter(
     C_NETWORKIDENTITY retVal[],
     C_NETWORK_IDENTITY_FILTER filters[],
     size_t filterSize,
-    uint32_t offset, uint8_t size
+    uint32_t offset,
+    uint8_t size
+);
+
+int c_filterExpression(
+    void *o,
+    C_NETWORKIDENTITY retVal[],
+    const char *filterExpression,
+    size_t filterExpressionSize,
+    uint32_t offset,
+    uint8_t size
 );
 
 size_t c_size(void *o);

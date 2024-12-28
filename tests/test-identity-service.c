@@ -36,6 +36,10 @@ int main() {
     };
     c = c_filter(o, nis, filters, 3, 0, 2);
 
+
+    const char *filterExpression = "activation = 'ABP' and deveui = '12345678' and class = 'B'";
+    c = c_filterExpression(o, nis, filterExpression, strlen(filterExpression), 0, 2);
+
     c_done(o);
     destroyIdentityServiceC(o);
     return 0;

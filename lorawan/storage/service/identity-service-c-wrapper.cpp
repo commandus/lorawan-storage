@@ -2,6 +2,7 @@
 #include "lorawan/storage/service/identity-service-c-wrapper.h"
 
 #include <cstring>
+#include <lorawan/lorawan-string.h>
 
 #include "lorawan/storage/service/identity-service.h"
 
@@ -210,6 +211,27 @@ int c_filter(
         retVal[i].devaddr = v[i].devaddr.u;
         NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
 
+    }
+    return r < 0 ? r : (int) v.size();
+}
+
+int c_filterExpression(
+    void *o,
+    C_NETWORKIDENTITY retVal[],
+    const char *filterExpression,
+    size_t filterExpressionSize,
+    uint32_t offset,
+    uint8_t size
+)
+{
+    std::vector<NETWORKIDENTITY> v;
+    std::vector<NETWORK_IDENTITY_FILTER> f;
+
+    string2NETWORK_IDENTITY_FILTERS(f, filterExpression, filterExpressionSize);
+    int r = ((IdentityService *) o)->filter(v, f, offset, size);
+    for(auto i = 0; i < v.size(); i++) {
+        retVal[i].devaddr = v[i].devaddr.u;
+        NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
     }
     return r < 0 ? r : (int) v.size();
 }
