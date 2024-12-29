@@ -1,5 +1,6 @@
 #
-# On Windows set correct path to the VCPKG includes at line 16
+# On Windows set correct path to the VCPKG:
+# cmake -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scripts/buildsystems/vcpkg.cmake ..
 #
 # Options:
 # -DENABLE_LIBUV=off   	enable libuv UDP/TCP. Default UDP only. libuv dependency required.
@@ -197,12 +198,12 @@ endif()
 		)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			find_package(unofficial-sqlite3 CONFIG REQUIRED)
-			set(BACKEND_DB_LIB unofficial::sqlite3::sqlite3)
-			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
+			set(BACKEND_DB_LIB ${BACKEND_DB_LIB} unofficial::sqlite3::sqlite3)
+			set(BACKEND_DB_INC ${BACKEND_DB_INC} ${SQLite3_INCLUDE_DIRS})
 		else ()
 			find_package(SQLite3 REQUIRED)
-			set(BACKEND_DB_LIB ${SQLite3_LIBRARIES})
-			set(BACKEND_DB_INC ${SQLite3_INCLUDE_DIRS})
+			set(BACKEND_DB_LIB ${BACKEND_DB_LIB} ${SQLite3_LIBRARIES})
+			set(BACKEND_DB_INC ${BACKEND_DB_INC} ${SQLite3_INCLUDE_DIRS})
 		endif ()
 	endif()
 
@@ -212,13 +213,13 @@ endif()
 			lorawan/storage/service/gateway-service-lmdb.cpp
 		)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-#			find_package(unofficial-lmdb CONFIG REQUIRED)
-#			set(BACKEND_DB_LIB unofficial::lmdb::lmdb)
-#			set(BACKEND_DB_INC ${LMDB_INCLUDE_DIRS})
+			find_package(unofficial-lmdb CONFIG REQUIRED)
+			set(BACKEND_DB_LIB ${BACKEND_DB_LIB} unofficial::lmdb::lmdb)
+			set(BACKEND_DB_INC ${BACKEND_DB_INC} ${LMDB_INCLUDE_DIRS})
 		else ()
 #			find_package(lmdb REQUIRED)
-#			set(BACKEND_DB_LIB ${LMDB_LIBRARIES})
-#			set(BACKEND_DB_INC ${LMDB_INCLUDE_DIRS})
+#			set(BACKEND_DB_LIB ${BACKEND_DB_LIB} ${LMDB_LIBRARIES})
+#			set(BACKEND_DB_INC ${BACKEND_DB_INC} ${LMDB_INCLUDE_DIRS})
 		endif ()
 	endif()
 

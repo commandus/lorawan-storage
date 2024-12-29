@@ -15,6 +15,11 @@ This is a simple example of a gateway database service for a tlns project.
 - Visual Studio
 - vcpkg
 
+Provide CMAKE_TOOLCHAIN_FILE variable to set up VCPKG CMake toolchain file 
+```
+cmake -DCMAKE_TOOLCHAIN_FILE=C:/git/vcpkg/scripts/buildsystems/vcpkg.cmake ..
+```
+
 ### ESP32
 
 - SDK idf tools or
