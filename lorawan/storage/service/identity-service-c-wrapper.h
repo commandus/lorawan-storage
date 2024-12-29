@@ -10,6 +10,12 @@ extern "C"
 {
 #endif
 
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#define EXPORT_SHARED_C_FUNC __declspec(dllexport)
+#else
+#define EXPORT_SHARED_C_FUNC
+#endif
+
 typedef uint64_t C_DEVEUI;
 typedef uint32_t C_DEVADDR;
 typedef uint8_t C_ACTIVATION;
@@ -117,33 +123,35 @@ typedef PACK_STRUCT( struct {
     char filterData[16];
 } ) C_NETWORK_IDENTITY_FILTER;    // 20 bytes long
 
+// Functions
+
 // gen
-void* makeIdentityService0();
+EXPORT_SHARED_C_FUNC void* makeIdentityService0();
 // JSON
-void* makeIdentityService1();
+EXPORT_SHARED_C_FUNC void* makeIdentityService1();
 // memory
-void* makeIdentityService2();
+EXPORT_SHARED_C_FUNC void* makeIdentityService2();
 // Sqlite
-void* makeIdentityService3();
+EXPORT_SHARED_C_FUNC void* makeIdentityService3();
 // UDP
-void* makeIdentityService4();
+EXPORT_SHARED_C_FUNC void* makeIdentityService4();
 // LMDB
-void* makeIdentityService5();
+EXPORT_SHARED_C_FUNC void* makeIdentityService5();
 
-void* createIdentityServiceC(
+EXPORT_SHARED_C_FUNC void* createIdentityServiceC(
     void *instance
 );
 
-void destroyIdentityServiceC(
+EXPORT_SHARED_C_FUNC void destroyIdentityServiceC(
     void *instance
 );
 
-int c_get(void *o, C_DEVICEID *retVal, const C_DEVADDR *devAddr);
-int c_getNetworkIdentity(void *o, C_NETWORKIDENTITY *retVal, const C_DEVEUI *eui);
-int c_put(void *o, const C_DEVADDR *devaddr, const C_DEVICEID *id);
-int c_rm(void *o, const C_DEVADDR *addr);
-int c_list(void *o, C_NETWORKIDENTITY retVal[], uint32_t offset, uint8_t size);
-int c_filter(
+EXPORT_SHARED_C_FUNC int c_get(void *o, C_DEVICEID *retVal, const C_DEVADDR *devAddr);
+EXPORT_SHARED_C_FUNC int c_getNetworkIdentity(void *o, C_NETWORKIDENTITY *retVal, const C_DEVEUI *eui);
+EXPORT_SHARED_C_FUNC int c_put(void *o, const C_DEVADDR *devaddr, const C_DEVICEID *id);
+EXPORT_SHARED_C_FUNC int c_rm(void *o, const C_DEVADDR *addr);
+EXPORT_SHARED_C_FUNC int c_list(void *o, C_NETWORKIDENTITY retVal[], uint32_t offset, uint8_t size);
+EXPORT_SHARED_C_FUNC int c_filter(
     void *o,
     C_NETWORKIDENTITY retVal[],
     C_NETWORK_IDENTITY_FILTER filters[],
@@ -152,7 +160,7 @@ int c_filter(
     uint8_t size
 );
 
-int c_filterExpression(
+EXPORT_SHARED_C_FUNC int c_filterExpression(
     void *o,
     C_NETWORKIDENTITY retVal[],
     const char *filterExpression,
@@ -161,15 +169,15 @@ int c_filterExpression(
     uint8_t size
 );
 
-size_t c_size(void *o);
-int c_next(void *o, C_NETWORKIDENTITY *retVal);
-void c_flush(void *o);
-int c_init(void *o, const char *option, void *data);
-void c_done(void *o);
-void c_setOption(void *o, int option, void *value);
-C_NETID *c_getNetworkId(void *o);
-void c_setNetworkId(void *o, const C_NETID *value);
-int c_joinAccept(void *o, C_JOIN_ACCEPT_FRAME_HEADER *retVal, C_NETWORKIDENTITY *networkIdentity);
+EXPORT_SHARED_C_FUNC size_t c_size(void *o);
+EXPORT_SHARED_C_FUNC int c_next(void *o, C_NETWORKIDENTITY *retVal);
+EXPORT_SHARED_C_FUNC void c_flush(void *o);
+EXPORT_SHARED_C_FUNC int c_init(void *o, const char *option, void *data);
+EXPORT_SHARED_C_FUNC void c_done(void *o);
+EXPORT_SHARED_C_FUNC void c_setOption(void *o, int option, void *value);
+EXPORT_SHARED_C_FUNC C_NETID *c_getNetworkId(void *o);
+EXPORT_SHARED_C_FUNC void c_setNetworkId(void *o, const C_NETID *value);
+EXPORT_SHARED_C_FUNC int c_joinAccept(void *o, C_JOIN_ACCEPT_FRAME_HEADER *retVal, C_NETWORKIDENTITY *networkIdentity);
 
 #ifdef __cplusplus
 }

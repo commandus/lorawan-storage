@@ -11,14 +11,14 @@ extern "C"
 {
 #endif
 
-void *createIdentityServiceC(
+EXPORT_SHARED_C_FUNC void *createIdentityServiceC(
     void *instance
 )
 {
     return instance;
 }
 
-void destroyIdentityServiceC(
+EXPORT_SHARED_C_FUNC void destroyIdentityServiceC(
     void *instance
 )
 {
@@ -113,7 +113,7 @@ static void JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(
     retVal->rxDelay = hdr.rxDelay;
 }
 
-int c_get(
+EXPORT_SHARED_C_FUNC int c_get(
     void *o,
     C_DEVICEID *retVal,
     const C_DEVADDR *devAddr
@@ -126,7 +126,7 @@ int c_get(
     return r;
 }
 
-int c_getNetworkIdentity(
+EXPORT_SHARED_C_FUNC int c_getNetworkIdentity(
     void *o,
     C_NETWORKIDENTITY *retVal,
     const C_DEVEUI *eui
@@ -139,7 +139,7 @@ int c_getNetworkIdentity(
     return r;
 }
 
-int c_put(
+EXPORT_SHARED_C_FUNC int c_put(
     void *o,
     const C_DEVADDR *devaddr,
     const C_DEVICEID *id
@@ -163,7 +163,7 @@ int c_put(
     return ((IdentityService *) o)->put(a, did);
 }
 
-int c_rm(
+EXPORT_SHARED_C_FUNC int c_rm(
     void *o,
     const C_DEVADDR *addr
 )
@@ -172,7 +172,7 @@ int c_rm(
     return ((IdentityService *) o)->rm(a);
 }
 
-int c_list(
+EXPORT_SHARED_C_FUNC int c_list(
     void *o,
     C_NETWORKIDENTITY retVal[],
     uint32_t offset,
@@ -190,7 +190,7 @@ int c_list(
     return r < 0 ? r : (int) v.size();
 }
 
-int c_filter(
+EXPORT_SHARED_C_FUNC int c_filter(
     void *o,
     C_NETWORKIDENTITY retVal[],
     C_NETWORK_IDENTITY_FILTER filters[],
@@ -215,7 +215,7 @@ int c_filter(
     return r < 0 ? r : (int) v.size();
 }
 
-int c_filterExpression(
+EXPORT_SHARED_C_FUNC int c_filterExpression(
     void *o,
     C_NETWORKIDENTITY retVal[],
     const char *filterExpression,
@@ -236,12 +236,12 @@ int c_filterExpression(
     return r < 0 ? r : (int) v.size();
 }
 
-size_t c_size(void *o)
+EXPORT_SHARED_C_FUNC size_t c_size(void *o)
 {
     return ((IdentityService *) o)->size();
 }
 
-int c_next(
+EXPORT_SHARED_C_FUNC int c_next(
     void *o,
     C_NETWORKIDENTITY *retVal
 )
@@ -252,14 +252,14 @@ int c_next(
     return r;
 }
 
-void c_flush(
+EXPORT_SHARED_C_FUNC void c_flush(
     void *o
 )
 {
     ((IdentityService *) o)->flush();
 }
 
-int c_init(
+EXPORT_SHARED_C_FUNC int c_init(
     void *o,
     const char *option,
     void *data
@@ -268,14 +268,14 @@ int c_init(
     return ((IdentityService *) o)->init(option, data);
 }
 
-void c_done(
+EXPORT_SHARED_C_FUNC void c_done(
     void *o
 )
 {
     ((IdentityService *) o)->done();
 }
 
-void c_setOption(
+EXPORT_SHARED_C_FUNC void c_setOption(
     void *o,
     int option,
     void *value
@@ -284,14 +284,14 @@ void c_setOption(
     ((IdentityService *) o)->setOption(option, value);
 }
 
-C_NETID *c_getNetworkId(
+EXPORT_SHARED_C_FUNC C_NETID *c_getNetworkId(
     void *o
 )
 {
     return (C_NETID *) &((IdentityService *) o)->getNetworkId()->c;
 }
 
-void c_setNetworkId(
+EXPORT_SHARED_C_FUNC void c_setNetworkId(
     void *o,
     const C_NETID *value
 )
@@ -303,7 +303,7 @@ void c_setNetworkId(
     ((IdentityService *) o)->setNetworkId(n);
 }
 
-int c_joinAccept(
+EXPORT_SHARED_C_FUNC int c_joinAccept(
     void *o,
     C_JOIN_ACCEPT_FRAME_HEADER *retVal,
     C_NETWORKIDENTITY *networkIdentity
