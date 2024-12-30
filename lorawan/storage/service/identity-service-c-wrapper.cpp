@@ -5,6 +5,7 @@
 #endif
 #include "lorawan/storage/service/identity-service-c-wrapper.h"
 #include <lorawan/lorawan-string.h>
+#include <iostream>
 #include "lorawan/storage/service/identity-service.h"
 #include "lorawan/storage/service/identity-service-mem.h"
 #include "lorawan/storage/service/identity-service-udp.h"
@@ -38,6 +39,7 @@ EXPORT_SHARED_C_FUNC void* makeIdentityServiceC(
     C_IDENTITY_SERVICE_IMPL impl
 )
 {
+    std::cerr << "makeIdentityServiceC " << (int) impl << std::endl;
     switch (impl) {
 #ifdef ENABLE_GEN
         case CISI_GEN:

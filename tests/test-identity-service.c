@@ -89,7 +89,7 @@ void testJson()
 }
 
 int main() {
-    // testSqlite();
+    testSqlite();
     testJson();
     return 0;
 }
