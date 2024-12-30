@@ -1,19 +1,37 @@
 #ifndef IDENTITY_SERVICE_C_WRAPPER_H
-#define IDENTITY_SERVICE_C_WRAPPER_H
+#define IDENTITY_SERVICE_C_WRAPPER_H       1
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 #include <stdbool.h>
 #include <inttypes.h>
-#include <stddef.h>
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
+#ifdef __cplusplus
+#define EXPORT_SHARED_C_FUNC extern "C" __declspec(dllexport)
+#else
 #define EXPORT_SHARED_C_FUNC __declspec(dllexport)
+#endif
+#else
+#ifdef __cplusplus
+#define EXPORT_SHARED_C_FUNC extern "C"
 #else
 #define EXPORT_SHARED_C_FUNC
+#endif
+#endif
+
+// Structures
+
+#ifdef __GNUC__
+#define PACK_STRUCT( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#else
+#ifdef _MSC_VER
+#define PACK_STRUCT( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
+#else
+#define PACK_STRUCT( __Declaration__ ) __Declaration__ __attribute__((__packed__))
+#endif
 #endif
 
 typedef uint64_t C_DEVEUI;
@@ -26,17 +44,6 @@ typedef uint16_t C_DEVNONCE;
 typedef uint8_t C_JOINNONCE[3];
 typedef uint8_t C_NETID[3];
 typedef char C_DEVICENAME[8];
-
-
-#ifdef __GNUC__
-#define PACK_STRUCT( __Declaration__ ) __Declaration__ __attribute__((__packed__))
-#else
-#ifdef _MSC_VER
-#define PACK_STRUCT( __Declaration__ ) __pragma( pack(push, 1) ) __Declaration__ __pragma( pack(pop))
-#else
-#define PACK_STRUCT( __Declaration__ ) __Declaration__ __attribute__((__packed__))
-#endif
-#endif
 
 typedef PACK_STRUCT( struct {
     C_ACTIVATION activation;	///< activation type: ABP or OTAA
@@ -139,7 +146,7 @@ EXPORT_SHARED_C_FUNC void* makeIdentityService4();
 EXPORT_SHARED_C_FUNC void* makeIdentityService5();
 
 EXPORT_SHARED_C_FUNC void* createIdentityServiceC(
-    void *instance
+        void *instance
 );
 
 EXPORT_SHARED_C_FUNC void destroyIdentityServiceC(
