@@ -1723,7 +1723,7 @@ int string2NETWORK_IDENTITY_FILTERS(
                     break;
                 case NIP_DEVICENAME:
                     string2DEVICENAME((DEVICENAME &) f.filterData, token.c_str());
-                    f.length = token.size() < sizeof(DEVICENAME) ? token.size() : sizeof(DEVICENAME);
+                    f.length = (uint8_t) (token.size() < sizeof(DEVICENAME) ? token.size() : sizeof(DEVICENAME));
                     break;
                 default:
                     break;

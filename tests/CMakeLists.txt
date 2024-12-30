@@ -8,6 +8,7 @@ add_executable(test-parse-packet
 )
 target_include_directories(test-parse-packet PRIVATE .. ../third-party)
 target_link_libraries(test-parse-packet PRIVATE lorawan)
+target_compile_definitions(test-parse-packet PRIVATE ${GATEWAY_DEF})
 
 add_executable(test-identity-service
 	test-identity-service.c
@@ -15,6 +16,7 @@ add_executable(test-identity-service
 target_include_directories(test-identity-service PRIVATE .. ../third-party)
 target_link_libraries(test-identity-service PRIVATE lorawan)
 set_property(TARGET test-identity-service PROPERTY C_STANDARD 99)
+target_compile_definitions(test-identity-service PRIVATE ${GATEWAY_DEF})
 #
 add_test(NAME test-parse-packet COMMAND "test-parse-packet")
 add_test(NAME test-identity-service COMMAND "test-identity-service")

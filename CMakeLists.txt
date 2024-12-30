@@ -192,6 +192,7 @@ endif()
 	endif()
 
 	if (ENABLE_SQLITE)
+		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_SQLITE)
 		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
 			lorawan/storage/service/identity-service-sqlite.cpp
 			lorawan/storage/service/gateway-service-sqlite.cpp
@@ -208,6 +209,7 @@ endif()
 	endif()
 
 	if (ENABLE_LMDB)
+		set(GATEWAY_DEF ${GATEWAY_DEF} ENABLE_LMDB)
 		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
 			lorawan/storage/service/identity-service-lmdb.cpp
 			lorawan/storage/service/gateway-service-lmdb.cpp
@@ -296,6 +298,7 @@ endif()
 	target_link_libraries(identity-c PRIVATE lorawan)
 	target_include_directories(identity-c PRIVATE ".")
 	set_target_properties(identity-c PROPERTIES SOVERSION ${VERSION_INFO})
+	target_compile_definitions(identity-c PRIVATE ${GATEWAY_DEF})
 
 	#
 	# lorawan-identity-service

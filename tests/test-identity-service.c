@@ -5,7 +5,7 @@
 void testSqlite()
 {
     // sqlite
-    void *o = createIdentityServiceC(makeIdentityService3());
+    void *o = makeIdentityServiceC(CISI_SQLITE);
 
     c_init(o, "test.sqlite.db", NULL);
     C_DEVADDR devAddr = 0x12345678;
@@ -48,8 +48,7 @@ void testSqlite()
 void testJson()
 {
     // JSON
-    void *o = createIdentityServiceC(makeIdentityService1());
-
+    void *o = makeIdentityServiceC(CISI_JSON);
     c_init(o, "test.json", NULL);
     C_DEVADDR devAddr = 0x12345678;
     C_DEVICEID devId;

@@ -1,10 +1,26 @@
 #include <functional>
-#include "lorawan/storage/service/identity-service-c-wrapper.h"
-
 #include <cstring>
+#if defined(_MSC_VER) || defined(__MINGW32__)
+#include <WinSock2.h>
+#endif
+#include "lorawan/storage/service/identity-service-c-wrapper.h"
 #include <lorawan/lorawan-string.h>
-
 #include "lorawan/storage/service/identity-service.h"
+#include "lorawan/storage/service/identity-service-mem.h"
+#include "lorawan/storage/service/identity-service-udp.h"
+
+#ifdef ENABLE_GEN
+#include "identity-service-gen.h"
+#endif
+#ifdef ENABLE_JSON
+#include "identity-service-json.h"
+#endif
+#ifdef ENABLE_SQLITE
+#include "identity-service-sqlite.h"
+#endif
+#ifdef ENABLE_LMDB
+#include "identity-service-lmdb.h"
+#endif
 
 #ifdef __cplusplus
 extern "C"
@@ -16,6 +32,36 @@ EXPORT_SHARED_C_FUNC void *createIdentityServiceC(
 )
 {
     return instance;
+}
+
+EXPORT_SHARED_C_FUNC void* makeIdentityServiceC(
+    C_IDENTITY_SERVICE_IMPL impl
+)
+{
+    switch (impl) {
+#ifdef ENABLE_GEN
+        case CISI_GEN:
+            return makeIdentityService();
+#endif
+#ifdef ENABLE_JSON
+        case CISI_JSON:
+            return makeIdentityService1();
+#endif
+        case CISI_MEM:
+            return makeIdentityService2();
+#ifdef ENABLE_SQLITE
+        case CISI_SQLITE:
+            return makeIdentityService3();
+#endif
+        case CISI_UDP:
+            return makeIdentityService4();
+#ifdef ENABLE_LMDB
+        case CISI_LMDB:
+            return makeIdentityService5();
+#endif
+        default:
+            return nullptr;
+    }
 }
 
 EXPORT_SHARED_C_FUNC void destroyIdentityServiceC(

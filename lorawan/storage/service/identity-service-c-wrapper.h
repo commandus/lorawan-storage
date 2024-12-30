@@ -132,21 +132,17 @@ typedef PACK_STRUCT( struct {
 
 // Functions
 
-// gen
-EXPORT_SHARED_C_FUNC void* makeIdentityService0();
-// JSON
-EXPORT_SHARED_C_FUNC void* makeIdentityService1();
-// memory
-EXPORT_SHARED_C_FUNC void* makeIdentityService2();
-// Sqlite
-EXPORT_SHARED_C_FUNC void* makeIdentityService3();
-// UDP
-EXPORT_SHARED_C_FUNC void* makeIdentityService4();
-// LMDB
-EXPORT_SHARED_C_FUNC void* makeIdentityService5();
+typedef enum C_IDENTITY_SERVICE_IMPL {
+    CISI_GEN = 0,
+    CISI_JSON = 1,
+    CISI_MEM = 2,
+    CISI_SQLITE = 3,
+    CISI_UDP = 4,
+    CISI_LMDB = 5
+} C_IDENTITY_SERVICE_IMPL;
 
-EXPORT_SHARED_C_FUNC void* createIdentityServiceC(
-        void *instance
+EXPORT_SHARED_C_FUNC void* makeIdentityServiceC(
+    C_IDENTITY_SERVICE_IMPL impl
 );
 
 EXPORT_SHARED_C_FUNC void destroyIdentityServiceC(
