@@ -80,7 +80,7 @@ int JsonIdentityService::getNetworkIdentity(
             return CODE_OK;
         }
     }
-    return ERR_CODE_GATEWAY_NOT_FOUND;
+    return ERR_CODE_DEVICE_EUI_NOT_FOUND;
 }
 
 /**

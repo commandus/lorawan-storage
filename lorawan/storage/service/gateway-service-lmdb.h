@@ -5,11 +5,12 @@
 #include <mutex>
 #include <map>
 #include "lorawan/storage/service/gateway-service.h"
+#include "lorawan/helper/lmdb-helper.h"
 #include "lorawan/helper/plugin-helper.h"
 
 class LMDBGatewayService: public GatewayService {
 protected:
-    std::map<uint64_t, GatewayIdentity> storage;
+    dbenv env;
     void clear();
 public:
     LMDBGatewayService();
@@ -25,7 +26,7 @@ public:
     int put(const GatewayIdentity &request) override;
     int rm(const GatewayIdentity &addr) override;
 
-    int init(const std::string &option, void *data) override;
+    int init(const std::string &databaseName, void *data) override;
     void flush() override;
     void done() override;
     void setOption(int option, void *value) override;

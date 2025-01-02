@@ -8,7 +8,6 @@
 class LMDBIdentityService: public IdentityService {
 protected:
     dbenv env;
-    std::map<DEVADDR, DEVICEID> storage;
 public:
     LMDBIdentityService();
     ~LMDBIdentityService() override;

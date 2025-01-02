@@ -139,6 +139,27 @@ int SqliteIdentityService::getNetworkIdentity(
     const DEVEUI &eui
 )
 {
+    if (!db)
+        return ERR_CODE_DB_DATABASE_NOT_FOUND;
+    char *zErrMsg = nullptr;
+    std::stringstream statement;
+    statement << "SELECT " FIELD_LIST " FROM device WHERE deveui = " << DEVEUI2string(eui) << " LIMIT 1";
+
+    // uncomment to check SQL expression
+    // std::cerr << statement.str() << std::endl;
+
+    std::vector<std::vector<std::string>> table;
+    int r = sqlite3_exec(db, statement.str().c_str(), tableCallback, &table, &zErrMsg);
+    if (r != SQLITE_OK) {
+        if (zErrMsg) {
+            sqlite3_free(zErrMsg);
+        }
+        return ERR_CODE_DB_SELECT;
+    }
+    if (table.empty())
+        return ERR_CODE_DEVICE_EUI_NOT_FOUND;
+    row2DEVICEID(retval.devid, table[0]);
+    retval.devaddr = table[0][0];
     return CODE_OK;
 }
 

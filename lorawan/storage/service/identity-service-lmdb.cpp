@@ -111,8 +111,8 @@ size_t LMDBIdentityService::size()
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
     MDB_stat stat;
-    r = mdb_stat(env.txn, env.dbi, &stat);
-    r = mdb_txn_commit(env.txn);
+    mdb_stat(env.txn, env.dbi, &stat);
+    mdb_txn_commit(env.txn);
     return stat.ms_entries;
 }
 
@@ -127,14 +127,35 @@ int LMDBIdentityService::getNetworkIdentity(
     const DEVEUI &eui
 )
 {
-    for(auto & it : storage) {
-        if (it.second.devEUI.u == eui.u) {
-            retVal.devaddr = it.first;
-            retVal.devid = it.second;
-            return CODE_OK;
-        }
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+
+    MDB_cursor *cursor;
+    r = mdb_cursor_open(env.txn, env.dbi, &cursor);
+    if (r != MDB_SUCCESS) {
+        mdb_txn_commit(env.txn);
+        return r;
     }
-    return ERR_CODE_GATEWAY_NOT_FOUND;
+
+    NETWORKIDENTITY nid;
+    MDB_val dbKey {SIZE_DEVADDR, (void *) &nid.devaddr.u };
+    MDB_val dbVal {SIZE_DEVICEID, (void *) &nid.devid.activation };
+
+    while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == 0) {
+        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != SIZE_DEVICEID)
+            break;  // error, database corrupted
+
+        if (nid.devid.devEUI == eui) {
+            retVal.devaddr.u = nid.devaddr.u;
+            retVal.devid = nid.devid;
+            break;
+        }
+    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
+
+    r = mdb_txn_commit(env.txn);
+    return r;
 }
 
 /**
@@ -203,14 +224,12 @@ int LMDBIdentityService::rm(
         return r;
     }
 
-    int cnt = 0;
     do {
         if (dbKey.mv_size != SIZE_DEVADDR)
             break;  // error, database corrupted
         if (*(uint32_t*)dbKey.mv_data != addr.u)
             break;  // out of range
         mdb_cursor_del(cursor, 0);
-        cnt++;
     } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
 
     r = mdb_txn_commit(env.txn);
