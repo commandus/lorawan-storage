@@ -213,6 +213,7 @@ endif()
 		set(SRC_LIBLORAWAN ${SRC_LIBLORAWAN}
 			lorawan/storage/service/identity-service-lmdb.cpp
 			lorawan/storage/service/gateway-service-lmdb.cpp
+			lorawan/helper/lmdb-helper.cpp
 		)
 		if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 			find_package(unofficial-lmdb CONFIG REQUIRED)
@@ -281,6 +282,17 @@ endif()
 		target_link_libraries(storage-sqlite PRIVATE lorawan ${BACKEND_DB_LIB})
 		target_include_directories(storage-sqlite PRIVATE ".")
 		set_target_properties(storage-sqlite PROPERTIES SOVERSION ${VERSION_INFO})
+	endif()
+
+	if (ENABLE_LMDB)
+		add_library(storage-lmdb SHARED
+				lorawan/storage/service/identity-service-lmdb.cpp
+				lorawan/storage/service/gateway-service-lmdb.cpp
+				lorawan/helper/file-helper.cpp
+		)
+		target_link_libraries(storage-lmdb PRIVATE lorawan ${BACKEND_DB_LIB})
+		target_include_directories(storage-lmdb PRIVATE ".")
+		set_target_properties(storage-lmdb PROPERTIES SOVERSION ${VERSION_INFO})
 	endif()
 
 	add_library(storage-udp SHARED lorawan/storage/service/identity-service-udp.cpp)

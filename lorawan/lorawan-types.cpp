@@ -1667,6 +1667,26 @@ std::string DEVICEID::toJsonString(
     return ss.str();
 }
 
+void DEVICEID::toArray(
+    void *buffer,
+    size_t size
+) const
+{
+    if (!buffer || size < SIZE_DEVICEID)
+        return;
+    memmove(buffer, &activation, SIZE_DEVICEID);
+}
+
+void DEVICEID::fromArray(
+    const void *buffer,
+    size_t size
+)
+{
+    if (!buffer || size < SIZE_DEVICEID)
+        return;
+    memmove(&activation, buffer, SIZE_DEVICEID);
+}
+
 void DEVICEID::setProperties
 (
 	std::map<std::string, std::string> &retval

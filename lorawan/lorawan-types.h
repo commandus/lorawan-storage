@@ -706,6 +706,8 @@ public:
     std::string toString(const DEVADDR &addr) const;
 	std::string toJsonString() const;
     std::string toJsonString(const DEVADDR &addr) const;
+    void toArray(void *buffer, size_t size) const;
+    void fromArray(const void *buffer, size_t size);
 	void setProperties(std::map<std::string, std::string> &retval) const;
 
     bool empty() const;

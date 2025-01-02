@@ -1,6 +1,7 @@
 #include <sstream>
 #include <iostream>
 #include "lorawan/storage/service/identity-service-lmdb.h"
+#include "lorawan/helper/lmdb-helper.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/file-helper.h"
@@ -26,12 +27,36 @@ int LMDBIdentityService::get(
     const DEVADDR &request
 )
 {
-    auto r = storage.find(request);
-    if (r != storage.end())
-        retVal = r->second;
-    else
-        return ERR_CODE_GATEWAY_NOT_FOUND;
-    return CODE_OK;
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+    MDB_val dbkey { SIZE_DEVADDR, (void *) &request.u };
+    // Get the last key
+    MDB_cursor *cursor;
+    MDB_val dbval;
+    r = mdb_cursor_open(env.txn, env.dbi, &cursor);
+    if (r != MDB_SUCCESS) {
+        mdb_txn_commit(env.txn);
+        return r;
+    }
+    r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
+    if (r != MDB_SUCCESS) {
+        // it's ok
+        mdb_txn_commit(env.txn);
+        return r;
+    }
+
+    do {
+        if (dbval.mv_size != SIZE_DEVICEID)
+            break;  // error
+        if (*(uint32_t*)dbkey.mv_data != request.u)
+            break;  // out of range
+            retVal.fromArray(dbval.mv_data, dbval.mv_size);
+    } while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS);
+
+    r = mdb_txn_commit(env.txn);
+    return r;
 }
 
 // List entries
@@ -93,21 +118,77 @@ int LMDBIdentityService::put(
     const DEVICEID &id
 )
 {
-    storage[devAddr] = id;
-    return CODE_OK;
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+    MDB_val dbkey { SIZE_DEVADDR, (void*) &devAddr.u };
+    MDB_val dbdata { SIZE_DEVICEID, (void *) &id.activation };
+    r = mdb_put(env.txn, env.dbi, &dbkey, &dbdata, 0);
+    if (r) {
+        if (r == MDB_MAP_FULL) {
+            r = processMapFull(&env);
+            if (r == 0)
+                r = mdb_put(env.txn, env.dbi, &dbkey, &dbdata, 0);
+        }
+        if (r) {
+            mdb_txn_abort(env.txn);
+            return ERR_CODE_LMDB_PUT;
+        }
+    }
+    r = mdb_txn_commit(env.txn);
+    if (r) {
+        if (r == MDB_MAP_FULL) {
+            r = processMapFull(&env);
+            if (r == 0) {
+                r = mdb_txn_commit(env.txn);
+            }
+        }
+        if (r)
+            return ERR_CODE_LMDB_TXN_COMMIT;
+    }
+    return r;
 }
 
 int LMDBIdentityService::rm(
     const DEVADDR &addr
 )
 {
-    // find out by gateway identifier
-    auto r = storage.find(addr);
-    if (r != storage.end()) {
-        storage.erase(r);
-        return CODE_OK;
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+
+    MDB_val dbkey { SIZE_DEVADDR, (void *) &addr.u};
+
+    // Get the last key
+    MDB_cursor *cursor;
+    MDB_val dbval;
+    r = mdb_cursor_open(env.txn, env.dbi, &cursor);
+    if (r != MDB_SUCCESS) {
+        mdb_txn_commit(env.txn);
+        return r;
     }
-    return ERR_CODE_DEVICE_ADDRESS_NOTFOUND;
+    r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
+    if (r != MDB_SUCCESS) {
+        mdb_txn_commit(env.txn);
+        return r;
+    }
+
+    int cnt = 0;
+    do {
+        if (dbkey.mv_size != SIZE_DEVADDR)
+            break;  // error
+        if (*(uint32_t*)dbkey.mv_data != addr.u)
+            break;  // out of range
+        mdb_cursor_del(cursor, 0);
+        cnt++;
+    } while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS);
+
+    r = mdb_txn_commit(env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_COMMIT;
+    return r;
 }
 
 int LMDBIdentityService::init(
@@ -115,6 +196,9 @@ int LMDBIdentityService::init(
     void *database
 )
 {
+    env.setDb(databaseName);
+    if (!openDb(&env))
+        return ERR_CODE_LMDB_OPEN;
     return CODE_OK;
 }
 
@@ -122,9 +206,8 @@ void LMDBIdentityService::flush()
 {
 }
 
-void LMDBIdentityService::done()
-{
-    storage.clear();
+void LMDBIdentityService::done() {
+    closeDb(&env);
 }
 
 /**

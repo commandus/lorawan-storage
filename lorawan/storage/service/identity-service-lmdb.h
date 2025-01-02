@@ -3,9 +3,11 @@
 
 #include "lorawan/storage/service/identity-service.h"
 #include "lorawan/helper/plugin-helper.h"
+#include "lorawan/helper/lmdb-helper.h"
 
 class LMDBIdentityService: public IdentityService {
 protected:
+    dbenv env;
     std::map<DEVADDR, DEVICEID> storage;
 public:
     LMDBIdentityService();
