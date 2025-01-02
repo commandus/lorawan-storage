@@ -31,16 +31,16 @@ int LMDBIdentityService::get(
     int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
-    MDB_val dbkey { SIZE_DEVADDR, (void *) &request.u };
     // Get the last key
     MDB_cursor *cursor;
-    MDB_val dbval;
     r = mdb_cursor_open(env.txn, env.dbi, &cursor);
     if (r != MDB_SUCCESS) {
         mdb_txn_commit(env.txn);
         return r;
     }
-    r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
+    MDB_val dbKey {SIZE_DEVADDR, (void *) &request.u };
+    MDB_val dbVal {SIZE_DEVICEID, (void *) &retVal.activation };
+    r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_SET_RANGE);
     if (r != MDB_SUCCESS) {
         // it's ok
         mdb_txn_commit(env.txn);
@@ -48,12 +48,12 @@ int LMDBIdentityService::get(
     }
 
     do {
-        if (dbval.mv_size != SIZE_DEVICEID)
-            break;  // error
-        if (*(uint32_t*)dbkey.mv_data != request.u)
+        if (dbVal.mv_size != SIZE_DEVICEID)
+            break;  // error, database corrupted
+        if (*(uint32_t*) dbKey.mv_data != request.u)
             break;  // out of range
-            retVal.fromArray(dbval.mv_data, dbval.mv_size);
-    } while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS);
+            retVal.fromArray(dbVal.mv_data, dbVal.mv_size);
+    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
 
     r = mdb_txn_commit(env.txn);
     return r;
@@ -65,9 +65,26 @@ int LMDBIdentityService::list(
     uint32_t offset,
     uint8_t size
 ) {
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+
     size_t o = 0;
     size_t sz = 0;
-    for (auto & it : storage) {
+
+    MDB_cursor *cursor;
+    r = mdb_cursor_open(env.txn, env.dbi, &cursor);
+    if (r != MDB_SUCCESS) {
+        mdb_txn_commit(env.txn);
+        return r;
+    }
+
+    NETWORKIDENTITY nid;
+    MDB_val dbKey {SIZE_DEVADDR, (void *) &nid.devaddr.u };
+    MDB_val dbVal {SIZE_DEVICEID, (void *) &nid.devid.activation };
+
+    while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == 0) {
         if (o < offset) {
             // skip first
             o++;
@@ -76,15 +93,27 @@ int LMDBIdentityService::list(
         sz++;
         if (sz > size)
             break;
-        retVal.emplace_back(it.first, it.second);
-    }
-    return CODE_OK;
+
+        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != SIZE_DEVICEID)
+            break;  // error, database corrupted
+        retVal.emplace_back(nid.devaddr, nid.devid);
+    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
+
+    r = mdb_txn_commit(env.txn);
+    return r;
 }
 
 // Entries count
 size_t LMDBIdentityService::size()
 {
-    return storage.size();
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+    MDB_stat stat;
+    r = mdb_stat(env.txn, env.dbi, &stat);
+    r = mdb_txn_commit(env.txn);
+    return stat.ms_entries;
 }
 
 /**
@@ -122,14 +151,14 @@ int LMDBIdentityService::put(
     int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
-    MDB_val dbkey { SIZE_DEVADDR, (void*) &devAddr.u };
-    MDB_val dbdata { SIZE_DEVICEID, (void *) &id.activation };
-    r = mdb_put(env.txn, env.dbi, &dbkey, &dbdata, 0);
+    MDB_val dbKey {SIZE_DEVADDR, (void*) &devAddr.u };
+    MDB_val dbData {SIZE_DEVICEID, (void *) &id.activation };
+    r = mdb_put(env.txn, env.dbi, &dbKey, &dbData, 0);
     if (r) {
         if (r == MDB_MAP_FULL) {
             r = processMapFull(&env);
             if (r == 0)
-                r = mdb_put(env.txn, env.dbi, &dbkey, &dbdata, 0);
+                r = mdb_put(env.txn, env.dbi, &dbKey, &dbData, 0);
         }
         if (r) {
             mdb_txn_abort(env.txn);
@@ -159,17 +188,16 @@ int LMDBIdentityService::rm(
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
 
-    MDB_val dbkey { SIZE_DEVADDR, (void *) &addr.u};
-
-    // Get the last key
     MDB_cursor *cursor;
-    MDB_val dbval;
     r = mdb_cursor_open(env.txn, env.dbi, &cursor);
     if (r != MDB_SUCCESS) {
         mdb_txn_commit(env.txn);
         return r;
     }
-    r = mdb_cursor_get(cursor, &dbkey, &dbval, MDB_SET_RANGE);
+    MDB_val dbKey {SIZE_DEVADDR, (void *) &addr.u};
+    DEVICEID did;
+    MDB_val dbVal {SIZE_DEVICEID, (void*) &did };
+    r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_SET_RANGE);
     if (r != MDB_SUCCESS) {
         mdb_txn_commit(env.txn);
         return r;
@@ -177,13 +205,13 @@ int LMDBIdentityService::rm(
 
     int cnt = 0;
     do {
-        if (dbkey.mv_size != SIZE_DEVADDR)
-            break;  // error
-        if (*(uint32_t*)dbkey.mv_data != addr.u)
+        if (dbKey.mv_size != SIZE_DEVADDR)
+            break;  // error, database corrupted
+        if (*(uint32_t*)dbKey.mv_data != addr.u)
             break;  // out of range
         mdb_cursor_del(cursor, 0);
         cnt++;
-    } while (mdb_cursor_get(cursor, &dbkey, &dbval, MDB_NEXT) == MDB_SUCCESS);
+    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
 
     r = mdb_txn_commit(env.txn);
     if (r)
@@ -293,10 +321,39 @@ int LMDBIdentityService::filter(
     uint8_t size
 )
 {
+    // start transaction
+    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    if (r)
+        return ERR_CODE_LMDB_TXN_BEGIN;
+
     size_t o = 0;
     size_t sz = 0;
-    for (auto & it : storage) {
-        if (!isIdentityFilteredV2(it.first, it.second, filters))
+
+    MDB_cursor *cursor;
+    r = mdb_cursor_open(env.txn, env.dbi, &cursor);
+    if (r != MDB_SUCCESS) {
+        mdb_txn_commit(env.txn);
+        return r;
+    }
+
+    NETWORKIDENTITY nid;
+    MDB_val dbKey {SIZE_DEVADDR, (void *) &nid.devaddr.u };
+    MDB_val dbVal {SIZE_DEVICEID, (void *) &nid.devid.activation };
+
+    while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == 0) {
+        if (o < offset) {
+            // skip first
+            o++;
+            continue;
+        }
+        sz++;
+        if (sz > size)
+            break;
+
+        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != SIZE_DEVICEID)
+            break;  // error, database corrupted
+
+        if (!isIdentityFilteredV2(nid.devaddr, nid.devid, filters))
             continue;
         if (o < offset) {
             // skip first
@@ -306,9 +363,12 @@ int LMDBIdentityService::filter(
         sz++;
         if (sz > size)
             break;
-        retVal.emplace_back(it.first, it.second);
-    }
-    return CODE_OK;
+        retVal.emplace_back(nid.devaddr, nid.devid);
+
+    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
+
+    r = mdb_txn_commit(env.txn);
+    return r;
 }
 
 int LMDBIdentityService::cFilter(
