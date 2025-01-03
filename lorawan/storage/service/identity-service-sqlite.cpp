@@ -28,18 +28,18 @@ static void row2DEVICEID(
     const std::vector<std::string> &row
 ) {
     // row 0- address
-    retVal.activation = string2activation(row[1]);
-    retVal.deviceclass = string2deviceclass(row[2]);
-    string2DEVEUI(retVal.devEUI, row[3]);
-    string2KEY(retVal.nwkSKey, row[4]);
-    string2KEY(retVal.appSKey, row[5]);
-    retVal.version = string2LORAWAN_VERSION(row[6]);
-    string2DEVEUI(retVal.appEUI, row[7]);
-    string2KEY(retVal.appKey, row[8]);
-    string2KEY(retVal.nwkKey, row[9]);
-    retVal.devNonce = string2DEVNONCE(row[10]);
-    string2JOINNONCE(retVal.joinNonce, row[11]);
-    string2DEVICENAME(retVal.name, row[12].c_str());
+    retVal.id.activation = string2activation(row[1]);
+    retVal.id.deviceclass = string2deviceclass(row[2]);
+    string2DEVEUI(retVal.id.devEUI, row[3]);
+    string2KEY(retVal.id.nwkSKey, row[4]);
+    string2KEY(retVal.id.appSKey, row[5]);
+    retVal.id.version = string2LORAWAN_VERSION(row[6]);
+    string2DEVEUI(retVal.id.appEUI, row[7]);
+    string2KEY(retVal.id.appKey, row[8]);
+    string2KEY(retVal.id.nwkKey, row[9]);
+    retVal.id.devNonce = string2DEVNONCE(row[10]);
+    string2JOINNONCE(retVal.id.joinNonce, row[11]);
+    string2DEVICENAME(retVal.id.name, row[12].c_str());
 }
 
 /**
@@ -100,8 +100,8 @@ int SqliteIdentityService::list(
         if (row.size() < 2)
             continue;
         NETWORKIDENTITY ni;
-        row2DEVICEID(ni.devid, row);
-        ni.devaddr = row[0];
+        row2DEVICEID(ni.value.devid, row);
+        ni.value.devaddr = row[0];
         retVal.push_back(ni);
     }
     return CODE_OK;
@@ -158,8 +158,8 @@ int SqliteIdentityService::getNetworkIdentity(
     }
     if (table.empty())
         return ERR_CODE_DEVICE_EUI_NOT_FOUND;
-    row2DEVICEID(retval.devid, table[0]);
-    retval.devaddr = table[0][0];
+    row2DEVICEID(retval.value.devid, table[0]);
+    retval.value.devaddr = table[0][0];
     return CODE_OK;
 }
 
@@ -181,18 +181,18 @@ int SqliteIdentityService::put(
 
     statement << "INSERT INTO device(" FIELD_LIST ") VALUES ('"
         << DEVADDR2string(devAddr) << "', "
-        << "'" << activation2string(id.activation) << "', "
-        << "'" << deviceclass2string(id.deviceclass) << "', "
-        << "'" << DEVEUI2string(id.devEUI) << "', "
-        << "'" << KEY2string(id.nwkSKey) << "', "
-        << "'" << KEY2string(id.appSKey) << "', "
-        << "'" << LORAWAN_VERSION2string(id.version) << "', "
-        << "'" << DEVEUI2string(id.appEUI) << "', "
-        << "'" << KEY2string(id.appKey) << "', "
-        << "'" << KEY2string(id.nwkKey) << "', "
-        << "'" << DEVNONCE2string(id.devNonce) << "', "
-        << "'" << JOINNONCE2string(id.joinNonce) << "', "
-        << "'" << DEVICENAME2string(id.name)
+        << "'" << activation2string(id.id.activation) << "', "
+        << "'" << deviceclass2string(id.id.deviceclass) << "', "
+        << "'" << DEVEUI2string(id.id.devEUI) << "', "
+        << "'" << KEY2string(id.id.nwkSKey) << "', "
+        << "'" << KEY2string(id.id.appSKey) << "', "
+        << "'" << LORAWAN_VERSION2string(id.id.version) << "', "
+        << "'" << DEVEUI2string(id.id.appEUI) << "', "
+        << "'" << KEY2string(id.id.appKey) << "', "
+        << "'" << KEY2string(id.id.nwkKey) << "', "
+        << "'" << DEVNONCE2string(id.id.devNonce) << "', "
+        << "'" << JOINNONCE2string(id.id.joinNonce) << "', "
+        << "'" << DEVICENAME2string(id.id.name)
         << "') ON CONFLICT(addr) DO UPDATE SET "
         "activation=excluded.activation, class=excluded.class, deveui=excluded.deveui, "
         "nwkskey=excluded.nwkskey, appskey=excluded.appskey, version=excluded.version, "
@@ -330,8 +330,8 @@ void SqliteIdentityService::setOption(
 int SqliteIdentityService::cGet(const DEVADDR &request)
 {
     IdentityGetResponse r;
-    r.response.devaddr = request;
-    get(r.response.devid, request);
+    r.response.value.devaddr = request;
+    get(r.response.value.devid, request);
     if (responseClient)
         responseClient->onIdentityGet(nullptr, &r);
     return CODE_OK;
@@ -426,8 +426,8 @@ int SqliteIdentityService::filter(
         if (row.size() < 2)
             continue;
         NETWORKIDENTITY ni;
-        row2DEVICEID(ni.devid, row);
-        ni.devaddr = row[0];
+        row2DEVICEID(ni.value.devid, row);
+        ni.value.devaddr = row[0];
         retVal.push_back(ni);
     }
     return CODE_OK;

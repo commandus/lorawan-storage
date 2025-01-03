@@ -87,6 +87,7 @@ void testLmdb()
         return;
     c_put(o, &devAddr, &devId);
     memset(&devId, 0, sizeof(devId));
+
     c_get(o, &devId, &devAddr);
 
     C_NETWORKIDENTITY nis[2];

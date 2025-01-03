@@ -62,9 +62,9 @@ public:
             << _("offset: ") << std::dec << offset << _(", size: ")  << (int) size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
-                if (!it.nid.devaddr.empty())
-                    ss << DEVADDR2string(it.nid.devaddr);
-                ss << "\t" << it.nid.devid.toString() << "\n";
+                if (!it.nid.value.devaddr.empty())
+                    ss << DEVADDR2string(it.nid.value.devaddr);
+                ss << "\t" << it.nid.value.devid.toString() << "\n";
             }
             if (it.hasGateway) {
                 if (it.gid.gatewayId)
@@ -105,7 +105,7 @@ public:
         const IdentityGetResponse *response
     ) override {
         if (response) {
-            if (!response->response.devid.empty()) {
+            if (!response->response.value.devid.empty()) {
                 if (params.verbose)
                     std::cout << response->toJsonString() << std::endl;
                 else
@@ -263,17 +263,17 @@ public:
                     req = new IdentityAssignRequest(params.tag, id.nid, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_RM:
-                    req = new IdentityAddrRequest(params.tag, id.nid.devaddr, params.code, params.accessCode);
+                    req = new IdentityAddrRequest(params.tag, id.nid.value.devaddr, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_FORCE_SAVE:
                     break;
                 case QUERY_IDENTITY_CLOSE_RESOURCES:
                     break;
                 case QUERY_IDENTITY_EUI:
-                    req = new IdentityAddrRequest(QUERY_IDENTITY_EUI, id.nid.devaddr, params.code, params.accessCode);
+                    req = new IdentityAddrRequest(QUERY_IDENTITY_EUI, id.nid.value.devaddr, params.code, params.accessCode);
                     break;
                 case QUERY_IDENTITY_ADDR:
-                    req = new IdentityEUIRequest(params.tag, id.nid.devid.devEUI, params.code, params.accessCode);
+                    req = new IdentityEUIRequest(params.tag, id.nid.value.devid.id.devEUI, params.code, params.accessCode);
                     break;
                 // gateway
                 case QUERY_GATEWAY_LIST:
@@ -395,10 +395,10 @@ int main(int argc, char **argv) {
             id.hasDevice = true;
             switch (params.tag) {
                 case QUERY_IDENTITY_ADDR:
-                    string2DEVEUI(id.nid.devid.devEUI, a_query->sval[i]);
+                    string2DEVEUI(id.nid.value.devid.id.devEUI, a_query->sval[i]);
                     break;
                 case QUERY_IDENTITY_EUI:
-                    string2DEVADDR(id.nid.devaddr, a_query->sval[i]);
+                    string2DEVADDR(id.nid.value.devaddr, a_query->sval[i]);
                     break;
                 default:
                     if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {

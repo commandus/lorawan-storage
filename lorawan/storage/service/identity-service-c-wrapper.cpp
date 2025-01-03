@@ -77,18 +77,18 @@ static void DEVICEID2C_DEVICEID(
     const DEVICEID &did
 )
 {
-    retVal->activation = did.activation;
-    retVal->deviceclass = did.deviceclass;
-    retVal->devEUI = did.devEUI.u;
-    memmove(&retVal->nwkSKey, &did.nwkSKey, sizeof(KEY128));
-    memmove(&retVal->appSKey, &did.appSKey, sizeof(KEY128));
-    retVal->version = did.version.c;
-    retVal->appEUI = did.appEUI.u;
-    memmove(&retVal->appKey, &did.appKey, sizeof(KEY128));
-    memmove(&retVal->nwkKey, &did.nwkKey, sizeof(KEY128));
-    retVal->devNonce = did.devNonce.u;
-    memmove(&retVal->joinNonce, &did.joinNonce, sizeof(C_JOINNONCE));
-    memmove(&retVal->name, &did.name, sizeof(C_DEVICENAME));
+    retVal->activation = did.id.activation;
+    retVal->deviceclass = did.id.deviceclass;
+    retVal->devEUI = did.id.devEUI.u;
+    memmove(&retVal->nwkSKey, &did.id.nwkSKey, sizeof(KEY128));
+    memmove(&retVal->appSKey, &did.id.appSKey, sizeof(KEY128));
+    retVal->version = did.id.version.c;
+    retVal->appEUI = did.id.appEUI.u;
+    memmove(&retVal->appKey, &did.id.appKey, sizeof(KEY128));
+    memmove(&retVal->nwkKey, &did.id.nwkKey, sizeof(KEY128));
+    retVal->devNonce = did.id.devNonce.u;
+    memmove(&retVal->joinNonce, &did.id.joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal->name, &did.id.name, sizeof(C_DEVICENAME));
 }
 
 static void NETWORKIDENTITY2C_NETWORKIDENTITY(
@@ -96,19 +96,19 @@ static void NETWORKIDENTITY2C_NETWORKIDENTITY(
     const NETWORKIDENTITY &nid
 )
 {
-    retVal->devaddr = nid.devaddr.u;
-    retVal->devid.activation = nid.devid.activation;
-    retVal->devid.deviceclass = nid.devid.deviceclass;
-    retVal->devid.devEUI = nid.devid.devEUI.u;
-    memmove(&retVal->devid.nwkSKey, &nid.devid.nwkSKey, sizeof(KEY128));
-    memmove(&retVal->devid.appSKey, &nid.devid.appSKey, sizeof(KEY128));
-    retVal->devid.version = nid.devid.version.c;
-    retVal->devid.appEUI = nid.devid.appEUI.u;
-    memmove(&retVal->devid.appKey, &nid.devid.appKey, sizeof(KEY128));
-    memmove(&retVal->devid.nwkKey, &nid.devid.nwkKey, sizeof(KEY128));
-    retVal->devid.devNonce = nid.devid.devNonce.u;
-    memmove(&retVal->devid.joinNonce, &nid.devid.joinNonce, sizeof(C_JOINNONCE));
-    memmove(&retVal->devid.name, &nid.devid.name, sizeof(C_DEVICENAME));
+    retVal->devaddr = nid.value.devaddr.u;
+    retVal->devid.activation = nid.value.devid.id.activation;
+    retVal->devid.deviceclass = nid.value.devid.id.deviceclass;
+    retVal->devid.devEUI = nid.value.devid.id.devEUI.u;
+    memmove(&retVal->devid.nwkSKey, &nid.value.devid.id.nwkSKey, sizeof(KEY128));
+    memmove(&retVal->devid.appSKey, &nid.value.devid.id.appSKey, sizeof(KEY128));
+    retVal->devid.version = nid.value.devid.id.version.c;
+    retVal->devid.appEUI = nid.value.devid.id.appEUI.u;
+    memmove(&retVal->devid.appKey, &nid.value.devid.id.appKey, sizeof(KEY128));
+    memmove(&retVal->devid.nwkKey, &nid.value.devid.id.nwkKey, sizeof(KEY128));
+    retVal->devid.devNonce = nid.value.devid.id.devNonce.u;
+    memmove(&retVal->devid.joinNonce, &nid.value.devid.id.joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal->devid.name, &nid.value.devid.id.name, sizeof(C_DEVICENAME));
 }
 
 static void C_NETWORKIDENTITY2NETWORKIDENTITY(
@@ -116,19 +116,19 @@ static void C_NETWORKIDENTITY2NETWORKIDENTITY(
     C_NETWORKIDENTITY *nid
 )
 {
-    retVal.devaddr.u = nid->devaddr;
-    retVal.devid.activation = (ACTIVATION) nid->devid.activation;
-    retVal.devid.deviceclass = (DEVICECLASS) nid->devid.deviceclass;
-    retVal.devid.devEUI.u = nid->devid.devEUI;
-    memmove(&retVal.devid.nwkSKey, &nid->devid.nwkSKey, sizeof(KEY128));
-    memmove(&retVal.devid.appSKey, &nid->devid.appSKey, sizeof(KEY128));
-    retVal.devid.version.c = nid->devid.version;
-    retVal.devid.appEUI.u = nid->devid.appEUI;
-    memmove(&retVal.devid.appKey, &nid->devid.appKey, sizeof(KEY128));
-    memmove(&retVal.devid.nwkKey, &nid->devid.nwkKey, sizeof(KEY128));
-    retVal.devid.devNonce.u = nid->devid.devNonce;
-    memmove(&retVal.devid.joinNonce, &nid->devid.joinNonce, sizeof(C_JOINNONCE));
-    memmove(&retVal.devid.name, &nid->devid.name, sizeof(C_DEVICENAME));
+    retVal.value.devaddr.u = nid->devaddr;
+    retVal.value.devid.id.activation = (ACTIVATION) nid->devid.activation;
+    retVal.value.devid.id.deviceclass = (DEVICECLASS) nid->devid.deviceclass;
+    retVal.value.devid.id.devEUI.u = nid->devid.devEUI;
+    memmove(&retVal.value.devid.id.nwkSKey, &nid->devid.nwkSKey, sizeof(KEY128));
+    memmove(&retVal.value.devid.id.appSKey, &nid->devid.appSKey, sizeof(KEY128));
+    retVal.value.devid.id.version.c = nid->devid.version;
+    retVal.value.devid.id.appEUI.u = nid->devid.appEUI;
+    memmove(&retVal.value.devid.id.appKey, &nid->devid.appKey, sizeof(KEY128));
+    memmove(&retVal.value.devid.id.nwkKey, &nid->devid.nwkKey, sizeof(KEY128));
+    retVal.value.devid.id.devNonce.u = nid->devid.devNonce;
+    memmove(&retVal.value.devid.id.joinNonce, &nid->devid.joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal.value.devid.id.name, &nid->devid.name, sizeof(C_DEVICENAME));
 }
 
 static void C_NETWORK_IDENTITY_FILTER2NETWORK_IDENTITY_FILTER(
@@ -229,7 +229,7 @@ EXPORT_SHARED_C_FUNC int c_list(
     int r = ((IdentityService *) o)->list(v, offset, size);
     if (r >= 0) {
         for (auto i = 0; i < v.size(); i++) {
-            retVal[i].devaddr = v[i].devaddr.u;
+            retVal[i].devaddr = v[i].value.devaddr.u;
             NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
         }
     }
@@ -254,7 +254,7 @@ EXPORT_SHARED_C_FUNC int c_filter(
     }
     int r = ((IdentityService *) o)->filter(v, f, offset, size);
     for(auto i = 0; i < v.size(); i++) {
-        retVal[i].devaddr = v[i].devaddr.u;
+        retVal[i].devaddr = v[i].value.devaddr.u;
         NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
 
     }
@@ -276,7 +276,7 @@ EXPORT_SHARED_C_FUNC int c_filterExpression(
     string2NETWORK_IDENTITY_FILTERS(f, filterExpression, filterExpressionSize);
     int r = ((IdentityService *) o)->filter(v, f, offset, size);
     for(auto i = 0; i < v.size(); i++) {
-        retVal[i].devaddr = v[i].devaddr.u;
+        retVal[i].devaddr = v[i].value.devaddr.u;
         NETWORKIDENTITY2C_NETWORKIDENTITY(&retVal[i], v[i]);
     }
     return r < 0 ? r : (int) v.size();

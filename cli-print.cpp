@@ -136,7 +136,7 @@ public:
         const IdentityGetResponse *response
     ) override {
         if (response) {
-            if (!response->response.devid.empty())
+            if (!response->response.value.devid.empty())
                 promiseResponse.set_value(response);
             else
                 promiseResponse.set_value(nullptr);
@@ -288,9 +288,9 @@ static void printPacket(
                         << DLMT << _("fcnt: ") << (int) rfm->fhdr.fcnt
                         << DLMT << _("direction: ") << (int) (rfm->macheader.f.mtype & 1)
                         << DLMT << _("devAddr: ") << DEVADDR2string(rfm->fhdr.devaddr)
-                        << DLMT << _("appSKey: ") << KEY2string(deviceId.appSKey);
-                    decryptPayloadString(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
-                    strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
+                        << DLMT << _("appSKey: ") << KEY2string(deviceId.id.appSKey);
+                    decryptPayloadString(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.id.appSKey);
+                    strm << DLMT << DEVEUI2string(deviceId.id.devEUI) << DLMT
                          << hexString(pld);
                 } else
                     strm << DLMT << _("n/a") << DLMT << hexString(pld);
@@ -321,8 +321,8 @@ static void printPacket(
             DEVICEID deviceId;
             std::string pld(pl, sz - (pl - (char *) rfm) - SIZE_MIC);
             if (getDeviceByAddr(deviceId, rfm->fhdr.devaddr)) {
-                decryptPayloadString(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.appSKey);
-                strm << DLMT << DEVEUI2string(deviceId.devEUI) << DLMT
+                decryptPayloadString(pld, rfm->fhdr.fcnt, rfm->macheader.f.mtype & 1, rfm->fhdr.devaddr, deviceId.id.appSKey);
+                strm << DLMT << DEVEUI2string(deviceId.id.devEUI) << DLMT
                      << hexString(pld);
             } else
                 strm << DLMT << _("n/a") << DLMT << hexString(pld);

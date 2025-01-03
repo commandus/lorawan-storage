@@ -49,7 +49,7 @@ public:
         const IdentityGetResponse *response
     ) override {
         if (response) {
-            if (!response->response.devid.empty()) {
+            if (!response->response.value.devid.empty()) {
                 if (svc->verbose)
                     std::cout << response->toJsonString() << std::endl;
                 else

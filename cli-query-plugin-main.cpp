@@ -67,9 +67,9 @@ public:
             << _(", offset: ") << std::dec << offset << _(", size: ")  << (int) size << "\n";
         for (auto & it : query) {
             if (it.hasDevice) {
-                if (!it.nid.devaddr.empty())
-                    ss << DEVADDR2string(it.nid.devaddr);
-                ss << "\t" << it.nid.devid.toString() << "\n";
+                if (!it.nid.value.devaddr.empty())
+                    ss << DEVADDR2string(it.nid.value.devaddr);
+                ss << "\t" << it.nid.value.devid.toString() << "\n";
             }
             if (it.hasGateway) {
                 if (it.gid.gatewayId)
@@ -133,8 +133,8 @@ static void run()
                     std::cout << it.toJsonString();
                 else
                     std::cout
-                        << DEVADDR2string(it.devaddr) << "\t"
-                        << it.devid.toString()
+                        << DEVADDR2string(it.value.devaddr) << "\t"
+                        << it.value.devid.toString()
                         << "\n";
             }
             if (params.verbose > 0)
@@ -148,17 +148,17 @@ static void run()
         case QUERY_IDENTITY_NEXT: {
             NETWORKIDENTITY ni;
             c->svcIdentity->next(ni);
-            std::cout << DEVADDR2string(ni.devaddr) << std::endl;
+            std::cout << DEVADDR2string(ni.value.devaddr) << std::endl;
         }
             break;
         case QUERY_IDENTITY_ASSIGN:
             for (auto &it: params.query) {
-                c->svcIdentity->put(it.nid.devaddr, it.nid.devid);
+                c->svcIdentity->put(it.nid.value.devaddr, it.nid.value.devid);
             }
             break;
         case QUERY_IDENTITY_RM:
             for (auto &it: params.query) {
-                c->svcIdentity->rm(it.nid.devaddr);
+                c->svcIdentity->rm(it.nid.value.devaddr);
             }
             break;
         case QUERY_IDENTITY_FORCE_SAVE:
@@ -203,10 +203,10 @@ static void run()
         case QUERY_GATEWAY_ADDR:
             for (auto &it: params.query) {
                 if (it.hasDevice) {
-                    c->svcIdentity->get(it.nid.devid, it.nid.devaddr);
-                    if (!it.nid.devaddr.empty())
-                        std::cout << DEVADDR2string(it.nid.devaddr);
-                    std::cout << "\t" << it.nid.devid.toString() << "\n";
+                    c->svcIdentity->get(it.nid.value.devid, it.nid.value.devaddr);
+                    if (!it.nid.value.devaddr.empty())
+                        std::cout << DEVADDR2string(it.nid.value.devaddr);
+                    std::cout << "\t" << it.nid.value.devid.toString() << "\n";
                 }
                 if (it.hasGateway) {
                     c->svcGateway->get(it.gid, it.gid);
@@ -302,10 +302,10 @@ int main(int argc, char **argv) {
             id.hasDevice = true;
             switch (params.tag) {
                 case QUERY_IDENTITY_ADDR:
-                    string2DEVEUI(id.nid.devid.devEUI, a_query->sval[i]);
+                    string2DEVEUI(id.nid.value.devid.id.devEUI, a_query->sval[i]);
                     break;
                 case QUERY_IDENTITY_EUI:
-                    string2DEVADDR(id.nid.devaddr, a_query->sval[i]);
+                    string2DEVADDR(id.nid.value.devaddr, a_query->sval[i]);
                     break;
                 default:
                     if (!string2NETWORKIDENTITY(id.nid, a_query->sval[i])) {

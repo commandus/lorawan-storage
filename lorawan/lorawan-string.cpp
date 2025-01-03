@@ -916,43 +916,43 @@ static void setIdentity(
     std::string s(start, finish - start);
     switch (property) {
         case NIP_ADDRESS:
-            string2DEVADDR(retVal.devaddr, s);
+            string2DEVADDR(retVal.value.devaddr, s);
             break;
         case NIP_ACTIVATION:
-            retVal.devid.activation = string2activation(s);
+            retVal.value.devid.id.activation = string2activation(s);
             break;
         case NIP_DEVICE_CLASS:
-            retVal.devid.deviceclass = string2deviceclass(s);
+            retVal.value.devid.id.deviceclass = string2deviceclass(s);
             break;
         case NIP_DEVEUI:
-            string2DEVEUI(retVal.devid.devEUI, s);
+            string2DEVEUI(retVal.value.devid.id.devEUI, s);
             break;
         case NIP_NWKSKEY:
-            string2KEY(retVal.devid.nwkSKey, s);
+            string2KEY(retVal.value.devid.id.nwkSKey, s);
             break;
         case NIP_APPSKEY:
-            string2KEY(retVal.devid.appSKey, s);
+            string2KEY(retVal.value.devid.id.appSKey, s);
             break;
         case NIP_LORAWAN_VERSION:
-            retVal.devid.version = string2LORAWAN_VERSION(s);
+            retVal.value.devid.id.version = string2LORAWAN_VERSION(s);
             break;
         case NIP_APPEUI:
-            string2DEVEUI(retVal.devid.appEUI, s);
+            string2DEVEUI(retVal.value.devid.id.appEUI, s);
             break;
         case NIP_APPKEY:
-            string2KEY(retVal.devid.appKey, s);
+            string2KEY(retVal.value.devid.id.appKey, s);
             break;
         case NIP_NWKKEY:
-            string2KEY(retVal.devid.nwkKey, s);
+            string2KEY(retVal.value.devid.id.nwkKey, s);
             break;
         case NIP_DEVNONCE:
-            retVal.devid.devNonce = string2DEVNONCE(s);
+            retVal.value.devid.id.devNonce = string2DEVNONCE(s);
             break;
         case NIP_JOINNONCE:
-            string2JOINNONCE(retVal.devid.joinNonce, s);
+            string2JOINNONCE(retVal.value.devid.id.joinNonce, s);
             break;
         case NIP_DEVICENAME:
-            string2DEVICENAME(retVal.devid.name, s.c_str());
+            string2DEVICENAME(retVal.value.devid.id.name, s.c_str());
             break;
         default:
             break;
@@ -1127,7 +1127,7 @@ std::string datr2string(
  * @param LoRa LoRa ECC coding rate identifier e.g. "4/6"
  */
 CODING_RATE string2codingRate(
-        const std::string &value
+    const std::string &value
 )
 {
     size_t sz = value.size();

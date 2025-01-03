@@ -188,7 +188,7 @@ size_t IdentityTextJSONSerialization::query(
             if (js.contains("activation")) {
                 auto jsv = js["activation"];
                 if (jsv.is_string())
-                    deviceId.activation = string2activation(jsv);
+                    deviceId.id.activation = string2activation(jsv);
             }
 
             if (js.contains("class")) {
@@ -200,61 +200,61 @@ size_t IdentityTextJSONSerialization::query(
             if (js.contains("deveui")) {
                 auto jsv = js["deveui"];
                 if (jsv.is_string())
-                    string2DEVEUI(deviceId.devEUI, jsv);
+                    string2DEVEUI(deviceId.id.devEUI, jsv);
             }
 
             if (js.contains("nwkSKey")) {
                 auto jsv = js["nwkSKey"];
                 if (jsv.is_string())
-                    string2KEY(deviceId.nwkSKey, jsv);
+                    string2KEY(deviceId.id.nwkSKey, jsv);
             }
             if (js.contains("appSKey")) {
                 auto jsv = js["appSKey"];
                 if (jsv.is_string())
-                    string2KEY(deviceId.appSKey, jsv);
+                    string2KEY(deviceId.id.appSKey, jsv);
             }
 
             if (js.contains("version")) {
                 auto jsv = js["version"];
                 if (jsv.is_string())
-                    deviceId.version = string2LORAWAN_VERSION(jsv);
+                    deviceId.id.version = string2LORAWAN_VERSION(jsv);
             }
 
             if (js.contains("appeui")) {
                 auto jsv = js["appeui"];
                 if (jsv.is_string())
-                    string2DEVEUI(deviceId.appEUI, jsv);
+                    string2DEVEUI(deviceId.id.appEUI, jsv);
             }
 
             if (js.contains("appKey")) {
                 auto jsv = js["appKey"];
                 if (jsv.is_string())
-                    string2KEY(deviceId.appKey, jsv);
+                    string2KEY(deviceId.id.appKey, jsv);
             }
 
             if (js.contains("nwkKey")) {
                 auto jsv = js["nwkKey"];
                 if (jsv.is_string())
-                    string2KEY(deviceId.nwkKey, jsv);
+                    string2KEY(deviceId.id.nwkKey, jsv);
             }
 
             if (js.contains("devNonce")) {
                 auto jsv = js["devNonce"];
                 if (jsv.is_string())
-                    deviceId.devNonce = string2DEVNONCE(jsv);
+                    deviceId.id.devNonce = string2DEVNONCE(jsv);
             }
 
             if (js.contains("joinNonce")) {
                 auto jsv = js["joinNonce"];
                 if (jsv.is_string())
-                    string2JOINNONCE(deviceId.joinNonce, jsv);
+                    string2JOINNONCE(deviceId.id.joinNonce, jsv);
             }
 
             if (js.contains("name")) {
                 auto jsv = js["name"];
                 if (jsv.is_string()) {
                     std::string s(jsv);
-                    string2DEVICENAME(deviceId.name, s.c_str());
+                    string2DEVICENAME(deviceId.id.name, s.c_str());
                 }
             }
 

@@ -57,22 +57,22 @@ int GenIdentityService::get(
     const DEVADDR &devaddr
 )
 {
-    retval.activation = ABP;	///< activation type: ABP or OTAA
-    retval.deviceclass = CLASS_A;
-    euiGen((uint8_t *) &retval.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, devaddr.u);
-    keyGen((uint8_t *) &retval.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, devaddr.u);
+    retval.id.activation = ABP;	///< activation type: ABP or OTAA
+    retval.id.deviceclass = CLASS_A;
+    euiGen((uint8_t *) &retval.id.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, devaddr.u);
+    keyGen((uint8_t *) &retval.id.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, devaddr.u);
 
-    keyGen((uint8_t *) &retval.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, devaddr.u);
-    keyGen((uint8_t *) &retval.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, devaddr.u);
+    keyGen((uint8_t *) &retval.id.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, devaddr.u);
+    keyGen((uint8_t *) &retval.id.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, devaddr.u);
 
-    retval.joinNonce = {};
-    retval.devNonce = {};
+    retval.id.joinNonce = {};
+    retval.id.devNonce = {};
 
-    deriveOptNegFNwkSIntKey(retval.nwkSKey, key, retval.appEUI, retval.joinNonce, retval.devNonce);
-    deriveOptNegFNwkSIntKey(retval.appSKey, key, retval.appEUI, retval.joinNonce, retval.devNonce);
+    deriveOptNegFNwkSIntKey(retval.id.nwkSKey, key, retval.id.appEUI, retval.id.joinNonce, retval.id.devNonce);
+    deriveOptNegFNwkSIntKey(retval.id.appSKey, key, retval.id.appEUI, retval.id.joinNonce, retval.id.devNonce);
 
-    retval.version = { 1, 0, 0 };
-    string2DEVICENAME(retval.name, DEVADDR2string(devaddr).c_str());
+    retval.id.version = { 1, 0, 0 };
+    string2DEVICENAME(retval.id.name, DEVADDR2string(devaddr).c_str());
 #ifdef ENABLE_DEBUG
         std::cerr << "get " << DEVADDR2string(devaddr)
             << std::endl;
@@ -98,22 +98,22 @@ void GenIdentityService::gen(
     uint32_t nwkAddr
 )
 {
-    retVal.devaddr = DEVADDR(netid, nwkAddr);
+    retVal.value.devaddr = DEVADDR(netid, nwkAddr);
 
-    euiGen((uint8_t *) &retVal.devid.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, retVal.devaddr.u);
-    keyGen((uint8_t *) &retVal.devid.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, retVal.devaddr.u);
+    euiGen((uint8_t *) &retVal.value.devid.id.devEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, retVal.value.devaddr.u);
+    keyGen((uint8_t *) &retVal.value.devid.id.appEUI.c, KEY_NUMBER_EUI, (uint8_t *) &key.c, retVal.value.devaddr.u);
 
-    keyGen((uint8_t *) &retVal.devid.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, retVal.devaddr.u);
-    keyGen((uint8_t *) &retVal.devid.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, retVal.devaddr.u);
+    keyGen((uint8_t *) &retVal.value.devid.id.nwkKey.c, KEY_NUMBER_NWK, (uint8_t *) &key.c, retVal.value.devaddr.u);
+    keyGen((uint8_t *) &retVal.value.devid.id.appKey.c, KEY_NUMBER_APP, (uint8_t *) &key.c, retVal.value.devaddr.u);
 
-    retVal.devid.joinNonce = {};
-    retVal.devid.devNonce = {};
+    retVal.value.devid.id.joinNonce = {};
+    retVal.value.devid.id.devNonce = {};
 
-    deriveOptNegFNwkSIntKey(retVal.devid.nwkSKey, retVal.devid.nwkKey, retVal.devid.appEUI, retVal.devid.joinNonce, retVal.devid.devNonce);
-    deriveOptNegFNwkSIntKey(retVal.devid.appSKey, retVal.devid.appKey, retVal.devid.appEUI, retVal.devid.joinNonce, retVal.devid.devNonce);
+    deriveOptNegFNwkSIntKey(retVal.value.devid.id.nwkSKey, retVal.value.devid.id.nwkKey, retVal.value.devid.id.appEUI, retVal.value.devid.id.joinNonce, retVal.value.devid.id.devNonce);
+    deriveOptNegFNwkSIntKey(retVal.value.devid.id.appSKey, retVal.value.devid.id.appKey, retVal.value.devid.id.appEUI, retVal.value.devid.id.joinNonce, retVal.value.devid.id.devNonce);
 
-    retVal.devid.version = {1, 0, 0 };
-    string2DEVICENAME(retVal.devid.name, DEVADDR2string(retVal.devaddr).c_str());
+    retVal.value.devid.id.version = {1, 0, 0 };
+    string2DEVICENAME(retVal.value.devid.id.name, DEVADDR2string(retVal.value.devaddr).c_str());
 }
 
 // List entries
@@ -217,8 +217,8 @@ void GenIdentityService::setOption(
 int GenIdentityService::cGet(const DEVADDR &request)
 {
     IdentityGetResponse r;
-    r.response.devaddr = request;
-    get(r.response.devid, request);
+    r.response.value.devaddr = request;
+    get(r.response.value.devid, request);
     if (responseClient)
         responseClient->onIdentityGet(nullptr, &r);
     return CODE_OK;

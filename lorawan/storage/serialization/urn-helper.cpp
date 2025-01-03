@@ -45,10 +45,10 @@ bool LorawanIdentificationURN::parseToken(
                 return false;
             break;
         case 2:
-            string2DEVEUI(networkIdentity.devid.appEUI, token);
+            string2DEVEUI(networkIdentity.value.devid.id.appEUI, token);
             break;
         case 3:
-            string2DEVEUI(networkIdentity.devid.devEUI, token);
+            string2DEVEUI(networkIdentity.value.devid.id.devEUI, token);
             break;
         default:
             // optional
@@ -69,34 +69,34 @@ bool LorawanIdentificationURN::parseToken(
                         return false;
                     switch (token[1]) {
                         case 'D':    // device address
-                            string2DEVADDR(networkIdentity.devaddr, token.substr(2));
+                            string2DEVADDR(networkIdentity.value.devaddr, token.substr(2));
                             break;
                         case 'T':    // activation
-                            networkIdentity.devid.activation = string2activation(token.substr(2));
+                            networkIdentity.value.devid.id.activation = string2activation(token.substr(2));
                             break;
                         case 'C':     // device class
-                            networkIdentity.devid.setClass(string2deviceclass(token.substr(2)));
+                            networkIdentity.value.devid.setClass(string2deviceclass(token.substr(2)));
                             break;
                         case 'W':     // nwkSKey
-                            string2KEY(networkIdentity.devid.nwkSKey, token.substr(2));
+                            string2KEY(networkIdentity.value.devid.id.nwkSKey, token.substr(2));
                             break;
                         case 'S':    // appSKey
-                            string2KEY(networkIdentity.devid.appSKey, token.substr(2));
+                            string2KEY(networkIdentity.value.devid.id.appSKey, token.substr(2));
                             break;
                         case 'V':    // LoRaWAN version
-                            networkIdentity.devid.version = string2LORAWAN_VERSION(token.substr(2));
+                            networkIdentity.value.devid.id.version = string2LORAWAN_VERSION(token.substr(2));
                             break;
                         case 'A':    // appKey
-                            string2KEY(networkIdentity.devid.appKey, token.substr(2));
+                            string2KEY(networkIdentity.value.devid.id.appKey, token.substr(2));
                             break;
                         case 'N':    // nwkKey
-                            string2KEY(networkIdentity.devid.nwkKey, token.substr(2));
+                            string2KEY(networkIdentity.value.devid.id.nwkKey, token.substr(2));
                             break;
                         case 'O':    // devNonce
-                            networkIdentity.devid.devNonce = string2DEVNONCE(token.substr(2));
+                            networkIdentity.value.devid.id.devNonce = string2DEVNONCE(token.substr(2));
                             break;
                         case 'J':    // joinNonce
-                            string2JOINNONCE(networkIdentity.devid.joinNonce, token.substr(2));
+                            string2JOINNONCE(networkIdentity.value.devid.id.joinNonce, token.substr(2));
                             break;
                         case 'X':     // 'command': 'A', 'I', 'L', 'C', 'N', 'P', 'R', 'S', 'E'
                             if (token.size() > 1)
@@ -188,25 +188,25 @@ std::string NETWORKIDENTITY2URN(
     const std::vector<std::string> *extraProprietary
 )
 {
-    PROFILEID pid(DEVICENAME2string(networkIdentity.devid.name));
+    PROFILEID pid(DEVICENAME2string(networkIdentity.value.devid.id.name));
     std::vector<std::string> proprietary;
     if (extraProprietary) {
         proprietary = *extraProprietary;
     }
     if (addProprietary) {
-        proprietary.push_back("D" + DEVADDR2string(networkIdentity.devaddr));
-        proprietary.push_back("T" + activation2string(networkIdentity.devid.activation));
-        proprietary.push_back("C" + deviceclass2string(networkIdentity.devid.deviceclass));
-        proprietary.push_back("W" + KEY2string(networkIdentity.devid.nwkSKey));
-        proprietary.push_back("S" + KEY2string(networkIdentity.devid.appSKey));
-        proprietary.push_back("V" + LORAWAN_VERSION2string(networkIdentity.devid.version));
-        proprietary.push_back("A" + KEY2string(networkIdentity.devid.appKey));
-        proprietary.push_back("N" + KEY2string(networkIdentity.devid.nwkKey));
-        proprietary.push_back("O" + DEVNONCE2string(networkIdentity.devid.devNonce));
-        proprietary.push_back("J" + JOINNONCE2string(networkIdentity.devid.joinNonce));
+        proprietary.push_back("D" + DEVADDR2string(networkIdentity.value.devaddr));
+        proprietary.push_back("T" + activation2string(networkIdentity.value.devid.id.activation));
+        proprietary.push_back("C" + deviceclass2string(networkIdentity.value.devid.id.deviceclass));
+        proprietary.push_back("W" + KEY2string(networkIdentity.value.devid.id.nwkSKey));
+        proprietary.push_back("S" + KEY2string(networkIdentity.value.devid.id.appSKey));
+        proprietary.push_back("V" + LORAWAN_VERSION2string(networkIdentity.value.devid.id.version));
+        proprietary.push_back("A" + KEY2string(networkIdentity.value.devid.id.appKey));
+        proprietary.push_back("N" + KEY2string(networkIdentity.value.devid.id.nwkKey));
+        proprietary.push_back("O" + DEVNONCE2string(networkIdentity.value.devid.id.devNonce));
+        proprietary.push_back("J" + JOINNONCE2string(networkIdentity.value.devid.id.joinNonce));
     }
 
-    return mkURN(networkIdentity.devid.appEUI, networkIdentity.devid.devEUI, pid,
+    return mkURN(networkIdentity.value.devid.id.appEUI, networkIdentity.value.devid.id.devEUI, pid,
           ownerToken, serialNumber, &proprietary, addCheckSum);
 }
 

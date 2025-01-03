@@ -74,9 +74,9 @@ int MemoryIdentityService::getNetworkIdentity(
 )
 {
     for(auto & it : storage) {
-        if (it.second.devEUI.u == eui.u) {
-            retVal.devaddr = it.first;
-            retVal.devid = it.second;
+        if (it.second.id.devEUI.u == eui.u) {
+            retVal.value.devaddr = it.first;
+            retVal.value.devid = it.second;
             return CODE_OK;
         }
     }
@@ -156,8 +156,8 @@ EXPORT_SHARED_C_FUNC IdentityService* makeMemoryIdentityService()
 int MemoryIdentityService::cGet(const DEVADDR &request)
 {
     IdentityGetResponse r;
-    r.response.devaddr = request;
-    get(r.response.devid, request);
+    r.response.value.devaddr = request;
+    get(r.response.value.devid, request);
     if (responseClient)
         responseClient->onIdentityGet(nullptr, &r);
     return CODE_OK;

@@ -11,8 +11,8 @@ NetworkIdentity::NetworkIdentity(
 	const DEVADDR &a,
 	const DEVICEID &value
 )
-    :   devaddr(a.u), activation(value.activation), deviceclass(value.deviceclass),
-        devEUI(value.devEUI), nwkSKey(value.nwkSKey), appSKey(value.appSKey), name(value.name)
+    :   devaddr(a.u), activation(value.id.activation), deviceclass(value.id.deviceclass),
+        devEUI(value.id.devEUI), nwkSKey(value.id.nwkSKey), appSKey(value.id.appSKey), name(value.id.name)
 {
 }
 
@@ -20,8 +20,8 @@ NetworkIdentity::NetworkIdentity
 (
 	const DEVICEID &value
 )
-    : devaddr(0), activation(value.activation), deviceclass(value.deviceclass),
-          devEUI(value.devEUI), nwkSKey(value.nwkSKey), appSKey(value.appSKey), name(value.name)
+    : devaddr(0), activation(value.id.activation), deviceclass(value.id.deviceclass),
+          devEUI(value.id.devEUI), nwkSKey(value.id.nwkSKey), appSKey(value.id.appSKey), name(value.id.name)
 {
 }
 
@@ -29,12 +29,12 @@ NetworkIdentity& NetworkIdentity::operator=(
     const DEVICEID& value
 )
 {
-    activation = value.activation;
-    deviceclass = value.deviceclass;
-    devEUI = value.devEUI;
-    nwkSKey = value.nwkSKey;
-    appSKey = value.appSKey;
-    name = value.name;
+    activation = value.id.activation;
+    deviceclass = value.id.deviceclass;
+    devEUI = value.id.devEUI;
+    nwkSKey = value.id.nwkSKey;
+    appSKey = value.id.appSKey;
+    name = value.id.name;
     return *this;
 }
 
@@ -83,18 +83,18 @@ void NetworkIdentity::set(
 )
 {
 	memmove(&devaddr.u, &addr.u, sizeof(DEVADDR));
-	memmove(&activation, &value.activation, sizeof(activation));
-	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-	memmove(&devEUI, &value.devEUI, sizeof(DEVEUI));
-	memmove(&nwkSKey.c, &value.nwkSKey.c, sizeof(KEY128));
-	memmove(&appSKey.c, &value.appSKey.c, sizeof(KEY128));
-	memmove(&appEUI, &value.appEUI, sizeof(DEVEUI));
-	memmove(&appKey.c, &value.appKey.c, sizeof(KEY128));
-	memmove(&nwkKey.c, &value.nwkKey.c, sizeof(KEY128));
-	devNonce = value.devNonce;
-	memmove(&joinNonce, &value.joinNonce, sizeof(JOINNONCE));
-	memmove(&name, &value.name, sizeof(DEVICENAME));
-	memmove(&version, &value.version, sizeof(LORAWAN_VERSION));
+	memmove(&activation, &value.id.activation, sizeof(activation));
+	memmove(&deviceclass, &value.id.deviceclass, sizeof(deviceclass));
+	memmove(&devEUI, &value.id.devEUI, sizeof(DEVEUI));
+	memmove(&nwkSKey.c, &value.id.nwkSKey.c, sizeof(KEY128));
+	memmove(&appSKey.c, &value.id.appSKey.c, sizeof(KEY128));
+	memmove(&appEUI, &value.id.appEUI, sizeof(DEVEUI));
+	memmove(&appKey.c, &value.id.appKey.c, sizeof(KEY128));
+	memmove(&nwkKey.c, &value.id.nwkKey.c, sizeof(KEY128));
+	devNonce = value.id.devNonce;
+	memmove(&joinNonce, &value.id.joinNonce, sizeof(JOINNONCE));
+	memmove(&name, &value.id.name, sizeof(DEVICENAME));
+	memmove(&version, &value.id.version, sizeof(LORAWAN_VERSION));
 }
 
 uint32_t calculateMIC(

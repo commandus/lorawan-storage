@@ -36,13 +36,13 @@ size_t IdentityTextURNSerialization::query(
         case 'A':
             // request identifier(with address) by LoRaWAN network address
         {
-            if (urn.networkIdentity.devaddr.empty()) {
+            if (urn.networkIdentity.value.devaddr.empty()) {
                 // eui
-                int r = svc->getNetworkIdentity(urn.networkIdentity, urn.networkIdentity.devid.devEUI);
+                int r = svc->getNetworkIdentity(urn.networkIdentity, urn.networkIdentity.value.devid.id.devEUI);
                 return returnURN(retBuf, retSize, urn, r);
             } else {
                 // addr
-                int r = svc->get(urn.networkIdentity.devid, urn.networkIdentity.devaddr);
+                int r = svc->get(urn.networkIdentity.value.devid, urn.networkIdentity.value.devaddr);
                 return returnURN(retBuf, retSize, urn, r);
             }
         }
@@ -50,7 +50,7 @@ size_t IdentityTextURNSerialization::query(
         case 'I':
             // request address (with identifier) by identifier
         {
-            int r = svc->get(urn.networkIdentity.devid, urn.networkIdentity.devaddr);
+            int r = svc->get(urn.networkIdentity.value.devid, urn.networkIdentity.value.devaddr);
             return returnURN(retBuf, retSize, urn, r);
         }
             break;
@@ -88,13 +88,13 @@ size_t IdentityTextURNSerialization::query(
         case 'p':
             // assign
         {
-            auto r = svc->put(urn.networkIdentity.devaddr, urn.networkIdentity.devid);
+            auto r = svc->put(urn.networkIdentity.value.devaddr, urn.networkIdentity.value.devid);
             return returnStr(retBuf, retSize, std::to_string(r), 0);
         }
         case 'r':
             // remove entry
         {
-            auto r = svc->rm(urn.networkIdentity.devaddr);
+            auto r = svc->rm(urn.networkIdentity.value.devaddr);
             return returnStr(retBuf, retSize, std::to_string(r), 0);
         }
         case 's':

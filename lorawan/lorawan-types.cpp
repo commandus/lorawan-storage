@@ -1411,39 +1411,39 @@ std::string DEVICENAME::toString() const
 }
 
 DEVICEID::DEVICEID() {
-    this->activation = ABP;
-    this->deviceclass = CLASS_A;
-    memset(&this->devEUI.c, 0, sizeof(DEVEUI));
-    memset(&this->nwkSKey.c, 0, sizeof(KEY128));
-    memset(&this->appSKey.c, 0, sizeof(KEY128));
+    this->id.activation = ABP;
+    this->id.deviceclass = CLASS_A;
+    memset(&this->id.devEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->id.nwkSKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appSKey.c, 0, sizeof(KEY128));
     
-    memset(&this->appEUI.c, 0, sizeof(DEVEUI));
-    memset(&this->nwkKey.c, 0, sizeof(KEY128));
-    memset(&this->appKey.c, 0, sizeof(KEY128));
-    this->devNonce.u = 0;
-    memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
-    memset(&this->name.c, 0, sizeof(DEVICENAME));
-	version.major = 1;
+    memset(&this->id.appEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->id.nwkKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appKey.c, 0, sizeof(KEY128));
+    this->id.devNonce.u = 0;
+    memset(&this->id.joinNonce.c, 0, sizeof(JOINNONCE));
+    memset(&this->id.name.c, 0, sizeof(DEVICENAME));
+    id.version.major = 1;
 }
 
 DEVICEID::DEVICEID(
     const DEVEUI &deveui
 )
-    : devEUI(deveui)
 {
-    this->activation = ABP;
-    this->deviceclass = CLASS_A;
+    id.devEUI = deveui;
+    this->id.activation = ABP;
+    this->id.deviceclass = CLASS_A;
 
-    memset(&this->nwkSKey.c, 0, sizeof(KEY128));
-    memset(&this->appSKey.c, 0, sizeof(KEY128));
+    memset(&this->id.nwkSKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appSKey.c, 0, sizeof(KEY128));
 
-    memset(&this->appEUI.c, 0, sizeof(DEVEUI));
-    memset(&this->nwkKey.c, 0, sizeof(KEY128));
-    memset(&this->appKey.c, 0, sizeof(KEY128));
-    this->devNonce.u = 0;
-    memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
-    memset(&this->name.c, 0, sizeof(DEVICENAME));
-    version.major = 1;
+    memset(&this->id.appEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->id.nwkKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appKey.c, 0, sizeof(KEY128));
+    this->id.devNonce.u = 0;
+    memset(&this->id.joinNonce.c, 0, sizeof(JOINNONCE));
+    memset(&this->id.name.c, 0, sizeof(DEVICENAME));
+    id.version.major = 1;
 }
 
 DEVICEID::DEVICEID(
@@ -1460,18 +1460,18 @@ DEVICEID::DEVICEID(
     const JOINNONCE joinNonce,
     const DEVICENAME name
 ) {
-    this->activation = activation;
-    this->deviceclass = deviceclass;
-    memmove(&this->devEUI.c, &devEUI.c, sizeof(DEVEUI));
-    memmove(&this->nwkSKey.c, &nwkSKey.c, sizeof(KEY128));
-    memmove(&this->appSKey.c, &appSKey.c, sizeof(KEY128));
-    this->version = version;
-    memmove(&this->appEUI.c, &appEUI.c, sizeof(DEVEUI));
-    memmove(&this->nwkKey.c, &nwkKey.c, sizeof(KEY128));
-    memmove(&this->appKey.c, &appKey.c, sizeof(KEY128));
-    this->devNonce = devNonce;
-    memmove(&this->joinNonce.c, &joinNonce.c, sizeof(JOINNONCE));
-    memmove(&this->name, &name, sizeof(DEVICENAME));
+    this->id.activation = activation;
+    this->id.deviceclass = deviceclass;
+    memmove(&this->id.devEUI.c, &devEUI.c, sizeof(DEVEUI));
+    memmove(&this->id.nwkSKey.c, &nwkSKey.c, sizeof(KEY128));
+    memmove(&this->id.appSKey.c, &appSKey.c, sizeof(KEY128));
+    this->id.version = version;
+    memmove(&this->id.appEUI.c, &appEUI.c, sizeof(DEVEUI));
+    memmove(&this->id.nwkKey.c, &nwkKey.c, sizeof(KEY128));
+    memmove(&this->id.appKey.c, &appKey.c, sizeof(KEY128));
+    this->id.devNonce = devNonce;
+    memmove(&this->id.joinNonce.c, &joinNonce.c, sizeof(JOINNONCE));
+    memmove(&this->id.name, &name, sizeof(DEVICENAME));
 }
 
 DEVICEID::DEVICEID(
@@ -1482,39 +1482,39 @@ DEVICEID::DEVICEID(
     LORAWAN_VERSION version,
     const DEVICENAME name
 ) {
-    this->activation = ABP;
-    this->deviceclass = deviceclass;
-    memmove(&this->devEUI.c, &devEUI.c, sizeof(DEVEUI));
-    memmove(&this->nwkSKey.c, &nwkSKey.c, sizeof(KEY128));
-    memmove(&this->appSKey.c, &appSKey.c, sizeof(KEY128));
-    this->version = version;
-    memmove(&this->name, &name, sizeof(DEVICENAME));
+    this->id.activation = ABP;
+    this->id.deviceclass = deviceclass;
+    memmove(&this->id.devEUI.c, &devEUI.c, sizeof(DEVEUI));
+    memmove(&this->id.nwkSKey.c, &nwkSKey.c, sizeof(KEY128));
+    memmove(&this->id.appSKey.c, &appSKey.c, sizeof(KEY128));
+    this->id.version = version;
+    memmove(&this->id.name, &name, sizeof(DEVICENAME));
 
-    memset(&this->appEUI.c, 0, sizeof(DEVEUI));
-    memset(&this->nwkKey.c, 0, sizeof(KEY128));
-    memset(&this->appKey.c, 0, sizeof(KEY128));
-    this->devNonce.u = 0;
-    memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
+    memset(&this->id.appEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->id.nwkKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appKey.c, 0, sizeof(KEY128));
+    this->id.devNonce.u = 0;
+    memset(&this->id.joinNonce.c, 0, sizeof(JOINNONCE));
 }
 
 DEVICEID::DEVICEID(
-    uint64_t id
+    uint64_t did
 )
-    : devEUI(id)
 {
-    this->activation = ABP;
-    this->deviceclass = CLASS_A;
-    memset(&this->devEUI.c, 0, sizeof(DEVEUI));
-    memset(&this->nwkSKey.c, 0, sizeof(KEY128));
-    memset(&this->appSKey.c, 0, sizeof(KEY128));
+    id.devEUI.u = did;
+    this->id.activation = ABP;
+    this->id.deviceclass = CLASS_A;
+    memset(&this->id.devEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->id.nwkSKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appSKey.c, 0, sizeof(KEY128));
 
-    memset(&this->appEUI.c, 0, sizeof(DEVEUI));
-    memset(&this->nwkKey.c, 0, sizeof(KEY128));
-    memset(&this->appKey.c, 0, sizeof(KEY128));
-    this->devNonce.u = 0;
-    memset(&this->joinNonce.c, 0, sizeof(JOINNONCE));
-    memset(&this->name.c, 0, sizeof(DEVICENAME));
-    version.major = 1;
+    memset(&this->id.appEUI.c, 0, sizeof(DEVEUI));
+    memset(&this->id.nwkKey.c, 0, sizeof(KEY128));
+    memset(&this->id.appKey.c, 0, sizeof(KEY128));
+    this->id.devNonce.u = 0;
+    memset(&this->id.joinNonce.c, 0, sizeof(JOINNONCE));
+    memset(&this->id.name.c, 0, sizeof(DEVICENAME));
+    id.version.major = 1;
 }
 
 DEVICEID::DEVICEID(
@@ -1530,24 +1530,24 @@ DEVICEID& DEVICEID::operator=(
 {
 	if (this == &value)
 		return *this;
-	activation = value.activation;	///< activation type: ABP or OTAA
-	deviceclass = value.deviceclass;
-	memmove(&devEUI.c, &value.devEUI.c, sizeof(DEVEUI));
-	memmove(&nwkSKey.c, &value.nwkSKey.c, sizeof(KEY128));
-	memmove(&appSKey.c, &value.appSKey.c, sizeof(KEY128));
-	version = value.version;		///< device LoraWAN version
-    memmove(&appEUI.c, &value.appEUI.c, sizeof(DEVEUI));
-    memmove(&appKey.c, &value.appKey.c, sizeof(KEY128));
-    memmove(&nwkKey.c, &value.nwkKey.c, sizeof(KEY128));
-    devNonce = value.devNonce;
-    memmove(&joinNonce.c, &value.joinNonce.c, sizeof(JOINNONCE));
-	memmove(&name, &value.name, sizeof(DEVICENAME));
+    id.activation = value.id.activation;	///< activation type: ABP or OTAA
+    id.deviceclass = value.id.deviceclass;
+	memmove(&id.devEUI.c, &value.id.devEUI.c, sizeof(DEVEUI));
+	memmove(&id.nwkSKey.c, &value.id.nwkSKey.c, sizeof(KEY128));
+	memmove(&id.appSKey.c, &value.id.appSKey.c, sizeof(KEY128));
+    id.version = value.id.version;		///< device LoraWAN version
+    memmove(&id.appEUI.c, &value.id.appEUI.c, sizeof(DEVEUI));
+    memmove(&id.appKey.c, &value.id.appKey.c, sizeof(KEY128));
+    memmove(&id.nwkKey.c, &value.id.nwkKey.c, sizeof(KEY128));
+    id.devNonce = value.id.devNonce;
+    memmove(&id.joinNonce.c, &value.id.joinNonce.c, sizeof(JOINNONCE));
+	memmove(&id.name, &value.id.name, sizeof(DEVICENAME));
 	return *this;
 }
 
 DEVICEID& DEVICEID::operator=(const NETWORKIDENTITY& value)
 {
-    set(value.devid);
+    set(value.value.devid);
 	return *this;
 }
 
@@ -1555,18 +1555,18 @@ void DEVICEID::set(
 	const DEVICEID &value
 )
 {
-	memmove(&activation, &value.activation, sizeof(activation));
-	memmove(&deviceclass, &value.deviceclass, sizeof(deviceclass));
-	memmove(&devEUI.c, &value.devEUI.c, sizeof(DEVEUI));
-	memmove(&nwkSKey.c, &value.nwkSKey.c, sizeof(KEY128));
-	memmove(&appSKey.c, &value.appSKey.c, sizeof(KEY128));
-	memmove(&version, &value.version.c, sizeof(LORAWAN_VERSION));
-	memmove(&appEUI.c, &value.appEUI.c, sizeof(DEVEUI));
-	memmove(&appKey.c, &value.appKey.c, sizeof(KEY128));
-	memmove(&nwkKey.c, &value.nwkKey.c, sizeof(KEY128));
-	devNonce = value.devNonce;
-	memmove(&joinNonce.c, &value.joinNonce.c, sizeof(JOINNONCE));
-	memmove(&name, &value.name, sizeof(DEVICENAME));
+	memmove(&id.activation, &value.id.activation, sizeof(id.activation));
+	memmove(&id.deviceclass, &value.id.deviceclass, sizeof(id.deviceclass));
+	memmove(&id.devEUI.c, &value.id.devEUI.c, sizeof(DEVEUI));
+	memmove(&id.nwkSKey.c, &value.id.nwkSKey.c, sizeof(KEY128));
+	memmove(&id.appSKey.c, &value.id.appSKey.c, sizeof(KEY128));
+	memmove(&id.version, &value.id.version.c, sizeof(LORAWAN_VERSION));
+	memmove(&id.appEUI.c, &value.id.appEUI.c, sizeof(DEVEUI));
+	memmove(&id.appKey.c, &value.id.appKey.c, sizeof(KEY128));
+	memmove(&id.nwkKey.c, &value.id.nwkKey.c, sizeof(KEY128));
+    id.devNonce = value.id.devNonce;
+	memmove(&id.joinNonce.c, &value.id.joinNonce.c, sizeof(JOINNONCE));
+	memmove(&id.name, &value.id.name, sizeof(DEVICENAME));
 }
 
 void DEVICEID::setEUIString
@@ -1574,7 +1574,7 @@ void DEVICEID::setEUIString
 	const std::string &value
 )
 {
-	string2DEVEUI(devEUI, value);
+	string2DEVEUI(id.devEUI, value);
 }
 
 void DEVICEID::setNwkSKeyString
@@ -1582,28 +1582,28 @@ void DEVICEID::setNwkSKeyString
 	const std::string &value
 )
 {
-	string2KEY(nwkSKey, value);
+	string2KEY(id.nwkSKey, value);
 }
 
 void DEVICEID::setAppSKeyString(
 	const std::string &value
 )
 {
-	string2KEY(appSKey, value);
+	string2KEY(id.appSKey, value);
 }
 
 void DEVICEID::setName(
 	const std::string &value
 )
 {
-	string2DEVICENAME(name, value.c_str());
+	string2DEVICENAME(id.name, value.c_str());
 }
 
 void DEVICEID::setClass(
 	const DEVICECLASS &value
 )
 {
-	deviceclass = value;
+    id.deviceclass = value;
 }
 
 std::string DEVICEID::toString() const
@@ -1620,18 +1620,18 @@ std::string DEVICEID::toString(
     if (!addr.empty())
         ss << DEVADDR2string(addr) << LIST_SEPARATOR;
     ss
-        << activation2string(activation)
-        << LIST_SEPARATOR << deviceclass2string(deviceclass)
-        << LIST_SEPARATOR << DEVEUI2string(devEUI)
-        << LIST_SEPARATOR << KEY2string(nwkSKey)
-        << LIST_SEPARATOR << KEY2string(appSKey)
-        << LIST_SEPARATOR << LORAWAN_VERSION2string(version)
-        << LIST_SEPARATOR << DEVEUI2string(appEUI)
-        << LIST_SEPARATOR << KEY2string(appKey)
-        << LIST_SEPARATOR << KEY2string(nwkKey)
-        << LIST_SEPARATOR << DEVNONCE2string(devNonce)
-        << LIST_SEPARATOR << JOINNONCE2string(joinNonce)
-        << LIST_SEPARATOR << DEVICENAME2string(name);
+        << activation2string(id.activation)
+        << LIST_SEPARATOR << deviceclass2string(id.deviceclass)
+        << LIST_SEPARATOR << DEVEUI2string(id.devEUI)
+        << LIST_SEPARATOR << KEY2string(id.nwkSKey)
+        << LIST_SEPARATOR << KEY2string(id.appSKey)
+        << LIST_SEPARATOR << LORAWAN_VERSION2string(id.version)
+        << LIST_SEPARATOR << DEVEUI2string(id.appEUI)
+        << LIST_SEPARATOR << KEY2string(id.appKey)
+        << LIST_SEPARATOR << KEY2string(id.nwkKey)
+        << LIST_SEPARATOR << DEVNONCE2string(id.devNonce)
+        << LIST_SEPARATOR << JOINNONCE2string(id.joinNonce)
+        << LIST_SEPARATOR << DEVICENAME2string(id.name);
     return ss.str();
 }
 
@@ -1649,20 +1649,20 @@ std::string DEVICEID::toJsonString(
     ss << "{";
     if (!addr.empty())
         ss << R"("addr":")" << DEVADDR2string(addr) << "\",";
-    ss << R"("activation":")" << activation2string(activation)
-       << R"(","class":")" << deviceclass2string(deviceclass)
-       << R"(","deveui":")" << DEVEUI2string(devEUI)
-       << R"(","nwkSKey":")" << KEY2string(nwkSKey)
-       << R"(","appSKey":")" << KEY2string(appSKey)
-       << R"(","version":")" << LORAWAN_VERSION2string(version)
+    ss << R"("activation":")" << activation2string(id.activation)
+       << R"(","class":")" << deviceclass2string(id.deviceclass)
+       << R"(","deveui":")" << DEVEUI2string(id.devEUI)
+       << R"(","nwkSKey":")" << KEY2string(id.nwkSKey)
+       << R"(","appSKey":")" << KEY2string(id.appSKey)
+       << R"(","version":")" << LORAWAN_VERSION2string(id.version)
 
-       << R"(","appeui":")" << DEVEUI2string(appEUI)
-       << R"(","appKey":")" << KEY2string(appKey)
-       << R"(","nwkKey":")" << KEY2string(nwkKey)
-       << R"(","devNonce":")" << DEVNONCE2string(devNonce)
-       << R"(","joinNonce":")" << JOINNONCE2string(joinNonce)
+       << R"(","appeui":")" << DEVEUI2string(id.appEUI)
+       << R"(","appKey":")" << KEY2string(id.appKey)
+       << R"(","nwkKey":")" << KEY2string(id.nwkKey)
+       << R"(","devNonce":")" << DEVNONCE2string(id.devNonce)
+       << R"(","joinNonce":")" << JOINNONCE2string(id.joinNonce)
 
-       << R"(","name":")" << name.toString()
+       << R"(","name":")" << id.name.toString()
        << "\"}";
     return ss.str();
 }
@@ -1674,7 +1674,22 @@ void DEVICEID::toArray(
 {
     if (!buffer || size < SIZE_DEVICEID)
         return;
-    memmove(buffer, &activation, SIZE_DEVICEID);
+    /*
+    ACTIVATION activation;	///< activation type: ABP or OTAA   1 1
+    DEVICECLASS deviceclass;///< device class A, B, C           1 2
+    DEVEUI devEUI;		    ///< device identifier 8 bytes (ABP device may not store EUI) 8 10
+    KEY128 nwkSKey;			///< shared session key 16 bytes    16 26
+    KEY128 appSKey;			///< private key 16 bytes           16 42
+    LORAWAN_VERSION version;///< 1                              1  43
+    // OTAA
+    DEVEUI appEUI;			///< OTAA application identifier    8 51
+    KEY128 appKey;			///< OTAA application private key   16 67
+    KEY128 nwkKey;          ///< OTAA network key               16 83
+    DEVNONCE devNonce;      ///< last device nonce              2  85
+    JOINNONCE joinNonce;    ///< last Join nonce                3  88
+    DEVICENAME name;        ///< name, comment or tag           8 96
+*/
+    memmove(buffer, &id.activation, SIZE_DEVICEID);
 }
 
 void DEVICEID::fromArray(
@@ -1684,7 +1699,7 @@ void DEVICEID::fromArray(
 {
     if (!buffer || size < SIZE_DEVICEID)
         return;
-    memmove(&activation, buffer, SIZE_DEVICEID);
+    memmove(&id.activation, buffer, SIZE_DEVICEID);
 }
 
 void DEVICEID::setProperties
@@ -1692,21 +1707,21 @@ void DEVICEID::setProperties
 	std::map<std::string, std::string> &retval
 ) const
 {
-	retval["activation"] = activation2string(activation);
-	retval["class"] = deviceclass2string(deviceclass);
-	retval["deveui"] = DEVEUI2string(devEUI);
-    retval["appeui"] = DEVEUI2string(appEUI);
-    retval["appKey"] = KEY2string(appKey);
-    retval["nwkKey"] = KEY2string(nwkKey);
-    retval["devNonce"] = DEVNONCE2string(devNonce);
-    retval["joinNonce"] = JOINNONCE2string(joinNonce);
-	retval["name"] = DEVICENAME2string(name);
-	retval["version"] = LORAWAN_VERSION2string(version);
+	retval["activation"] = activation2string(id.activation);
+	retval["class"] = deviceclass2string(id.deviceclass);
+	retval["deveui"] = DEVEUI2string(id.devEUI);
+    retval["appeui"] = DEVEUI2string(id.appEUI);
+    retval["appKey"] = KEY2string(id.appKey);
+    retval["nwkKey"] = KEY2string(id.nwkKey);
+    retval["devNonce"] = DEVNONCE2string(id.devNonce);
+    retval["joinNonce"] = JOINNONCE2string(id.joinNonce);
+	retval["name"] = DEVICENAME2string(id.name);
+	retval["version"] = LORAWAN_VERSION2string(id.version);
 }
 
 bool DEVICEID::empty() const
 {
-    return devEUI.u == 0;
+    return id.devEUI.u == 0;
 }
 
 NETWORKIDENTITY::NETWORKIDENTITY()
@@ -1717,14 +1732,14 @@ NETWORKIDENTITY::NETWORKIDENTITY(
     const DEVICEID &id
 )
 {
-    devaddr.u = a.u;
-    devid = id;
+    value.devaddr.u = a.u;
+    value.devid = id;
 }
 
 NETWORKIDENTITY::NETWORKIDENTITY(
     const NETWORKIDENTITY &id
 )
-    : devaddr(id.devaddr), devid(id.devid)
+    : value { id.value.devaddr, id.value.devid }
 {
 }
 
@@ -1746,26 +1761,26 @@ void NETWORKIDENTITY::set(
     const NETWORKIDENTITY &id
 )
 {
-    set(id.devaddr, id.devid);
+    set(id.value.devaddr, id.value.devid);
 }
 
 void NETWORKIDENTITY::set(
     const DEVADDR &addr,
-    const DEVICEID &value
+    const DEVICEID &val
 )
 {
-    devaddr.u = addr.u;
-    devid.set(value);
+    value.devaddr.u = addr.u;
+    value.devid.set(val);
 }
 
 std::string NETWORKIDENTITY::toString() const 
 {
-    return devid.toString(devaddr);
+    return value.devid.toString(value.devaddr);
 }
 
 std::string NETWORKIDENTITY::toJsonString() const
 {
-	return devid.toJsonString(devaddr);
+	return value.devid.toJsonString(value.devaddr);
 }
 
 bool JOIN_REQUEST_FRAME::operator==(const JOIN_REQUEST_FRAME &rhs) const
@@ -2019,33 +2034,33 @@ static const char *getDeviceIdPropertyPtr(
 ) {
     switch (p) {
         case NIP_ACTIVATION:
-            return (char *) &deviceId.activation;
+            return (char *) &deviceId.id.activation;
         case NIP_DEVICE_CLASS:
-            return (char *) &deviceId.deviceclass;
+            return (char *) &deviceId.id.deviceclass;
         case NIP_DEVEUI:
-            return (char *) &deviceId.devEUI.u;
+            return (char *) &deviceId.id.devEUI.u;
         case NIP_NWKSKEY:
-            return (char *) &deviceId.nwkSKey.u;
+            return (char *) &deviceId.id.nwkSKey.u;
         case NIP_APPSKEY:
-            return (char *) &deviceId.appSKey.u;
+            return (char *) &deviceId.id.appSKey.u;
         case NIP_LORAWAN_VERSION:
-            return (char *) &deviceId.version.c;
+            return (char *) &deviceId.id.version.c;
             // OTAA
         case NIP_APPEUI:
-            return (char *) &deviceId.appEUI.u;
+            return (char *) &deviceId.id.appEUI.u;
         case NIP_APPKEY:
-            return (char *) &deviceId.appKey.u;
+            return (char *) &deviceId.id.appKey.u;
         case NIP_NWKKEY:
-            return (char *) &deviceId.nwkKey.u;
+            return (char *) &deviceId.id.nwkKey.u;
         case NIP_DEVNONCE:
-            return (char *) &deviceId.devNonce.c;
+            return (char *) &deviceId.id.devNonce.c;
         case NIP_JOINNONCE:
-            return (char *) &deviceId.joinNonce.c;
+            return (char *) &deviceId.id.joinNonce.c;
             // added for searching
         case NIP_DEVICENAME:
-            return (char *) &deviceId.name.c;
+            return (char *) &deviceId.id.name.c;
         default:
-            return (char *) &deviceId.activation;
+            return (char *) &deviceId.id.activation;
     }
 }
 
@@ -2056,35 +2071,35 @@ static const char *getNetworkIdentityPropertyPtr(
 {
     switch (p) {
         case NIP_ADDRESS:
-            return (char *) &identity.devaddr.u;
+            return (char *) &identity.value.devaddr.u;
         case NIP_ACTIVATION:
-            return (char *) &identity.devid.activation;
+            return (char *) &identity.value.devid.id.activation;
         case NIP_DEVICE_CLASS:
-            return (char *) &identity.devid.deviceclass;
+            return (char *) &identity.value.devid.id.deviceclass;
         case NIP_DEVEUI:
-            return (char *) &identity.devid.devEUI.u;
+            return (char *) &identity.value.devid.id.devEUI.u;
         case NIP_NWKSKEY:
-            return (char *) &identity.devid.nwkSKey.u;
+            return (char *) &identity.value.devid.id.nwkSKey.u;
         case NIP_APPSKEY:
-            return (char *) &identity.devid.appSKey.u;
+            return (char *) &identity.value.devid.id.appSKey.u;
         case NIP_LORAWAN_VERSION:
-            return (char *) &identity.devid.version.c;
+            return (char *) &identity.value.devid.id.version.c;
         // OTAA
         case NIP_APPEUI:
-            return (char *) &identity.devid.appEUI.u;
+            return (char *) &identity.value.devid.id.appEUI.u;
         case NIP_APPKEY:
-            return (char *) &identity.devid.appKey.u;
+            return (char *) &identity.value.devid.id.appKey.u;
         case NIP_NWKKEY:
-            return (char *) &identity.devid.nwkKey.u;
+            return (char *) &identity.value.devid.id.nwkKey.u;
         case NIP_DEVNONCE:
-            return (char *) &identity.devid.devNonce.c;
+            return (char *) &identity.value.devid.id.devNonce.c;
         case NIP_JOINNONCE:
-            return (char *) &identity.devid.joinNonce.c;
+            return (char *) &identity.value.devid.id.joinNonce.c;
         // added for searching
         case NIP_DEVICENAME:
-            return (char *) &identity.devid.name.c;
+            return (char *) &identity.value.devid.id.name.c;
         default:
-            return (char *) &identity.devaddr.u;
+            return (char *) &identity.value.devaddr.u;
     }
 }
 
@@ -2092,21 +2107,21 @@ static const char *getNetworkIdentityPropertyPtr(
 
 static size_t NETWORK_IDENTITY_PROPERTY_SIZES[NIP_SIZE_COUNT] {
     0,
-    sizeof(NETWORKIDENTITY::devaddr.u),
-    sizeof(NETWORKIDENTITY::devid.activation),
-    sizeof(NETWORKIDENTITY::devid.deviceclass),
-    sizeof(NETWORKIDENTITY::devid.devEUI.u),
-    sizeof(NETWORKIDENTITY::devid.nwkSKey.u),
-    sizeof(NETWORKIDENTITY::devid.appSKey.u),
-    sizeof(NETWORKIDENTITY::devid.version.c),
+    sizeof(NETWORKIDENTITY::value.devaddr.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.activation),
+    sizeof(NETWORKIDENTITY::value.devid.id.deviceclass),
+    sizeof(NETWORKIDENTITY::value.devid.id.devEUI.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.nwkSKey.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.appSKey.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.version.c),
     // OTAA
-    sizeof(NETWORKIDENTITY::devid.appEUI.u),
-    sizeof(NETWORKIDENTITY::devid.appKey.u),
-    sizeof(NETWORKIDENTITY::devid.nwkKey.u),
-    sizeof(NETWORKIDENTITY::devid.devNonce.u),
-    sizeof(NETWORKIDENTITY::devid.joinNonce.c),
+    sizeof(NETWORKIDENTITY::value.devid.id.appEUI.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.appKey.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.nwkKey.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.devNonce.u),
+    sizeof(NETWORKIDENTITY::value.devid.id.joinNonce.c),
     // added for searching
-    sizeof(NETWORKIDENTITY::devid.name.c)
+    sizeof(NETWORKIDENTITY::value.devid.id.name.c)
 };
 
 static size_t getNetworkIdentityPropertySize(
