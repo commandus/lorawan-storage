@@ -8,6 +8,7 @@
 #include <vector>
 
 namespace file {
+    bool mkDir(const std::string &path);
 	bool rmDir(const std::string &path);
 	bool rmFile(const std::string &fn);
 #if defined(_MSC_VER) || defined(__MINGW32__)

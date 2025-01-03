@@ -69,6 +69,13 @@ bool file::rmAllDir(const char *path)
     return true;
 }
 
+bool file::mkDir(
+    const std::string &path
+)
+{
+    return CreateDirectoryA(path.c_str(), nullptr);
+}
+
 bool file::rmDir(const std::string &path)
 {
 	if (&path == nullptr)
@@ -204,6 +211,21 @@ static int rmnode
 	}
 	rm_func(path);
 	return 0;
+}
+
+bool file::mkDir(
+    const std::string &path
+)
+{
+    Stat st;
+    if (stat(path.c_str(), &st) != 0) {
+        // Directory does not exist. EEXIST for race condition
+        if (mkdir(path, mode) != 0 && errno != EEXIST)
+            return false;
+    } else if (!S_ISDIR(st.st_mode)) {
+        return false;
+    }
+    return true;
 }
 
 bool file::rmDir(const std::string &path)

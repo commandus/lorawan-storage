@@ -5,7 +5,6 @@
 #endif
 #include "lorawan/storage/service/identity-service-c-wrapper.h"
 #include <lorawan/lorawan-string.h>
-#include <iostream>
 #include "lorawan/storage/service/identity-service.h"
 #include "lorawan/storage/service/identity-service-mem.h"
 #include "lorawan/storage/service/identity-service-udp.h"
@@ -39,7 +38,6 @@ EXPORT_SHARED_C_FUNC void* makeIdentityServiceC(
     C_IDENTITY_SERVICE_IMPL impl
 )
 {
-    std::cerr << "makeIdentityServiceC " << (int) impl << std::endl;
     switch (impl) {
 #ifdef ENABLE_GEN
         case CISI_GEN:
@@ -359,9 +357,9 @@ EXPORT_SHARED_C_FUNC int c_joinAccept(
 {
     NETWORKIDENTITY nid;
     C_NETWORKIDENTITY2NETWORKIDENTITY(nid, networkIdentity);
-    JOIN_ACCEPT_FRAME_HEADER jafh;
-    int r = ((IdentityService *) o)->joinAccept(jafh, nid);
-    JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(retVal, jafh);
+    JOIN_ACCEPT_FRAME_HEADER path;
+    int r = ((IdentityService *) o)->joinAccept(path, nid);
+    JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(retVal, path);
     return r;
 }
 

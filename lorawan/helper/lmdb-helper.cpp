@@ -4,6 +4,7 @@
 #include "lorawan/lorawan-error.h"
 #include "lorawan/helper/lmdb-helper.h"
 #include "lorawan/lorawan-msg.h"
+#include "file-helper.h"
 
 #include <sstream>
 #include <iostream>
@@ -108,6 +109,16 @@ bool openDb(
 
     rc = mdb_env_open(env->env, env->path.c_str(), env->flags, env->mode);
     if (rc) {
+        if (rc == 3) {
+            // try to create a new directory
+            bool dirCreated = file::mkDir(env->path);
+            if (dirCreated) {
+                // try again
+                rc = mdb_env_open(env->env, env->path.c_str(), env->flags, env->mode);
+                if (rc == 0)
+                    return true;
+            }
+        }
         env->LOG(LOG_ERR, ERR_CODE_LMDB_OPEN, ERR_LMDB_ENV_OPEN);
         env->env = nullptr;
         return false;

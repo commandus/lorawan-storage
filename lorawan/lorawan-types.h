@@ -631,20 +631,19 @@ public:
     DEVICEID(const DEVEUI &devEUI);
 
     // value, no key
-	ACTIVATION activation;	///< activation type: ABP or OTAA
-	DEVICECLASS deviceclass;
-	DEVEUI devEUI;		    ///< device identifier 8 bytes (ABP device may not store EUI)
-	KEY128 nwkSKey;			///< shared session key 16 bytes
-	KEY128 appSKey;			///< private key 16 bytes
-	LORAWAN_VERSION version;
+	ACTIVATION activation;	///< activation type: ABP or OTAA   1 1
+	DEVICECLASS deviceclass;///< device class A, B, C           1 2
+	DEVEUI devEUI;		    ///< device identifier 8 bytes (ABP device may not store EUI) 8 10
+	KEY128 nwkSKey;			///< shared session key 16 bytes    16 26
+	KEY128 appSKey;			///< private key 16 bytes           16 42
+	LORAWAN_VERSION version;///< 1                              1  43
 	// OTAA
-	DEVEUI appEUI;			///< OTAA application identifier
-	KEY128 appKey;			///< OTAA application private key
-    KEY128 nwkKey;          ///< OTAA network key
-	DEVNONCE devNonce;      ///< last device nonce
-	JOINNONCE joinNonce;    ///< last Join nonce
-	// added for searching
-	DEVICENAME name;
+	DEVEUI appEUI;			///< OTAA application identifier    8 51
+	KEY128 appKey;			///< OTAA application private key   16 67
+    KEY128 nwkKey;          ///< OTAA network key               16 83
+	DEVNONCE devNonce;      ///< last device nonce              2  85
+	JOINNONCE joinNonce;    ///< last Join nonce                3  88
+	DEVICENAME name;        ///< name, comment or tag           8 96
 
 	size_t operator()(const DEVICEID &value) const {
 		return value.devEUI.u;
@@ -711,15 +710,15 @@ public:
 	void setProperties(std::map<std::string, std::string> &retval) const;
 
     bool empty() const;
-});					// 44 bytes + 8 + 18 = 70
+});					// 96 bytes
 
-#define SIZE_DEVICEID 70
+#define SIZE_DEVICEID 96
 
 PACK(class NETWORKIDENTITY {
 public:
 	// key
 	DEVADDR devaddr;		///< network address 4 bytes
-	DEVICEID devid;         // 91 bytes
+	DEVICEID devid;         // 96 bytes
 
 	NETWORKIDENTITY();
 	NETWORKIDENTITY(const DEVADDR &a, const DEVICEID &id);
@@ -730,9 +729,9 @@ public:
 	void set(const DEVADDR &addr, const DEVICEID &value);
 	std::string toString() const;
     std::string toJsonString() const;
-});  // 95 bytes
+});  // 100 bytes
 
-#define SIZE_NETWORKIDENTITY 96
+#define SIZE_NETWORKIDENTITY 100
 
 typedef PACK(struct {
      uint16_t vendorId;

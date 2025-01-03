@@ -55,9 +55,9 @@ typedef PACK_STRUCT( struct {
     // OTAA
     C_DEVEUI appEUI;			///< OTAA application identifier
     C_KEY128 appKey;			///< OTAA application private key
-    C_KEY128 nwkKey;          ///< OTAA network key
-    C_DEVNONCE devNonce;      ///< last device nonce
-    C_JOINNONCE joinNonce;    ///< last Join nonce
+    C_KEY128 nwkKey;            ///< OTAA network key
+    C_DEVNONCE devNonce;        ///< last device nonce
+    C_JOINNONCE joinNonce;      ///< last Join nonce
     C_DEVICENAME name;
 } ) C_DEVICEID;
 
