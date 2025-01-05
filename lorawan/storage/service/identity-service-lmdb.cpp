@@ -1,5 +1,6 @@
 #include <sstream>
 #include <iostream>
+#include <cstring>
 #include "lorawan/storage/service/identity-service-lmdb.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
