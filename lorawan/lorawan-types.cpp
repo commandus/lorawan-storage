@@ -1674,22 +1674,30 @@ void DEVICEID::toArray(
 {
     if (!buffer || size < SIZE_DEVICEID)
         return;
-    /*
-    ACTIVATION activation;	///< activation type: ABP or OTAA   1 1
-    DEVICECLASS deviceclass;///< device class A, B, C           1 2
-    DEVEUI devEUI;		    ///< device identifier 8 bytes (ABP device may not store EUI) 8 10
-    KEY128 nwkSKey;			///< shared session key 16 bytes    16 26
-    KEY128 appSKey;			///< private key 16 bytes           16 42
-    LORAWAN_VERSION version;///< 1                              1  43
-    // OTAA
-    DEVEUI appEUI;			///< OTAA application identifier    8 51
-    KEY128 appKey;			///< OTAA application private key   16 67
-    KEY128 nwkKey;          ///< OTAA network key               16 83
-    DEVNONCE devNonce;      ///< last device nonce              2  85
-    JOINNONCE joinNonce;    ///< last Join nonce                3  88
-    DEVICENAME name;        ///< name, comment or tag           8 96
-*/
-    memmove(buffer, &id.activation, SIZE_DEVICEID);
+    char *p = (char*) buffer;
+    memmove(p, &id.activation, 1);
+    p++;
+    memmove(p, &id.deviceclass, 1);
+    p++;
+    memmove(p, &id.devEUI.c, sizeof(DEVEUI));
+    p+= sizeof(DEVEUI);
+    memmove(p, &id.nwkSKey.c, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(p, &id.appSKey.c, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(p, &id.version, sizeof(LORAWAN_VERSION));
+    p+= sizeof(LORAWAN_VERSION);
+    memmove(p, &id.appEUI.c, sizeof(DEVEUI));
+    p+= sizeof(DEVEUI);
+    memmove(p, &id.appKey.c, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(p, &id.nwkKey.c, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(p, &id.devNonce, sizeof(DEVNONCE));
+    p+= sizeof(DEVNONCE);
+    memmove(p, &id.joinNonce.c, sizeof(JOINNONCE));
+    p+= sizeof(JOINNONCE);
+    memmove(p, &id.name, sizeof(DEVICENAME));
 }
 
 void DEVICEID::fromArray(
@@ -1699,7 +1707,30 @@ void DEVICEID::fromArray(
 {
     if (!buffer || size < SIZE_DEVICEID)
         return;
-    memmove(&id.activation, buffer, SIZE_DEVICEID);
+    char *p = (char*) buffer;
+    memmove(&id.activation, p, 1);
+    p++;
+    memmove(&id.deviceclass, p, 1);
+    p++;
+    memmove(&id.devEUI.c, p, sizeof(DEVEUI));
+    p+= sizeof(DEVEUI);
+    memmove(&id.nwkSKey.c, p, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(&id.appSKey.c, p, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(&id.version, p, sizeof(LORAWAN_VERSION));
+    p+= sizeof(LORAWAN_VERSION);
+    memmove(&id.appEUI.c, p, sizeof(DEVEUI));
+    p+= sizeof(DEVEUI);
+    memmove(&id.appKey.c, p, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(&id.nwkKey.c, p, sizeof(KEY128));
+    p+= sizeof(KEY128);
+    memmove(&id.devNonce, p, sizeof(DEVNONCE));
+    p+= sizeof(DEVNONCE);
+    memmove(&id.joinNonce.c, p, sizeof(JOINNONCE));
+    p+= sizeof(JOINNONCE);
+    memmove(&id.name, p, sizeof(DEVICENAME));
 }
 
 void DEVICEID::setProperties
@@ -2029,38 +2060,38 @@ std::string DataRate::toString() const
 }
 
 static const char *getDeviceIdPropertyPtr(
-    const DEVICEID &deviceId,
+    const DEVICE_ID &deviceId,
     enum NETWORK_IDENTITY_PROPERTY p
 ) {
     switch (p) {
         case NIP_ACTIVATION:
-            return (char *) &deviceId.id.activation;
+            return (char *) &deviceId.activation;
         case NIP_DEVICE_CLASS:
-            return (char *) &deviceId.id.deviceclass;
+            return (char *) &deviceId.deviceclass;
         case NIP_DEVEUI:
-            return (char *) &deviceId.id.devEUI.u;
+            return (char *) &deviceId.devEUI.u;
         case NIP_NWKSKEY:
-            return (char *) &deviceId.id.nwkSKey.u;
+            return (char *) &deviceId.nwkSKey.u;
         case NIP_APPSKEY:
-            return (char *) &deviceId.id.appSKey.u;
+            return (char *) &deviceId.appSKey.u;
         case NIP_LORAWAN_VERSION:
-            return (char *) &deviceId.id.version.c;
+            return (char *) &deviceId.version.c;
             // OTAA
         case NIP_APPEUI:
-            return (char *) &deviceId.id.appEUI.u;
+            return (char *) &deviceId.appEUI.u;
         case NIP_APPKEY:
-            return (char *) &deviceId.id.appKey.u;
+            return (char *) &deviceId.appKey.u;
         case NIP_NWKKEY:
-            return (char *) &deviceId.id.nwkKey.u;
+            return (char *) &deviceId.nwkKey.u;
         case NIP_DEVNONCE:
-            return (char *) &deviceId.id.devNonce.c;
+            return (char *) &deviceId.devNonce.c;
         case NIP_JOINNONCE:
-            return (char *) &deviceId.id.joinNonce.c;
+            return (char *) &deviceId.joinNonce.c;
             // added for searching
         case NIP_DEVICENAME:
-            return (char *) &deviceId.id.name.c;
+            return (char *) &deviceId.name.c;
         default:
-            return (char *) &deviceId.id.activation;
+            return (char *) &deviceId.activation;
     }
 }
 
@@ -2169,7 +2200,7 @@ bool isIdentityFiltered(
 
 bool isIdentityFiltered2(
     const DEVADDR &addr,
-    const DEVICEID &deviceId,
+    const DEVICE_ID &deviceId,
     const NETWORK_IDENTITY_FILTER &filter
 )
 {
@@ -2222,7 +2253,7 @@ bool isIdentityFilteredV(
 
 bool isIdentityFilteredV2(
     const DEVADDR &addr,
-    const DEVICEID &deviceId,
+    const DEVICE_ID &deviceId,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters
 )
 {

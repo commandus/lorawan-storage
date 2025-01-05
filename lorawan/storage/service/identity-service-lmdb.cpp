@@ -1,7 +1,6 @@
 #include <sstream>
 #include <iostream>
 #include "lorawan/storage/service/identity-service-lmdb.h"
-#include "lorawan/helper/lmdb-helper.h"
 #include "lorawan/lorawan-error.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/file-helper.h"
@@ -28,33 +27,18 @@ int LMDBIdentityService::get(
 )
 {
     // start transaction
-    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    int r = mdb_txn_begin(env.env, nullptr, MDB_RDONLY, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
-    // Get the last key
-    MDB_cursor *cursor;
-    r = mdb_cursor_open(env.txn, env.dbi, &cursor);
-    if (r != MDB_SUCCESS) {
-        mdb_txn_commit(env.txn);
-        return r;
-    }
     MDB_val dbKey {SIZE_DEVADDR, (void *) &request.u };
-    MDB_val dbVal {SIZE_DEVICEID, (void *) &retVal.id.activation };
-    r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_SET_RANGE);
+    MDB_val dbVal {};
+    r = mdb_get(env.txn, env.dbi, &dbKey, &dbVal);
     if (r != MDB_SUCCESS) {
         // it's ok
-        mdb_txn_commit(env.txn);
+        mdb_txn_abort(env.txn);
         return r;
     }
-
-    do {
-        if (dbVal.mv_size != SIZE_DEVICEID)
-            break;  // error, database corrupted
-        if (*(uint32_t*) dbKey.mv_data != request.u)
-            break;  // out of range
-            retVal.fromArray(dbVal.mv_data, dbVal.mv_size);
-    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
-
+    memmove((void*) &retVal.id, dbVal.mv_data, dbVal.mv_size < sizeof(DEVICE_ID) ? dbVal.mv_size : sizeof(DEVICE_ID));
     r = mdb_txn_commit(env.txn);
     return r;
 }
@@ -66,7 +50,7 @@ int LMDBIdentityService::list(
     uint8_t size
 ) {
     // start transaction
-    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    int r = mdb_txn_begin(env.env, nullptr, MDB_RDONLY, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
 
@@ -80,9 +64,8 @@ int LMDBIdentityService::list(
         return r;
     }
 
-    NETWORKIDENTITY nid;
-    MDB_val dbKey {SIZE_DEVADDR, (void *) &nid.value.devaddr.u };
-    MDB_val dbVal {SIZE_DEVICEID, (void *) &nid.value.devid.id.activation };
+    MDB_val dbKey {};
+    MDB_val dbVal {};
 
     while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == 0) {
         if (o < offset) {
@@ -94,8 +77,11 @@ int LMDBIdentityService::list(
         if (sz > size)
             break;
 
-        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != SIZE_DEVICEID)
+        if (dbKey.mv_size != SIZE_DEVADDR)
             break;  // error, database corrupted
+        NETWORKIDENTITY nid;
+        memmove((void*) &nid.value.devaddr, dbKey.mv_data, dbKey.mv_size < SIZE_DEVADDR ? dbKey.mv_size : SIZE_DEVADDR);
+        memmove((void*) &nid.value.devid, dbVal.mv_data, dbVal.mv_size < sizeof(DEVICE_ID) ? dbVal.mv_size : sizeof(DEVICE_ID));
         retVal.emplace_back(nid.value.devaddr, nid.value.devid);
     } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
 
@@ -107,7 +93,7 @@ int LMDBIdentityService::list(
 size_t LMDBIdentityService::size()
 {
     // start transaction
-    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    int r = mdb_txn_begin(env.env, nullptr, MDB_RDONLY, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
     MDB_stat stat;
@@ -128,7 +114,7 @@ int LMDBIdentityService::getNetworkIdentity(
 )
 {
     // start transaction
-    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    int r = mdb_txn_begin(env.env, nullptr, MDB_RDONLY, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
 
@@ -139,20 +125,19 @@ int LMDBIdentityService::getNetworkIdentity(
         return r;
     }
 
-    NETWORKIDENTITY nid;
-    MDB_val dbKey {SIZE_DEVADDR, (void *) &nid.value.devaddr.u };
-    MDB_val dbVal {SIZE_DEVICEID, (void *) &nid.value.devid.id.activation };
+    MDB_val dbKey {};
+    MDB_val dbVal {};
 
-    while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == 0) {
-        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != SIZE_DEVICEID)
+    while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == MDB_SUCCESS) {
+        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != sizeof(DEVICE_ID))
             break;  // error, database corrupted
 
-        if (nid.value.devid.id.devEUI == eui) {
-            retVal.value.devaddr.u = nid.value.devaddr.u;
-            retVal.value.devid = nid.value.devid;
+        if (((DEVICE_ID *)dbVal.mv_data)->devEUI == eui) {
+            memmove((void*) &retVal.value.devaddr.u, dbKey.mv_data, dbKey.mv_size < SIZE_DEVADDR ? dbKey.mv_size : SIZE_DEVADDR);
+            memmove((void*) &retVal.value.devid, dbVal.mv_data, dbVal.mv_size < sizeof(DEVICE_ID) ? dbVal.mv_size : sizeof(DEVICE_ID));
             break;
         }
-    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
+    };
 
     r = mdb_txn_commit(env.txn);
     return r;
@@ -168,30 +153,12 @@ int LMDBIdentityService::put(
     const DEVICEID &id
 )
 {
-    printf("%zu\n", offsetof(DEVICEID, id.activation));
-    printf("%zu\n", offsetof(DEVICEID, id.deviceclass));
-    printf("%zu\n", offsetof(DEVICEID, id.devEUI));
-    printf("%zu\n", offsetof(DEVICEID, id.nwkSKey));
-    printf("%zu\n", offsetof(DEVICEID, id.appSKey));
-    printf("%zu\n", offsetof(DEVICEID, id.version));
-    printf("%zu\n", offsetof(DEVICEID, id.appEUI));
-    printf("%zu\n", offsetof(DEVICEID, id.appKey));
-    printf("%zu\n", offsetof(DEVICEID, id.nwkKey));
-    printf("%zu\n", offsetof(DEVICEID, id.devNonce));
-    printf("%zu\n", offsetof(DEVICEID, id.joinNonce));
-    printf("%zu\n", offsetof(DEVICEID, id.name));
-
-
-
-
     // start transaction
     int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
     MDB_val dbKey {SIZE_DEVADDR, (void*) &devAddr.u };
-    char did[SIZE_DEVICEID];
-    id.toArray(did, SIZE_DEVICEID);
-    MDB_val dbData {SIZE_DEVICEID, (void *) did };
+    MDB_val dbData {sizeof(DEVICE_ID), (void *) &id.id };
     r = mdb_put(env.txn, env.dbi, &dbKey, &dbData, 0);
     if (r) {
         if (r == MDB_MAP_FULL) {
@@ -234,9 +201,8 @@ int LMDBIdentityService::rm(
         return r;
     }
     MDB_val dbKey {SIZE_DEVADDR, (void *) &addr.u};
-    DEVICEID did;
-    MDB_val dbVal {SIZE_DEVICEID, (void*) &did };
-    r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_SET_RANGE);
+    DEVICE_ID did;
+    r = mdb_cursor_get(cursor, &dbKey, nullptr, MDB_SET_RANGE);
     if (r != MDB_SUCCESS) {
         mdb_txn_commit(env.txn);
         return r;
@@ -248,7 +214,7 @@ int LMDBIdentityService::rm(
         if (*(uint32_t*)dbKey.mv_data != addr.u)
             break;  // out of range
         mdb_cursor_del(cursor, 0);
-    } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
+    } while (mdb_cursor_get(cursor, &dbKey, nullptr, MDB_NEXT) == MDB_SUCCESS);
 
     r = mdb_txn_commit(env.txn);
     if (r)
@@ -359,7 +325,7 @@ int LMDBIdentityService::filter(
 )
 {
     // start transaction
-    int r = mdb_txn_begin(env.env, nullptr, 0, &env.txn);
+    int r = mdb_txn_begin(env.env, nullptr, MDB_RDONLY, &env.txn);
     if (r)
         return ERR_CODE_LMDB_TXN_BEGIN;
 
@@ -373,9 +339,8 @@ int LMDBIdentityService::filter(
         return r;
     }
 
-    NETWORKIDENTITY nid;
-    MDB_val dbKey {SIZE_DEVADDR, (void *) &nid.value.devaddr.u };
-    MDB_val dbVal {SIZE_DEVICEID, (void *) &nid.value.devid.id.activation };
+    MDB_val dbKey {};
+    MDB_val dbVal {};
 
     while ((r = mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT)) == 0) {
         if (o < offset) {
@@ -387,10 +352,10 @@ int LMDBIdentityService::filter(
         if (sz > size)
             break;
 
-        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != SIZE_DEVICEID)
+        if (dbKey.mv_size != SIZE_DEVADDR || dbVal.mv_size != sizeof(DEVICE_ID))
             break;  // error, database corrupted
 
-        if (!isIdentityFilteredV2(nid.value.devaddr, nid.value.devid, filters))
+        if (!isIdentityFilteredV2(*(DEVADDR*) dbKey.mv_data, *(DEVICE_ID*) dbVal.mv_data, filters))
             continue;
         if (o < offset) {
             // skip first
@@ -400,8 +365,10 @@ int LMDBIdentityService::filter(
         sz++;
         if (sz > size)
             break;
+        NETWORKIDENTITY nid;
+        memmove((void*) &nid.value.devaddr.u, dbKey.mv_data, dbKey.mv_size < SIZE_DEVADDR ? dbKey.mv_size : SIZE_DEVADDR);
+        memmove((void*) &nid.value.devid, dbVal.mv_data, dbVal.mv_size < sizeof(DEVICE_ID) ? dbVal.mv_size : sizeof(DEVICE_ID));
         retVal.emplace_back(nid.value.devaddr, nid.value.devid);
-
     } while (mdb_cursor_get(cursor, &dbKey, &dbVal, MDB_NEXT) == MDB_SUCCESS);
 
     r = mdb_txn_commit(env.txn);

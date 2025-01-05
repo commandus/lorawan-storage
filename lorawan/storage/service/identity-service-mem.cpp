@@ -213,7 +213,7 @@ int MemoryIdentityService::filter(
     size_t o = 0;
     size_t sz = 0;
     for (auto & it : storage) {
-        if (!isIdentityFilteredV2(it.first, it.second, filters))
+        if (!isIdentityFilteredV2(it.first, it.second.id, filters))
             continue;
         if (o < offset) {
             // skip first

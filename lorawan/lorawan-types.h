@@ -796,7 +796,7 @@ bool isIdentityFiltered(
 
 bool isIdentityFiltered2(
     const DEVADDR &addr,
-    const DEVICEID &deviceId,
+    const DEVICE_ID &deviceId,
     const NETWORK_IDENTITY_FILTER &filter
 );
 
@@ -807,7 +807,7 @@ bool isIdentityFilteredV(
 
 bool isIdentityFilteredV2(
     const DEVADDR &addr,
-    const DEVICEID &deviceId,
+    const DEVICE_ID &deviceId,
     const std::vector<NETWORK_IDENTITY_FILTER> &filters
 );
 
