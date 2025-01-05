@@ -113,7 +113,7 @@ size_t SqliteIdentityService::size()
     if (!db)
         return 0;
     char *zErrMsg = nullptr;
-    std::string statement = "SELECT count(id) FROM gateway";
+    std::string statement = "SELECT count(addr) FROM device";
     std::vector<std::string> row;
     int r = sqlite3_exec(db, statement.c_str(), rowCallback, &row, &zErrMsg);
     if (r != SQLITE_OK) {

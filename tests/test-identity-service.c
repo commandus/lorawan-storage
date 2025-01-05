@@ -28,8 +28,9 @@ void testSqlite()
     memset(&devId, 0, sizeof(devId));
     c_get(o, &devId, &devAddr);
 
+    int c = c_size(o);
     C_NETWORKIDENTITY nis[2];
-    int c = c_list(o, nis, 0, 2);
+    c = c_list(o, nis, 0, 2);
     // c_rm(o, &devAddr);
     c = c_list(o, nis, 0, 2);
     C_NETWORK_IDENTITY_FILTER ff = {C_NILPO_AND, C_NIP_ACTIVATION, C_NICO_EQ, 1, 1};
@@ -110,8 +111,8 @@ void testLmdb()
 }
 
 int main() {
-    // testSqlite();
+    testSqlite();
     // testJson();
-    testLmdb();
+    // testLmdb();
     return 0;
 }
