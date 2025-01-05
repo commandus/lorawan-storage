@@ -28,8 +28,8 @@ PACK(
         void setFport(uint8_t value);
         const uint8_t* payload() const;
         const std::string payloadString() const;
-        void setPayload(uint8_t* value, uint8_t size);
-        void setFOpts(void* value, size_t size);
+        void setPayload(const void* value, uint8_t size);
+        void setFOpts(const void* value, size_t size);
 }
 );                                  // 4 1 2 255 =  262 bytes
 
@@ -56,13 +56,13 @@ PACK(
         const uint8_t* fopts() const;
         const std::string foptsString() const;
         uint8_t foptsSize() const;
-        void setFopts(uint8_t* value, uint8_t size);
+        void setFopts(const uint8_t* value, uint8_t size);
         uint8_t fport() const;
         void setFport(uint8_t value);
         const uint8_t* payload() const;
         const std::string payloadString() const;
-        void setPayload(uint8_t* value, uint8_t size);
-        void setFOpts(void* value, size_t size);
+        void setPayload(const void* value, uint8_t size);
+        void setFOpts(const void* value, size_t size);
     }
 );                                  // 4 1 2 255 =  262 bytes
 
@@ -104,24 +104,35 @@ PACK(
         std::string toString() const;
 
         size_t toArray(void *buf, size_t size, const NetworkIdentity *aIdentity) const;
+        size_t toStream(std::ostream &retVal, const NetworkIdentity *aIdentity) const;
+        std::string asHex(const NetworkIdentity *aIdentity) const;
         // decode message
-        void decode(const NetworkIdentity *aIdentity);
-        void decode(const DEVADDR &devAddr, const KEY128 &appSKey);
+        bool decode(const NetworkIdentity *aIdentity);
+        bool decode(const DEVADDR &devAddr, const KEY128 &appSKey);
 
         const DEVADDR* getAddr() const;
         const JOIN_REQUEST_FRAME *getJoinRequest() const;
         bool operator==(const LORAWAN_MESSAGE_STORAGE &rhs) const;
         LORAWAN_MESSAGE_STORAGE& operator=(const LORAWAN_MESSAGE_STORAGE &value);
-        void setPayload(void* value, size_t size);
+        void setPayload(const void* value, size_t size);
         const std::string foptsString() const;
-        void setFOpts(void* value, size_t size);
+        void setFOpts(const void* value, size_t size);
         std::string payloadBase64() const;
         std::string payloadString() const;
         void setSize(size_t size);
-    }
+        // calculate MIC
+        uint32_t mic(const KEY128 &key) const;
+        // read MIC from received buffer (if exista)
+        uint32_t mic() const;
+        /**
+         * Compare received MIC with calculated value based on NwkSKey
+         * @param key NwkSKey
+         */
+        bool matchMic(const KEY128 &key) const;
+}
 );
 
-void  setLORAWAN_MESSAGE_STORAGE(
+void setLORAWAN_MESSAGE_STORAGE(
     LORAWAN_MESSAGE_STORAGE &retVal,
     const std::string &bin
 );

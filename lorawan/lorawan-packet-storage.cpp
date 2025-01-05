@@ -5,9 +5,10 @@
 #include "lorawan/lorawan-packet-storage.h"
 #include "lorawan/lorawan-string.h"
 #include "lorawan/helper/aes-helper.h"
-#include "lorawan/lorawan-conv.h"
 
 #include "base64/base64.h"
+#include "lorawan-conv.h"
+#include "lorawan-mic.h"
 
 LORAWAN_MESSAGE_STORAGE::LORAWAN_MESSAGE_STORAGE()
     : mhdr{}, data {}, payloadSize(0)
@@ -48,6 +49,7 @@ void setLORAWAN_MESSAGE_STORAGE(
 {
     if (size > sizeof(LORAWAN_MESSAGE_STORAGE) - 2)
         size = sizeof(LORAWAN_MESSAGE_STORAGE) - 2;
+    // including least 4 bytes MIC
     memmove(&retVal.mhdr, buffer, size);
     retVal.setSize(size);
 }
@@ -139,27 +141,35 @@ size_t LORAWAN_MESSAGE_STORAGE::toArray(
             break;
         case MTYPE_UNCONFIRMED_DATA_UP:
         case MTYPE_CONFIRMED_DATA_UP:
-            retSize += SIZE_UPLINK_EMPTY_STORAGE;  // 5 bytes
+            retSize += SIZE_UPLINK_EMPTY_STORAGE;  // 7 bytes
             if (b && (size >= retSize)) {
-                memmove(b, &data.u, SIZE_UPLINK_EMPTY_STORAGE);
+                memmove(b, &data.uplink.devaddr.c, SIZE_UPLINK_EMPTY_STORAGE);
+                b += SIZE_UPLINK_EMPTY_STORAGE;
             }
             if (payloadSize) {
-                retSize += payloadSize;
+                retSize += payloadSize + 1; // + FPort
                 if (b && (size >= retSize)) {
+                    *b = data.uplink.fport();
+                    b++;
                     memmove(b, data.uplink.payload(), payloadSize);
+                    b += payloadSize;
                 }
             }
             break;
         case MTYPE_UNCONFIRMED_DATA_DOWN:
         case MTYPE_CONFIRMED_DATA_DOWN:
-            retSize += SIZE_DOWNLINK_EMPTY_STORAGE;  // 5 bytes
+            retSize += SIZE_DOWNLINK_EMPTY_STORAGE;  // 7 bytes
             if (b && (size >= retSize)) {
-                memmove(b, &data.u, SIZE_DOWNLINK_EMPTY_STORAGE);
+                memmove(b, &data.downlink.devaddr.c, SIZE_DOWNLINK_EMPTY_STORAGE);
+                b += SIZE_DOWNLINK_EMPTY_STORAGE;
             }
             if (payloadSize) {
-                retSize += payloadSize;
+                retSize += payloadSize + 1; // + FPort
                 if (b && (size >= retSize)) {
+                    *b = data.uplink.fport();
+                    b++;
                     memmove(b, data.downlink.payload(), payloadSize);
+                    b += payloadSize;
                 }
             }
             break;
@@ -188,22 +198,45 @@ size_t LORAWAN_MESSAGE_STORAGE::toArray(
     }
     // add MIC
     retSize += SIZE_MIC;
-    if (b && (size >= retSize)) {
+    if (identity && b && (size >= retSize)) {
         uint32_t mic = calculateMIC(buf, size, *identity);
-        memmove(b, &data.u, SIZE_MIC);
+        mic = NTOH4(mic);
+        memmove(b, &mic, SIZE_MIC);
     }
     return retSize;
 }
 
-void LORAWAN_MESSAGE_STORAGE::decode(
+size_t LORAWAN_MESSAGE_STORAGE::toStream(
+    std::ostream &retVal,
+    const NetworkIdentity *aIdentity
+) const
+{
+    char b[300];
+    auto r = toArray((void *) b, sizeof(b), aIdentity);
+    retVal.write(b, (std::streamsize) r);
+    return r;
+}
+
+std::string LORAWAN_MESSAGE_STORAGE::asHex(
+    const NetworkIdentity *aIdentity
+) const
+{
+    char b[300];
+    size_t r = toArray((void *) b, sizeof(b), aIdentity);
+    return hexString(b, r);
+}
+
+bool LORAWAN_MESSAGE_STORAGE::decode(
     const NetworkIdentity *aIdentity
 ) {
-    if (aIdentity)
-        decode(aIdentity->devaddr, aIdentity->appSKey);
+    if (aIdentity) {
+        return decode(aIdentity->devaddr, aIdentity->appSKey);
+    }
+    return false;
 }
 
 // decode message
-void LORAWAN_MESSAGE_STORAGE::decode(
+bool LORAWAN_MESSAGE_STORAGE::decode(
     const DEVADDR &devAddr,
     const KEY128 &appSKey
 )
@@ -220,17 +253,18 @@ void LORAWAN_MESSAGE_STORAGE::decode(
             case MTYPE_CONFIRMED_DATA_UP:
                 decryptPayload((void *) data.uplink.payload(), payloadSize,
                     data.uplink.fcnt, LORAWAN_UPLINK, devAddr, appSKey);
-            break;
+                return true;
             case MTYPE_UNCONFIRMED_DATA_DOWN:
             case MTYPE_CONFIRMED_DATA_DOWN:
                 decryptPayload((void *) data.downlink.payload(), payloadSize,
                     data.uplink.fcnt, LORAWAN_DOWNLINK, devAddr, appSKey);
-                break;
+                return true;
             default:
                 // case MTYPE_PROPRIETARYRADIO:
                 break;
         }
     }
+    return false;
 }
 
 const DEVADDR* LORAWAN_MESSAGE_STORAGE::getAddr() const
@@ -292,10 +326,10 @@ std::string LORAWAN_MESSAGE_STORAGE::payloadString() const
     switch ((MTYPE) mhdr.f.mtype) {
         case MTYPE_UNCONFIRMED_DATA_UP:
         case MTYPE_CONFIRMED_DATA_UP:
-            return std::string((char *) data.uplink.payload(), payloadSize);
+            return std::string((const char *) data.uplink.payload(), payloadSize);
         case MTYPE_UNCONFIRMED_DATA_DOWN:
         case MTYPE_CONFIRMED_DATA_DOWN:
-            return std::string((char *) data.downlink.payload(), payloadSize);
+            return std::string((const char *) data.downlink.payload(), payloadSize);
         default:
             break;
     }
@@ -312,7 +346,7 @@ void LORAWAN_MESSAGE_STORAGE::setSize(
             break;
         case MTYPE_UNCONFIRMED_DATA_UP:
         case MTYPE_CONFIRMED_DATA_UP:
-            payloadSize = (int) size - SIZE_MHDR - SIZE_UPLINK_EMPTY_STORAGE - data.uplink.f.foptslen - SIZE_MIC;
+            payloadSize = size - SIZE_MHDR - SIZE_UPLINK_EMPTY_STORAGE - data.uplink.f.foptslen - SIZE_MIC;
             // FPort
             if (payloadSize > 1)
                 payloadSize--;
@@ -321,7 +355,7 @@ void LORAWAN_MESSAGE_STORAGE::setSize(
             break;
         case MTYPE_UNCONFIRMED_DATA_DOWN:
         case MTYPE_CONFIRMED_DATA_DOWN:
-            payloadSize = (int) size - SIZE_MHDR - SIZE_DOWNLINK_EMPTY_STORAGE - data.downlink.f.foptslen - SIZE_MIC;
+            payloadSize = size - SIZE_MHDR - SIZE_DOWNLINK_EMPTY_STORAGE - data.downlink.f.foptslen - SIZE_MIC;
             // FPort
             if (payloadSize > 1)
                 payloadSize--;
@@ -331,6 +365,49 @@ void LORAWAN_MESSAGE_STORAGE::setSize(
         default:
             break;
     }
+}
+
+uint32_t LORAWAN_MESSAGE_STORAGE::mic(
+    const KEY128 &key
+) const
+{
+    switch ((MTYPE) mhdr.f.mtype) {
+        case MTYPE_UNCONFIRMED_DATA_UP:
+        case MTYPE_CONFIRMED_DATA_UP:
+        case MTYPE_UNCONFIRMED_DATA_DOWN:
+        case MTYPE_CONFIRMED_DATA_DOWN:
+            return calculateMICFrmPayload(&mhdr.i, payloadSize ? payloadSize + 9 : 8, data.uplink.fcnt, mhdr.f.mtype & 1, data.uplink.devaddr, key);
+        default:
+            break;
+    }
+    return 0;
+}
+
+bool LORAWAN_MESSAGE_STORAGE::matchMic(
+    const KEY128 &key
+) const {
+    return mic() == mic(key);
+}
+
+/**
+ * MIC saved in the buffer at the end of payload in the Semtech's simple UDP protocol as part of radio packet
+ * @return 0 if there os no room for MIC (in case of simulation wire protocol)
+ */
+uint32_t LORAWAN_MESSAGE_STORAGE::mic() const
+{
+    switch ((MTYPE) mhdr.f.mtype) {
+        case MTYPE_UNCONFIRMED_DATA_UP:
+        case MTYPE_CONFIRMED_DATA_UP:
+        case MTYPE_UNCONFIRMED_DATA_DOWN:
+        case MTYPE_CONFIRMED_DATA_DOWN:
+            if (payloadSize <= 255 - 4)
+                return *(uint32_t*) (&mhdr.i + 1 + SIZE_DOWNLINK_EMPTY_STORAGE + (payloadSize ? 1 + payloadSize : 0));
+            else
+                return 0;
+        default:
+            break;
+    }
+    return 0;
 }
 
 const std::string LORAWAN_MESSAGE_STORAGE::foptsString() const {
@@ -363,7 +440,7 @@ std::string LORAWAN_MESSAGE_STORAGE::payloadBase64() const
 }
 
 void LORAWAN_MESSAGE_STORAGE::setPayload(
-    void* value,
+    const void* value,
     size_t size
 )
 {
@@ -380,7 +457,7 @@ void LORAWAN_MESSAGE_STORAGE::setPayload(
 }
 
 void LORAWAN_MESSAGE_STORAGE::setFOpts(
-    void* value,
+    const void* value,
     size_t size
 )
 {
@@ -451,14 +528,14 @@ const uint8_t* DOWNLINK_STORAGE::payload() const
 }
 
 void DOWNLINK_STORAGE::setPayload(
-    uint8_t* value,
+    const void* value,
     uint8_t size
 ) {
     memmove(fopts_fport_payload + f.foptslen + 1, value, size);
 }
 
 void DOWNLINK_STORAGE::setFOpts(
-    void* value,
+    const void* value,
     size_t size
 ) {
     // check size
@@ -485,7 +562,7 @@ uint8_t UPLINK_STORAGE::foptsSize() const
 }
 
 void UPLINK_STORAGE::setFopts(
-    uint8_t* value,
+    const uint8_t* value,
     uint8_t size
 )
 {
@@ -511,14 +588,14 @@ const uint8_t* UPLINK_STORAGE::payload() const
 }
 
 void UPLINK_STORAGE::setPayload(
-    uint8_t* value,
+    const void *value,
     uint8_t size
 ) {
     memmove(fopts_fport_payload + f.foptslen + 1, value, size); // +1 FPort
 }
 
 void UPLINK_STORAGE::setFOpts(
-    void* value,
+    const void* value,
     size_t size
 ) {
     // check size

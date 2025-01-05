@@ -1,4 +1,4 @@
-#include "key128gen.h"
+#include "lorawan/helper/key128gen.h"
 
 #include <cstring>
 #if __cplusplus < 199711L
@@ -10,16 +10,13 @@
 
 #include "system/crypto/aes.h"
 #include "system/crypto/cmac.h"
+#include "lorawan/helper/aes-const.h"
 
 #ifdef ESP_PLATFORM
 #include <iostream>
 #include "platform-defs.h"
 #include "lorawan/lorawan-string.h"
 #endif
-
-// N_MAX_ROUNDS = 14  N_BLOCK = 4 * 4 = 15
-// KSCH_SIZE = 240
-#define KSCH_SIZE	((N_MAX_ROUNDS + 1) * N_BLOCK)
 
 void euiGen(
     uint8_t *retVal,

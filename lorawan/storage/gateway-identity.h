@@ -3,6 +3,7 @@
 
 #include <string>
 #include <ctime>
+#include <cinttypes>
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <WinSock2.h>
 #include <ws2tcpip.h>
@@ -37,7 +38,7 @@ public:
     std::string toJsonString() const;
 };
 
-class GatewayStatistic : public GatewayIdentity{
+class GatewayStatistic : public GatewayIdentity {
 public:
     // gateway common name
     std::string name;
