@@ -182,6 +182,18 @@ EXPORT_SHARED_C_FUNC C_NETID *c_getNetworkId(void *o);
 EXPORT_SHARED_C_FUNC void c_setNetworkId(void *o, const C_NETID *value);
 EXPORT_SHARED_C_FUNC int c_joinAccept(void *o, C_JOIN_ACCEPT_FRAME_HEADER *retVal, C_NETWORKIDENTITY *networkIdentity);
 
+EXPORT_SHARED_C_FUNC void text2c_networkidentity(
+    C_NETWORKIDENTITY *retVal,
+    const char *lines[]
+);
+
+EXPORT_SHARED_C_FUNC void c_networkidentity2text(
+    char *buffer,
+    size_t bufferSize,
+    const char *retVal[],
+    C_NETWORKIDENTITY *value
+);
+
 #ifdef __cplusplus
 }
 #endif
