@@ -63,15 +63,15 @@ EXPORT_SHARED_C_FUNC void *makeIdentityServiceC(
 }
 
 EXPORT_SHARED_C_FUNC void destroyIdentityServiceC(
-        void *instance
+    void *instance
 ) {
     if (instance)
         delete (IdentityService *) instance;
 }
 
 static void DEVICEID2C_DEVICEID(
-        C_DEVICEID *retVal,
-        const DEVICEID &did
+    C_DEVICEID *retVal,
+    const DEVICEID &did
 ) {
     retVal->activation = did.id.activation;
     retVal->deviceclass = did.id.deviceclass;
@@ -88,8 +88,8 @@ static void DEVICEID2C_DEVICEID(
 }
 
 static void NETWORKIDENTITY2C_NETWORKIDENTITY(
-        C_NETWORKIDENTITY *retVal,
-        const NETWORKIDENTITY &nid
+    C_NETWORKIDENTITY *retVal,
+    const NETWORKIDENTITY &nid
 ) {
     retVal->devaddr = nid.value.devaddr.u;
     retVal->devid.activation = nid.value.devid.id.activation;
@@ -106,28 +106,35 @@ static void NETWORKIDENTITY2C_NETWORKIDENTITY(
     memmove(&retVal->devid.name, &nid.value.devid.id.name, sizeof(C_DEVICENAME));
 }
 
+static void C_DEVICEID2DEVICEID(
+    DEVICEID &retVal,
+    C_DEVICEID *did
+) {
+    retVal.id.activation = (ACTIVATION) did->activation;
+    retVal.id.deviceclass = (DEVICECLASS) did->deviceclass;
+    retVal.id.devEUI.u = did->devEUI;
+    memmove(&retVal.id.nwkSKey, &did->nwkSKey, sizeof(KEY128));
+    memmove(&retVal.id.appSKey, &did->appSKey, sizeof(KEY128));
+    retVal.id.version.c = did->version;
+    retVal.id.appEUI.u = did->appEUI;
+    memmove(&retVal.id.appKey, &did->appKey, sizeof(KEY128));
+    memmove(&retVal.id.nwkKey, &did->nwkKey, sizeof(KEY128));
+    retVal.id.devNonce.u = did->devNonce;
+    memmove(&retVal.id.joinNonce, &did->joinNonce, sizeof(C_JOINNONCE));
+    memmove(&retVal.id.name, &did->name, sizeof(C_DEVICENAME));
+}
+
 static void C_NETWORKIDENTITY2NETWORKIDENTITY(
-        NETWORKIDENTITY &retVal,
-        C_NETWORKIDENTITY *nid
+    NETWORKIDENTITY &retVal,
+    C_NETWORKIDENTITY *nid
 ) {
     retVal.value.devaddr.u = nid->devaddr;
-    retVal.value.devid.id.activation = (ACTIVATION) nid->devid.activation;
-    retVal.value.devid.id.deviceclass = (DEVICECLASS) nid->devid.deviceclass;
-    retVal.value.devid.id.devEUI.u = nid->devid.devEUI;
-    memmove(&retVal.value.devid.id.nwkSKey, &nid->devid.nwkSKey, sizeof(KEY128));
-    memmove(&retVal.value.devid.id.appSKey, &nid->devid.appSKey, sizeof(KEY128));
-    retVal.value.devid.id.version.c = nid->devid.version;
-    retVal.value.devid.id.appEUI.u = nid->devid.appEUI;
-    memmove(&retVal.value.devid.id.appKey, &nid->devid.appKey, sizeof(KEY128));
-    memmove(&retVal.value.devid.id.nwkKey, &nid->devid.nwkKey, sizeof(KEY128));
-    retVal.value.devid.id.devNonce.u = nid->devid.devNonce;
-    memmove(&retVal.value.devid.id.joinNonce, &nid->devid.joinNonce, sizeof(C_JOINNONCE));
-    memmove(&retVal.value.devid.id.name, &nid->devid.name, sizeof(C_DEVICENAME));
+    C_DEVICEID2DEVICEID(retVal.value.devid, &nid->devid);
 }
 
 static void C_NETWORK_IDENTITY_FILTER2NETWORK_IDENTITY_FILTER(
-        NETWORK_IDENTITY_FILTER &retVal,
-        C_NETWORK_IDENTITY_FILTER *filter
+    NETWORK_IDENTITY_FILTER &retVal,
+    C_NETWORK_IDENTITY_FILTER *filter
 ) {
     retVal.pre = (NETWORK_IDENTITY_LOGICAL_PRE_OPERATOR) filter->pre;
     retVal.property = (NETWORK_IDENTITY_PROPERTY) filter->property;
@@ -152,9 +159,9 @@ static void JOIN_ACCEPT_FRAME_HEADER2C_JOIN_ACCEPT_FRAME_HEADER(
 }
 
 EXPORT_SHARED_C_FUNC int c_get(
-        void *o,
-        C_DEVICEID *retVal,
-        const C_DEVADDR *devAddr
+    void *o,
+    C_DEVICEID *retVal,
+    const C_DEVADDR *devAddr
 ) {
     const DEVADDR a(*devAddr);
     DEVICEID did;
@@ -164,9 +171,9 @@ EXPORT_SHARED_C_FUNC int c_get(
 }
 
 EXPORT_SHARED_C_FUNC int c_getNetworkIdentity(
-        void *o,
-        C_NETWORKIDENTITY *retVal,
-        const C_DEVEUI *eui
+    void *o,
+    C_NETWORKIDENTITY *retVal,
+    const C_DEVEUI *eui
 ) {
     NETWORKIDENTITY nid;
     const DEVEUI devEui(*eui);
@@ -176,9 +183,9 @@ EXPORT_SHARED_C_FUNC int c_getNetworkIdentity(
 }
 
 EXPORT_SHARED_C_FUNC int c_put(
-        void *o,
-        const C_DEVADDR *devaddr,
-        const C_DEVICEID *id
+    void *o,
+    const C_DEVADDR *devaddr,
+    const C_DEVICEID *id
 ) {
     const DEVADDR a(*devaddr);
     const DEVICEID did(
@@ -339,27 +346,47 @@ EXPORT_SHARED_C_FUNC int c_joinAccept(
     return r;
 }
 
-EXPORT_SHARED_C_FUNC void text2c_networkidentity(
-        C_NETWORKIDENTITY *retval,
-        const char *lines[]
-) {
-    if (!retval || !lines)
+EXPORT_SHARED_C_FUNC void text2c_devaddr(
+    C_DEVADDR *retVal,
+    const char *expr
+)
+{
+    DEVADDR a;
+    string2DEVADDR(a, expr);
+    *retVal = a.u;
+}
+
+EXPORT_SHARED_C_FUNC void text2c_deviceid(
+    C_DEVICEID *retVal,
+    const char *lines[]
+)
+{
+    if (!retVal || !lines)
         return;
-    NETWORKIDENTITY retVal;
-    C_NETWORKIDENTITY2NETWORKIDENTITY(retVal, retval);
-    string2DEVADDR(retVal.value.devaddr, lines[0]);
-    retVal.value.devid.id.activation = string2activation(lines[1]);
-    retVal.value.devid.id.deviceclass = string2deviceclass(lines[2]);
-    string2DEVEUI(retVal.value.devid.id.devEUI, lines[3]);
-    string2KEY(retVal.value.devid.id.nwkSKey, lines[4]);
-    string2KEY(retVal.value.devid.id.appSKey, lines[5]);
-    retVal.value.devid.id.version = string2LORAWAN_VERSION(lines[6]);
-    string2DEVEUI(retVal.value.devid.id.appEUI, lines[7]);
-    string2KEY(retVal.value.devid.id.appKey, lines[8]);
-    string2KEY(retVal.value.devid.id.nwkKey, lines[9]);
-    retVal.value.devid.id.devNonce = string2DEVNONCE(lines[10]);
-    string2JOINNONCE(retVal.value.devid.id.joinNonce, lines[11]);
-    string2DEVICENAME(retVal.value.devid.id.name, lines[12]);
+    DEVICEID did;
+    // lines[0] - address
+    did.id.activation = string2activation(lines[1]);
+    did.id.deviceclass = string2deviceclass(lines[2]);
+    string2DEVEUI(did.id.devEUI, lines[3]);
+    string2KEY(did.id.nwkSKey, lines[4]);
+    string2KEY(did.id.appSKey, lines[5]);
+    did.id.version = string2LORAWAN_VERSION(lines[6]);
+    string2DEVEUI(did.id.appEUI, lines[7]);
+    string2KEY(did.id.appKey, lines[8]);
+    string2KEY(did.id.nwkKey, lines[9]);
+    did.id.devNonce = string2DEVNONCE(lines[10]);
+    string2JOINNONCE(did.id.joinNonce, lines[11]);
+    string2DEVICENAME(did.id.name, lines[12]);
+
+    C_DEVICEID2DEVICEID(did, retVal);
+}
+
+EXPORT_SHARED_C_FUNC void text2c_networkidentity(
+    C_NETWORKIDENTITY *retval,
+    const char *lines[]
+) {
+    text2c_devaddr(&retval->devaddr, lines[0]);
+    text2c_deviceid(&retval->devid, lines);
 }
 
 static size_t addString2Buffer(
@@ -372,9 +399,52 @@ static size_t addString2Buffer(
 )
 {
     size_t len = s.size() + 1;
-    memmove(buffer + position, s.c_str(), len);
-    retVal[index] = buffer + position;
+    if (position + len <= bufferSize) {
+        memmove(buffer + position, s.c_str(), len);
+        retVal[index] = buffer + position;
+    } else
+        retVal[index] = nullptr;
     return len;
+}
+
+EXPORT_SHARED_C_FUNC size_t c_devaddr2text(
+    char *buffer,
+    size_t bufferSize,
+    C_DEVADDR *addr
+)
+{
+    DEVADDR a(*addr);
+    std::string r(DEVADDR2string(a));
+    auto sz = r.size();
+    if (sz <= bufferSize)
+        memmove(buffer, r.c_str(), sz);
+    return sz;
+}
+
+EXPORT_SHARED_C_FUNC void c_deviceid2text(
+    char *buffer,
+    size_t bufferSize,
+    const char *retVal[],
+    C_DEVICEID *deviceId
+)
+{
+    if (!buffer || !bufferSize || !retVal)
+        return;
+    DEVICEID did;
+    C_DEVICEID2DEVICEID(did, deviceId);
+    size_t position = 0;
+    position += addString2Buffer(buffer, position, bufferSize, 1, retVal, activation2string(did.id.activation));
+    position += addString2Buffer(buffer, position, bufferSize, 2, retVal, deviceclass2string(did.id.deviceclass));
+    position += addString2Buffer(buffer, position, bufferSize, 3, retVal, DEVEUI2string(did.id.devEUI));
+    position += addString2Buffer(buffer, position, bufferSize, 4, retVal, KEY2string(did.id.nwkSKey));
+    position += addString2Buffer(buffer, position, bufferSize, 5, retVal, KEY2string(did.id.appSKey));
+    position += addString2Buffer(buffer, position, bufferSize, 6, retVal, LORAWAN_VERSION2string(did.id.version));
+    position += addString2Buffer(buffer, position, bufferSize, 7, retVal, DEVEUI2string(did.id.appEUI));
+    position += addString2Buffer(buffer, position, bufferSize, 8, retVal, KEY2string(did.id.nwkKey));
+    position += addString2Buffer(buffer, position, bufferSize, 9, retVal, KEY2string(did.id.appKey));
+    position += addString2Buffer(buffer, position, bufferSize, 10, retVal, DEVNONCE2string(did.id.devNonce));
+    position += addString2Buffer(buffer, position, bufferSize, 11, retVal, JOINNONCE2string(did.id.joinNonce));
+    position += addString2Buffer(buffer, position, bufferSize, 12, retVal, DEVICENAME2string(did.id.name));
 }
 
 EXPORT_SHARED_C_FUNC void c_networkidentity2text(
@@ -386,24 +456,9 @@ EXPORT_SHARED_C_FUNC void c_networkidentity2text(
 {
     if (!buffer || !bufferSize || !retVal)
         return;
-    NETWORKIDENTITY nid;
-    char *p = buffer;
-    C_NETWORKIDENTITY2NETWORKIDENTITY(nid, networkIdentity);
-
-    size_t position = 0;
-    position += addString2Buffer(buffer, position, bufferSize, 0, retVal, DEVADDR2string(nid.value.devaddr));
-    position += addString2Buffer(buffer, position, bufferSize, 1, retVal, activation2string(nid.value.devid.id.activation));
-    position += addString2Buffer(buffer, position, bufferSize, 2, retVal, deviceclass2string(nid.value.devid.id.deviceclass));
-    position += addString2Buffer(buffer, position, bufferSize, 3, retVal, DEVEUI2string(nid.value.devid.id.devEUI));
-    position += addString2Buffer(buffer, position, bufferSize, 4, retVal, KEY2string(nid.value.devid.id.nwkSKey));
-    position += addString2Buffer(buffer, position, bufferSize, 5, retVal, KEY2string(nid.value.devid.id.appSKey));
-    position += addString2Buffer(buffer, position, bufferSize, 6, retVal, LORAWAN_VERSION2string(nid.value.devid.id.version));
-    position += addString2Buffer(buffer, position, bufferSize, 7, retVal, DEVEUI2string(nid.value.devid.id.appEUI));
-    position += addString2Buffer(buffer, position, bufferSize, 8, retVal, KEY2string(nid.value.devid.id.nwkKey));
-    position += addString2Buffer(buffer, position, bufferSize, 9, retVal, KEY2string(nid.value.devid.id.appKey));
-    position += addString2Buffer(buffer, position, bufferSize, 10, retVal, DEVNONCE2string(nid.value.devid.id.devNonce));
-    position += addString2Buffer(buffer, position, bufferSize, 11, retVal, JOINNONCE2string(nid.value.devid.id.joinNonce));
-    position += addString2Buffer(buffer, position, bufferSize, 12, retVal, DEVICENAME2string(nid.value.devid.id.name));
+    DEVADDR a(networkIdentity->devaddr);
+    size_t position = c_devaddr2text(buffer, bufferSize, &networkIdentity->devaddr);
+    c_deviceid2text(buffer + position, bufferSize - position, retVal, &networkIdentity->devid);
 }
 
 #ifdef __cplusplus

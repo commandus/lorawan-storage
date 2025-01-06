@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "lorawan/storage/service/identity-service-c-wrapper.h"
 
@@ -18,7 +19,7 @@ static C_DEVICEID devId = {
     { 'n', 'a', 'm', 'e', 0, 0, 0, 0 }
 };
 
-void testSqlite()
+static void testSqlite()
 {
     // sqlite
     void *o = makeIdentityServiceC(CISI_SQLITE);
@@ -28,7 +29,7 @@ void testSqlite()
     memset(&devId, 0, sizeof(devId));
     c_get(o, &devId, &devAddr);
 
-    int c = c_size(o);
+    size_t c = c_size(o);
     C_NETWORKIDENTITY nis[2];
     c = c_list(o, nis, 0, 2);
     // c_rm(o, &devAddr);
@@ -48,7 +49,7 @@ void testSqlite()
     destroyIdentityServiceC(o);
 }
 
-void testJson()
+static void testJson()
 {
     // JSON
     void *o = makeIdentityServiceC(CISI_JSON);
@@ -78,7 +79,7 @@ void testJson()
     destroyIdentityServiceC(o);
 }
 
-void testLmdb()
+static void testLmdb()
 {
     // LMDB
     void *o = makeIdentityServiceC(CISI_LMDB);
@@ -110,8 +111,35 @@ void testLmdb()
     destroyIdentityServiceC(o);
 }
 
+static void testString()
+{
+    char buffer[128];
+    char *p[13];
+
+
+    C_DEVADDR a;
+    C_DEVICEID did;
+    c_deviceid2text(buffer, sizeof(buffer), &p, &did);
+    text2c_deviceid(&did, &p);
+    for (int i = 0; i < 13; i++) {
+        printf("%s ", p[i]);
+    }
+    printf("\n");
+
+
+    C_NETWORKIDENTITY v;
+    c_networkidentity2text(buffer, sizeof(buffer), &p, &v);
+    text2c_networkidentity(&v, &p);
+    for (int i = 0; i < 13; i++) {
+        printf("%s ", p[i]);
+    }
+    printf("\n");
+
+}
+
 int main() {
-    testSqlite();
+    testString();
+    // testSqlite();
     // testJson();
     // testLmdb();
     return 0;
