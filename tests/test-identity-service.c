@@ -113,13 +113,14 @@ static void testLmdb()
 
 static void testString()
 {
-    char buffer[128];
+    char buffer[256];
     char *p[13];
-
 
     C_DEVADDR a;
     C_DEVICEID did;
-    c_deviceid2text(buffer, sizeof(buffer), &p, &did);
+    size_t position = c_devaddr2text(buffer, sizeof(buffer), &a);
+    p[0] = buffer;
+    c_deviceid2text(buffer + position, sizeof(buffer) - position, &p, &devId);
     text2c_deviceid(&did, &p);
     for (int i = 0; i < 13; i++) {
         printf("%s ", p[i]);
