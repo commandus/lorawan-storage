@@ -116,10 +116,16 @@ static void testString()
     char buffer[256];
     char *p[13];
 
-    C_DEVADDR a;
+    memset(buffer, 0, sizeof(buffer));
+    C_DEVADDR a = 0x01020304;
     C_DEVICEID did;
     size_t position = c_devaddr2text(buffer, sizeof(buffer), &a);
+    if (position >= sizeof(buffer))
+        return;
+    buffer[position] = '\0';
+    position++;
     p[0] = buffer;
+
     c_deviceid2text(buffer + position, sizeof(buffer) - position, &p, &devId);
     text2c_deviceid(&did, &p);
     for (int i = 0; i < 13; i++) {
@@ -128,6 +134,7 @@ static void testString()
     printf("\n");
 
 
+    memset(buffer, 0, sizeof(buffer));
     C_NETWORKIDENTITY v;
     c_networkidentity2text(buffer, sizeof(buffer), &p, &v);
     text2c_networkidentity(&v, &p);

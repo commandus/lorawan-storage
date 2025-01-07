@@ -458,6 +458,11 @@ EXPORT_SHARED_C_FUNC void c_networkidentity2text(
         return;
     DEVADDR a(networkIdentity->devaddr);
     size_t position = c_devaddr2text(buffer, bufferSize, &networkIdentity->devaddr);
+    if (position >= bufferSize)
+        return;
+    // add string terminator
+    buffer[position] = '\0';
+    position++;
     c_deviceid2text(buffer + position, bufferSize - position, retVal, &networkIdentity->devid);
 }
 
