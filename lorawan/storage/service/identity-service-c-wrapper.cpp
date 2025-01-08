@@ -394,7 +394,7 @@ static size_t addString2Buffer(
     size_t position,
     size_t bufferSize,
     int index,
-    const char *retVal[],
+    char *retVal[],
     const std::string &s
 )
 {
@@ -424,7 +424,7 @@ EXPORT_SHARED_C_FUNC size_t c_devaddr2text(
 EXPORT_SHARED_C_FUNC void c_deviceid2text(
     char *buffer,
     size_t bufferSize,
-    const char *retVal[],
+    char *retVal[],
     C_DEVICEID *deviceId
 )
 {
@@ -450,7 +450,7 @@ EXPORT_SHARED_C_FUNC void c_deviceid2text(
 EXPORT_SHARED_C_FUNC void c_networkidentity2text(
     char *buffer,
     size_t bufferSize,
-    const char *retVal[],
+    char *retVal[],
     C_NETWORKIDENTITY *networkIdentity
 )
 {
@@ -462,6 +462,7 @@ EXPORT_SHARED_C_FUNC void c_networkidentity2text(
         return;
     // add string terminator
     buffer[position] = '\0';
+    retVal[0] = buffer;
     position++;
     c_deviceid2text(buffer + position, bufferSize - position, retVal, &networkIdentity->devid);
 }

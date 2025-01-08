@@ -206,14 +206,14 @@ EXPORT_SHARED_C_FUNC size_t c_devaddr2text(
 EXPORT_SHARED_C_FUNC void c_deviceid2text(
     char *buffer,
     size_t bufferSize,
-    const char *retVal[],
+    char *retVal[],
     C_DEVICEID *value
 );
 
 EXPORT_SHARED_C_FUNC void c_networkidentity2text(
     char *buffer,
     size_t bufferSize,
-    const char *retVal[],
+    char *retVal[],
     C_NETWORKIDENTITY *value
 );
 
