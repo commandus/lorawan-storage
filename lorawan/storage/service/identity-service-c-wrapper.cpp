@@ -379,7 +379,7 @@ EXPORT_SHARED_C_FUNC void text2c_deviceid(
     string2JOINNONCE(did.id.joinNonce, lines[11]);
     string2DEVICENAME(did.id.name, lines[12]);
 
-    C_DEVICEID2DEVICEID(did, retVal);
+    DEVICEID2C_DEVICEID(retVal, did);
 }
 
 EXPORT_SHARED_C_FUNC void text2c_networkidentity(

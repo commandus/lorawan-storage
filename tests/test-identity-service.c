@@ -128,6 +128,7 @@ static void testString()
     p[0] = buffer;
 
     c_deviceid2text(buffer + position, sizeof(buffer) - position, &p, &devId);
+    memset(&did, 0, sizeof(did));
     text2c_deviceid(&did, &p);
     for (int i = 0; i < 13; i++) {
         printf("%s ", p[i]);
@@ -150,9 +151,9 @@ static void testString()
 }
 
 int main() {
-    // testString();
+    testString();
     // testSqlite();
-    testJson();
+    // testJson();
     // testLmdb();
     return 0;
 }
