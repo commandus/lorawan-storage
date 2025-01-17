@@ -305,6 +305,7 @@ EXPORT_SHARED_C_FUNC int c_init(
 EXPORT_SHARED_C_FUNC void c_done(
         void *o
 ) {
+    ((IdentityService *) o)->flush();
     ((IdentityService *) o)->done();
 }
 

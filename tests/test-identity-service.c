@@ -54,6 +54,7 @@ static void testJson()
     // JSON
     void *o = makeIdentityServiceC(CISI_JSON);
     c_init(o, "test.json", NULL);
+    size_t sz = c_size(o);
     c_put(o, &devAddr, &devId);
     memset(&devId, 0, sizeof(devId));
     c_get(o, &devId, &devAddr);
@@ -136,8 +137,11 @@ static void testString()
 
     memset(buffer, 0, sizeof(buffer));
     C_NETWORKIDENTITY v;
+    v.devaddr = 0x01020304;
+    memmove((char *) &v.devid, (char *) &devId, sizeof(devId));
     c_networkidentity2text(buffer, sizeof(buffer), &p, &v);
     text2c_networkidentity(&v, &p);
+    c_networkidentity2text(buffer, sizeof(buffer), &p, &v);
     for (int i = 0; i < 13; i++) {
         printf("%s ", p[i]);
     }
@@ -146,9 +150,9 @@ static void testString()
 }
 
 int main() {
-    testString();
+    // testString();
     // testSqlite();
-    // testJson();
+    testJson();
     // testLmdb();
     return 0;
 }
