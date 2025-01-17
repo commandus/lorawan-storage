@@ -34,7 +34,7 @@ EXPORT_SHARED_C_FUNC void *createIdentityServiceC(
 }
 
 EXPORT_SHARED_C_FUNC void *makeIdentityServiceC(
-        C_IDENTITY_SERVICE_IMPL impl
+    C_IDENTITY_SERVICE_IMPL impl
 ) {
     switch (impl) {
 #ifdef ENABLE_GEN
@@ -206,18 +206,18 @@ EXPORT_SHARED_C_FUNC int c_put(
 }
 
 EXPORT_SHARED_C_FUNC int c_rm(
-        void *o,
-        const C_DEVADDR *addr
+    void *o,
+    const C_DEVADDR *addr
 ) {
     const DEVADDR a(*addr);
     return ((IdentityService *) o)->rm(a);
 }
 
 EXPORT_SHARED_C_FUNC int c_list(
-        void *o,
-        C_NETWORKIDENTITY retVal[],
-        uint32_t offset,
-        uint8_t size
+    void *o,
+    C_NETWORKIDENTITY retVal[],
+    uint32_t offset,
+    uint8_t size
 ) {
     std::vector<NETWORKIDENTITY> v;
     int r = ((IdentityService *) o)->list(v, offset, size);
@@ -231,12 +231,12 @@ EXPORT_SHARED_C_FUNC int c_list(
 }
 
 EXPORT_SHARED_C_FUNC int c_filter(
-        void *o,
-        C_NETWORKIDENTITY retVal[],
-        C_NETWORK_IDENTITY_FILTER filters[],
-        size_t filterSize,
-        uint32_t offset,
-        uint8_t size
+    void *o,
+    C_NETWORKIDENTITY retVal[],
+    C_NETWORK_IDENTITY_FILTER filters[],
+    size_t filterSize,
+    uint32_t offset,
+    uint8_t size
 ) {
     std::vector<NETWORKIDENTITY> v;
     std::vector<NETWORK_IDENTITY_FILTER> f;
@@ -255,12 +255,12 @@ EXPORT_SHARED_C_FUNC int c_filter(
 }
 
 EXPORT_SHARED_C_FUNC int c_filterExpression(
-        void *o,
-        C_NETWORKIDENTITY retVal[],
-        const char *filterExpression,
-        size_t filterExpressionSize,
-        uint32_t offset,
-        uint8_t size
+    void *o,
+    C_NETWORKIDENTITY retVal[],
+    const char *filterExpression,
+    size_t filterExpressionSize,
+    uint32_t offset,
+    uint8_t size
 ) {
     std::vector<NETWORKIDENTITY> v;
     std::vector<NETWORK_IDENTITY_FILTER> f;
@@ -274,13 +274,15 @@ EXPORT_SHARED_C_FUNC int c_filterExpression(
     return r < 0 ? r : (int) v.size();
 }
 
-EXPORT_SHARED_C_FUNC size_t c_size(void *o) {
+EXPORT_SHARED_C_FUNC size_t c_size(
+    void *o
+) {
     return ((IdentityService *) o)->size();
 }
 
 EXPORT_SHARED_C_FUNC int c_next(
-        void *o,
-        C_NETWORKIDENTITY *retVal
+    void *o,
+    C_NETWORKIDENTITY *retVal
 ) {
     NETWORKIDENTITY nid;
     int r = ((IdentityService *) o)->next(nid);
@@ -289,30 +291,30 @@ EXPORT_SHARED_C_FUNC int c_next(
 }
 
 EXPORT_SHARED_C_FUNC void c_flush(
-        void *o
+    void *o
 ) {
     ((IdentityService *) o)->flush();
 }
 
 EXPORT_SHARED_C_FUNC int c_init(
-        void *o,
-        const char *option,
-        void *data
+    void *o,
+    const char *option,
+    void *data
 ) {
     return ((IdentityService *) o)->init(option, data);
 }
 
 EXPORT_SHARED_C_FUNC void c_done(
-        void *o
+    void *o
 ) {
     ((IdentityService *) o)->flush();
     ((IdentityService *) o)->done();
 }
 
 EXPORT_SHARED_C_FUNC void c_setOption(
-        void *o,
-        int option,
-        void *value
+    void *o,
+    int option,
+    void *value
 ) {
     ((IdentityService *) o)->setOption(option, value);
 }
@@ -335,9 +337,9 @@ EXPORT_SHARED_C_FUNC void c_setNetworkId(
 }
 
 EXPORT_SHARED_C_FUNC int c_joinAccept(
-        void *o,
-        C_JOIN_ACCEPT_FRAME_HEADER *retVal,
-        C_NETWORKIDENTITY *networkIdentity
+    void *o,
+    C_JOIN_ACCEPT_FRAME_HEADER *retVal,
+    C_NETWORKIDENTITY *networkIdentity
 ) {
     NETWORKIDENTITY nid;
     C_NETWORKIDENTITY2NETWORKIDENTITY(nid, networkIdentity);
@@ -471,4 +473,3 @@ EXPORT_SHARED_C_FUNC void c_networkidentity2text(
 #ifdef __cplusplus
 }
 #endif
-

@@ -140,9 +140,14 @@ static void testString()
     C_NETWORKIDENTITY v;
     v.devaddr = 0x01020304;
     memmove((char *) &v.devid, (char *) &devId, sizeof(devId));
-    c_networkidentity2text(buffer, sizeof(buffer), &p, &v);
-    text2c_networkidentity(&v, &p);
-    c_networkidentity2text(buffer, sizeof(buffer), &p, &v);
+    memset(&buffer, 0, sizeof(buffer));
+    memset(&p, 0, sizeof(p));
+    c_networkidentity2text(buffer, sizeof(buffer), p, &v);
+    memset(&v, 0, sizeof(v));
+    text2c_networkidentity(&v, p);
+    memset(&buffer, 0, sizeof(buffer));
+    memset(&p, 0, sizeof(p));
+    c_networkidentity2text(buffer, sizeof(buffer), p, &v);
     for (int i = 0; i < 13; i++) {
         printf("%s ", p[i]);
     }
