@@ -129,7 +129,7 @@ static void testString()
 
     c_deviceid2text(buffer + position, sizeof(buffer) - position, p, &devId);
     memset(&did, 0, sizeof(did));
-    text2c_deviceid(&did, p);
+    text2c_deviceid(&did, (const char **) p);
     for (int i = 0; i < 13; i++) {
         printf("%s ", p[i]);
     }
@@ -144,7 +144,7 @@ static void testString()
     memset(&p, 0, sizeof(p));
     c_networkidentity2text(buffer, sizeof(buffer), p, &v);
     memset(&v, 0, sizeof(v));
-    text2c_networkidentity(&v, p);
+    text2c_networkidentity(&v, (const char **) p);
     memset(&buffer, 0, sizeof(buffer));
     memset(&p, 0, sizeof(p));
     c_networkidentity2text(buffer, sizeof(buffer), p, &v);
