@@ -42,13 +42,13 @@
 
 #ifdef ENABLE_GEN
 #include "lorawan/storage/service/identity-service-gen.h"
-#define DEF_DB  "gen"
+#define DEF_DB_GEN  "gen"
 #endif
 
 #ifdef ENABLE_JSON
 #include "lorawan/storage/service/identity-service-json.h"
 #include "lorawan/storage/service/gateway-service-json.h"
-#define DEF_DB  "identity.json"
+#define DEF_DB_JSON  "identity.json"
 #else
 #include "lorawan/storage/service/identity-service-udp.h"
 #include "lorawan/storage/service/gateway-service-mem.h"
@@ -57,11 +57,7 @@
 #ifdef ENABLE_SQLITE
 #include "lorawan/storage/service/identity-service-sqlite.h"
 #include "lorawan/storage/service/gateway-service-sqlite.h"
-#define DEF_DB  "lorawan.db"
-#endif
-
-#ifndef DEF_DB
-#define DEF_DB  "none"
+#define DEF_DB_SQLITE  "lorawan.db"
 #endif
 
 #include "lorawan/lorawan-error.h"
@@ -72,6 +68,7 @@
 #include "lorawan/storage/serialization/identity-binary-serialization.h"
 #include "lorawan/storage/serialization/gateway-binary-serialization.h"
 #include "lorawan/helper/file-helper.h"
+#include "lorawan/storage/service/identity-service-udp.h"
 
 // i18n
 // #include <libintl.h>
@@ -85,6 +82,15 @@ enum IP_PROTO {
     PROTO_UDP,
     PROTO_TCP,
     PROTO_UDP_N_TCP
+};
+
+enum STORAGE_TYPE {
+    ST_MEM = 0,
+    ST_GEN,
+    ST_JSON,
+    ST_SQLITE,
+    ST_LMDB,
+    ST_CLIENT_UDP
 };
 
 static std::string IP_PROTO2string(
@@ -125,6 +131,7 @@ public:
     bool runAsDaemon;
     std::string pidfile;
     int verbose;
+    STORAGE_TYPE storageType;
     std::string db;
     std::string dbGatewayJson;
     int32_t retCode;
@@ -133,7 +140,7 @@ public:
     NETID netid;
 #endif
     CliServiceDescriptorNParams()
-        : server(nullptr), proto(PROTO_UDP), port(4244),
+        : storageType(ST_MEM), server(nullptr), proto(PROTO_UDP), port(4244),
 #ifdef ENABLE_HTTP
         httpServer(nullptr), httpPort(4246),
 #endif
@@ -219,22 +226,29 @@ void setSignalHandler()
 }
 
 void run() {
-    auto identityService =
+    IdentityService *identityService = nullptr;
 #ifdef ENABLE_SQLITE
-        new SqliteIdentityService;
-    identityService->init(svc.db, nullptr);
+    if (svc.storageType == ST_SQLITE) {
+        identityService = new SqliteIdentityService;
+        identityService->init(svc.db, nullptr);
+    }
 #endif
 #ifdef ENABLE_GEN
-        new GenIdentityService;
-    identityService->init(svc.passPhrase, &svc.netid);
+    if (svc.storageType == ST_GEN) {
+        identityService = new GenIdentityService;
+        identityService->init(svc.passPhrase, &svc.netid);
+    }
 #endif
 #ifdef ENABLE_JSON
-        new JsonIdentityService;
-    identityService->init(svc.db, nullptr);
-#else
-        new ClientUDPIdentityService;
-    identityService->init("", nullptr);
+    if (svc.storageType == ST_JSON) {
+        identityService = new JsonIdentityService;
+        identityService->init(svc.db, nullptr);
+    }
 #endif
+    if (!identityService) {
+        identityService = new ClientUDPIdentityService;
+        identityService->init("", nullptr);
+    }
 
     auto gatewayService =
 #ifdef ENABLE_SQLITE
@@ -295,7 +309,12 @@ int main(int argc, char **argv) {
 #ifdef ENABLE_QRCODE
     struct arg_str *a_http_qrcode_urn_interface_n_port = arg_str0("q", "qr", _("IP addr:port"), _("Default *:4248"));
 #endif
-    struct arg_str *a_db = arg_str0("f", "db", _("<database file>"), _("database file name. Default " DEF_DB));
+#ifdef ENABLE_JSON
+    struct arg_str *a_db_json = arg_str0(nullptr, "id-json", _("<database JSON file>"), _("database file name. Default " DEF_DB_JSON));
+#endif
+#ifdef ENABLE_SQLITE
+    struct arg_str *a_db_sqlite = arg_str0(nullptr, "id-sqlite", _("<database SQLITE path>"), _("database path name. Default " DEF_DB_SQLITE));
+#endif
 #ifdef ENABLE_JSON
     struct arg_str *a_gateway_json_db = arg_str0("g", "gateway-db", _("<database file>"), _("database file name. Default " DEF_DB_GATEWAY_JSON));
 #endif
@@ -312,7 +331,8 @@ int main(int argc, char **argv) {
 	struct arg_lit *a_help = arg_lit0("h", "help", _("Show this help"));
 	struct arg_end *a_end = arg_end(20);
 
-	void* argtable[] = {
+
+    void* argtable[] = {
             a_interface_n_port,
 #ifdef ENABLE_HTTP
             a_http_interface_n_port,
@@ -322,19 +342,21 @@ int main(int argc, char **argv) {
             a_http_qrcode_urn_interface_n_port,
 #endif
 #ifdef ENABLE_GEN
-        a_pass_phrase, a_net_id,
+            a_pass_phrase, a_net_id,
 #endif
-#if defined ENABLE_SQLITE || defined ENABLE_JSON
-            a_db,
+#if defined ENABLE_JSON
+            a_db_json,
+#endif
+#if defined ENABLE_SQLITE
+            a_db_sqlite,
 #endif
 #ifdef ENABLE_JSON
             a_gateway_json_db,
 #endif
             a_code, a_access_code, a_verbose, a_daemonize, a_pidfile,
             a_help, a_end
-	};
-
-	// verify the argtable[] entries were allocated successfully
+    };
+    // verify the argtable[] entries were allocated successfully
 	if (arg_nullcheck(argtable) != 0) {
 		arg_freetable(argtable, sizeof(argtable) / sizeof(argtable[0]));
 		return ERR_CODE_COMMAND_LINE;
@@ -380,24 +402,38 @@ int main(int argc, char **argv) {
 #endif
 
 #ifdef ENABLE_GEN
-    if (a_pass_phrase->count)
+    if (a_pass_phrase->count) {
         svc.passPhrase = *a_pass_phrase->sval;
-    else
+        svc.storageType = ST_GEN;
+    } else
         svc.passPhrase = DEF_PASSPHRASE;
-    if (a_net_id)
+    if (a_net_id->count) {
         readNetId(svc.netid, *a_net_id->sval);
+        svc.storageType = ST_GEN;
+    }
 #endif
-    if (a_db->count)
-        svc.db = *a_db->sval;
-    else
-        svc.db = DEF_DB;
 #ifdef ENABLE_JSON
+    if (a_db_json->count) {
+        svc.db = *a_db_json->sval;
+        svc.storageType = ST_JSON;
+    } else
+        svc.db = DEF_DB_JSON;
     if (a_gateway_json_db->count)
         svc.dbGatewayJson = *a_gateway_json_db->sval;
     else
         svc.dbGatewayJson = DEF_DB_GATEWAY_JSON;
 #endif
-
+#ifdef ENABLE_SQLITE
+    if (a_db_sqlite->count) {
+        svc.db = *a_db_sqlite->sval;
+        svc.storageType = ST_JSON;
+    } else
+        svc.db = DEF_DB_SQLITE;
+    if (a_gateway_json_db->count)
+        svc.dbGatewayJson = *a_gateway_json_db->sval;
+    else
+        svc.dbGatewayJson = DEF_DB_GATEWAY_JSON;
+#endif
     if (a_code->count)
         svc.code = *a_code->ival;
     else
