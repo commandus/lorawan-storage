@@ -388,7 +388,9 @@ EXPORT_SHARED_C_FUNC void text2c_networkidentity(
     C_NETWORKIDENTITY *retval,
     const char *lines[]
 ) {
-    text2c_devaddr(&retval->devaddr, lines[0]);
+    C_DEVADDR a;
+    text2c_devaddr(&a, lines[0]);
+    retval->devaddr = a;
     text2c_deviceid(&retval->devid, lines);
 }
 
