@@ -127,9 +127,9 @@ static void testString()
     position++;
     p[0] = buffer;
 
-    c_deviceid2text(buffer + position, sizeof(buffer) - position, &p, &devId);
+    c_deviceid2text(buffer + position, sizeof(buffer) - position, p, &devId);
     memset(&did, 0, sizeof(did));
-    text2c_deviceid(&did, &p);
+    text2c_deviceid(&did, p);
     for (int i = 0; i < 13; i++) {
         printf("%s ", p[i]);
     }
