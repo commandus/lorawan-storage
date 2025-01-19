@@ -461,8 +461,8 @@ EXPORT_SHARED_C_FUNC void c_networkidentity2text(
 {
     if (!buffer || !bufferSize || !retVal)
         return;
-    DEVADDR a(networkIdentity->devaddr);
-    size_t position = c_devaddr2text(buffer, bufferSize, &networkIdentity->devaddr);
+    C_DEVADDR a = networkIdentity->devaddr;
+    size_t position = c_devaddr2text(buffer, bufferSize, &a);
     if (position >= bufferSize)
         return;
     // add string terminator
