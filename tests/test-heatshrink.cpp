@@ -151,10 +151,10 @@ static std::string s("# heatshrink\n"
                          "\n"
                          "  [![Build Status](https://travis-ci.org/atomicobject/heatshrink.png)](http://travis-ci.org/atomicobject/heatshrink)");
 
-static size_t testEncode(
-    char *output,
+static size_t compressBuffer(
+    void *output,
     size_t outputSize,
-    const char *input,
+    const void *input,
     size_t inputSize
 ) {
     heatshrink_encoder hse;
@@ -163,14 +163,14 @@ static size_t testEncode(
     size_t sunk = 0;
     size_t polled = 0;
     while (sunk < inputSize) {
-        if (heatshrink_encoder_sink(&hse, (uint8_t *) &input[sunk], inputSize - sunk, &count) < 0)
+        if (heatshrink_encoder_sink(&hse, (uint8_t *) input + sunk, inputSize - sunk, &count) < 0)
             return 0;
         sunk += count;
 
         if (sunk == inputSize) heatshrink_encoder_finish(&hse);
         HSE_poll_res pr;
         do {
-            pr = heatshrink_encoder_poll(&hse, (uint8_t *) &output[polled], outputSize - polled, &count);
+            pr = heatshrink_encoder_poll(&hse, (uint8_t *) output + polled, outputSize - polled, &count);
             if (pr < 0)
                 return 0;
             polled += count;
@@ -182,10 +182,10 @@ static size_t testEncode(
     return polled;
 }
 
-static size_t testDecode(
-    char *output,
+static size_t decompressBuffer(
+    void *output,
     size_t outputSize,
-    const char *input,
+    const void  *input,
     size_t inputSize
 ) {
     heatshrink_decoder hsd;
@@ -194,15 +194,17 @@ static size_t testDecode(
     size_t sunk = 0;
     size_t polled = 0;
     while (sunk < inputSize) {
-        heatshrink_decoder_sink(&hsd, (uint8_t *) &input[sunk], inputSize - sunk, &count);
+        auto h = heatshrink_decoder_sink(&hsd, (uint8_t *) input + sunk, inputSize - sunk, &count);
+        if (h == HSDR_SINK_FULL)
+            return polled;
         sunk += count;
-        HSD_poll_res pres;
+        HSD_poll_res pr;
         if (sunk == inputSize)
             heatshrink_decoder_finish(&hsd);
         do {
-            pres = heatshrink_decoder_poll(&hsd, (uint8_t *) &output[polled], outputSize - polled, &count);
+            pr = heatshrink_decoder_poll(&hsd, (uint8_t *) output + polled, outputSize - polled, &count);
             polled += count;
-        } while (pres == HSDR_POLL_MORE && count > 0);
+        } while (pr == HSDR_POLL_MORE && count > 0);
         if (polled > outputSize)
             return 0;
     }
@@ -214,7 +216,7 @@ static void testTextFile()
     size_t compressedBufferSize = s.size();
     char *compressedBuffer = (char *) malloc(compressedBufferSize);
     memset(compressedBuffer, 0, compressedBufferSize);
-    size_t compressedSize = testEncode(compressedBuffer, compressedBufferSize, s.c_str(), s.size());
+    size_t compressedSize = compressBuffer(compressedBuffer, compressedBufferSize, s.c_str(), s.size());
 
 
     std::cout << s.size() << "->" << compressedSize << std::endl;
@@ -222,7 +224,7 @@ static void testTextFile()
     size_t decompressedBufferSize = s.size();
     char *decompressedBuffer = (char *) malloc(decompressedBufferSize);
     memset(decompressedBuffer, 0, decompressedBufferSize);
-    size_t decompressedSize = testDecode(decompressedBuffer, decompressedBufferSize, compressedBuffer, compressedSize);
+    size_t decompressedSize = decompressBuffer(decompressedBuffer, decompressedBufferSize, compressedBuffer, compressedSize);
     std::cout << compressedSize << "->" << decompressedSize << "(" << decompressedBufferSize << ")" << std::endl;
 
     assert(decompressedSize == s.size());
@@ -238,17 +240,39 @@ static void testIdentities()
 
     std::vector<NETWORKIDENTITY> nis;
     identityService.list(nis, 0, 255);
-    char devIdBuf[sizeof(DEVICE_ID)];
     char compressedBuffer[sizeof(DEVICE_ID)];
     for (auto &n : nis) {
-        memmove(devIdBuf, &n.value.devid.id, sizeof(DEVICE_ID));
-        size_t compressedSize = testEncode(compressedBuffer, sizeof(compressedBuffer), (char*) &n.value.devid.id, sizeof(DEVICE_ID));
+        size_t compressedSize = compressBuffer(compressedBuffer, sizeof(compressedBuffer), &n.value.devid.id, sizeof(DEVICE_ID));
+
+        DEVICE_ID decompressedDid;
+        size_t decompressedSize = decompressBuffer(&decompressedDid, sizeof(decompressedDid), compressedBuffer, compressedSize);
+
         std::cout << sizeof(DEVICE_ID) << "->" << compressedSize << std::endl;
+    }
+}
+
+static void testIdentities2()
+{
+    JsonIdentityService identityService;
+    identityService.init("test.json", nullptr);
+
+    std::vector<NETWORKIDENTITY> nis;
+    identityService.list(nis, 0, 255);
+    char compressedBuffer[sizeof(DEVICE_ID)];
+    for (auto &n : nis) {
+        size_t compressedSize = compressBuffer(compressedBuffer, sizeof(compressedBuffer), &n.value.devid.id, sizeof(DEVICE_ID));
+        DEVICE_ID decompressedDid;
+        size_t decompressedSize = decompressBuffer(&decompressedDid, sizeof(decompressedDid), compressedBuffer, compressedSize);
+        std::cout << sizeof(DEVICE_ID) << "->" << compressedSize << std::endl;
+
+        decompressedSize = decompressBuffer(&decompressedDid, sizeof(decompressedDid), &n.value.devid.id, sizeof(DEVICE_ID));
+        std::cout << "Invalid decompress " << sizeof(DEVICE_ID) << "->" << decompressedSize << std::endl;
     }
 }
 
 int main() {
     testTextFile();
     testIdentities();
+    testIdentities2();
     return 0;
 }
