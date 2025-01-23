@@ -24,6 +24,7 @@ add_executable(test-heatshrink
 	../third-party/heatshrink/heatshrink_decoder.c
 )
 target_include_directories(test-heatshrink PRIVATE .. ../third-party)
+target_link_libraries(test-heatshrink PRIVATE lorawan)
 
 #
 add_test(NAME test-parse-packet COMMAND "test-parse-packet")

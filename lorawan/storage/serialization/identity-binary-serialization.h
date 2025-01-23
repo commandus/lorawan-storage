@@ -205,8 +205,8 @@ class IdentityBinarySerialization : public IdentitySerialization {
 public:
     explicit IdentityBinarySerialization(
         IdentityService* svc,
-        int32_t code,
-        uint64_t accessCode
+        int32_t code = 0,
+        uint64_t accessCode = 0
     );
     /**
      * Request IdentityService and return serialized response.
