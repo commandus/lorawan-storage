@@ -162,7 +162,8 @@ static size_t inflateBuffer(
 )
 {
     tdefl_compressor g_deflator;
-    tdefl_status status = tdefl_init(&g_deflator, nullptr, nullptr, TDEFL_FORCE_ALL_RAW_BLOCKS);
+    tdefl_status status = tdefl_init(&g_deflator, nullptr, nullptr,
+        TDEFL_WRITE_ZLIB_HEADER | TDEFL_FORCE_ALL_RAW_BLOCKS);
     if (status != TDEFL_STATUS_OKAY)
         return 0;
     const void *nextIn = inBuf;
@@ -211,7 +212,7 @@ static size_t deflateBuffer(
         size_t outBytes = availOut;
         tinfl_status status = tinfl_decompress(&inflator, (const mz_uint8 *)nextIn, &inBytes,
                                                (uint8_t *) outBuf, (mz_uint8 *) nextOut, &outBytes,
-                                               TINFL_FLAG_HAS_MORE_INPUT);
+                                               TINFL_FLAG_PARSE_ZLIB_HEADER | TINFL_FLAG_HAS_MORE_INPUT);
         if (status <= TINFL_STATUS_DONE)
             return 0;
         nextIn = (const char *) nextIn + inBytes;
