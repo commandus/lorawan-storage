@@ -3,6 +3,14 @@ set(VERSION_INFO 1.0.3)
 project("lorawan-storage" VERSION ${VERSION_INFO})
 set(CMAKE_CXX_STANDARD 11)
 
+option(ENABLE_MINIZ "Build with miniz" ON)
+
+if (ENABLE_MINIZ)
+	find_package(miniz CONFIG REQUIRED)
+	set(EXTRA_LIBS ${EXTRA_LIBS} miniz::miniz)
+	set(EXTRA_DEF ${EXTRA_DEF} ENABLE_MINIZ)
+endif()
+
 add_executable(test-parse-packet
 	test-parse-packet.cpp
 )
@@ -26,7 +34,17 @@ add_executable(test-heatshrink
 target_include_directories(test-heatshrink PRIVATE .. ../third-party)
 target_link_libraries(test-heatshrink PRIVATE lorawan)
 
+add_executable(test-miniz
+	test-miniz.cpp
+)
+target_include_directories(test-miniz PRIVATE .. ../third-party)
+target_link_libraries(test-miniz PRIVATE lorawan ${EXTRA_LIBS})
+target_compile_definitions(test-miniz PRIVATE ${EXTRA_DEF})
+
 #
 add_test(NAME test-parse-packet COMMAND "test-parse-packet")
 add_test(NAME test-identity-service COMMAND "test-identity-service")
 add_test(NAME test-heatshrink COMMAND "test-heatshrink")
+add_test(NAME test-miniz COMMAND "test-miniz")
+
+message("-DENABLE_MINIZ=${ENABLE_MINIZ} \t build with miniz.")
