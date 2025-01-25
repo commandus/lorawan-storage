@@ -12,6 +12,7 @@
 # -DENABLE_LMDB=off  	enable LMDB backend. liblmdb++-dev (and liblmdb-dev) dependencies required.
 # -DENABLE_IPV6=off   	enable IPv6 (reserved)
 # -DENABLE_JSON=off		Build with JSON file
+# -DENABLE_MINIZ=off	Build with miniz
 #
 # Example:
 # cmake -DENABLE_LIBUV=on
@@ -98,6 +99,7 @@ endif()
 	option(ENABLE_SQLITE "Build with SQLite" OFF)
 	option(ENABLE_LMDB "Build with LMDB" OFF)
 	option(ENABLE_JSON "Build with JSON file" ON)
+	option(ENABLE_MINIZ "Build with miniz" OFF)
 
 	set(ARGTABLE "third-party/argtable3/argtable3.c")
 	set(AES_SRC third-party/system/crypto/aes.c third-party/system/crypto/cmac.c)
@@ -396,6 +398,7 @@ endif()
 	message("-DENABLE_LMDB=${ENABLE_LMDB} \t enable LMDB backend")
 	message("-DENABLE_IPV6=${ENABLE_IPV6} \t enable IPv6 (reserved)")
 	message("-DENABLE_JSON=${ENABLE_JSON} \t build with JSON file backend. -DENABLE_HTTP=on required")
+	message("-DENABLE_MINIZ=${ENABLE_MINIZ} \t build with miniz")
 	message("")
 
 	add_subdirectory(tests)

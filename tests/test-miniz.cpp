@@ -9,9 +9,14 @@
 #define MINIZ_NO_ZLIB_APIS
 #define MINIZ_NO_MALLOC
 
+#ifdef ENABLE_MINIZ
 extern "C" {
 #include "miniz.h"
 }
+#endif
+
+#ifdef ENABLE_MINIZIP
+#endif
 
 static std::string s1("# heatshrink\n"
                          "\n"
@@ -154,6 +159,8 @@ static std::string s1("# heatshrink\n"
 
 static std::string s2("1234567890abcdefghijklmnopqrtst");
 
+#ifdef ENABLE_MINIZ
+
 static size_t inflateBuffer(
     void *outBuf,
     size_t outBufSize,
@@ -227,6 +234,32 @@ static size_t deflateBuffer(
                                            (uint8_t *) outBuf, (mz_uint8 *) nextOut, &outBytes, 0);
     return outBytes;
 }
+
+#endif
+
+#ifdef ENABLE_MINIZIP
+
+static size_t inflateBuffer(
+        void *outBuf,
+        size_t outBufSize,
+        void *inBuf,
+        size_t inBufSize
+)
+{
+    return 0;
+}
+
+static size_t deflateBuffer(
+        void *outBuf,
+        size_t outBufSize,
+        void *inBuf,
+        size_t inBufSize
+)
+{
+    return 0;
+}
+
+#endif
 
 static void testText(
     const std::string &s
