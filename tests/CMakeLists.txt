@@ -4,6 +4,7 @@ project("lorawan-storage" VERSION ${VERSION_INFO})
 set(CMAKE_CXX_STANDARD 11)
 
 option(ENABLE_MINIZ "Build with miniz" OFF)
+option(ENABLE_MINIZIP "Build with minizip" OFF)
 
 if (ENABLE_MINIZ)
 	if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
@@ -53,3 +54,4 @@ add_test(NAME test-heatshrink COMMAND "test-heatshrink")
 add_test(NAME test-miniz COMMAND "test-miniz")
 
 message("-DENABLE_MINIZ=${ENABLE_MINIZ} \t build with miniz.")
+message("-DENABLE_MINIZIP=${ENABLE_MINIZ} \t build with minizip.")

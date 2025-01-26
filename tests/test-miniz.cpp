@@ -267,12 +267,11 @@ static void testText(
 {
     char compressed[10000];
     char uncompressed[10000];
-
+#if defined(ENABLE_MINIZ) || defined(ENABLE_MINIZIP)
     size_t compressedSize = inflateBuffer(&compressed, sizeof(compressed), (void *) s.c_str(), s.size());
-
     size_t decompressedSize = deflateBuffer(&uncompressed, sizeof(uncompressed), (void *) &compressed, compressedSize);
-
     std::cout << s.size() << "->" << compressedSize << " decompressed size: " << decompressedSize << std::endl;
+#endif
 }
 
 int main() {
